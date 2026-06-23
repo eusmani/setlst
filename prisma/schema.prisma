@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  bio           String?
+  avatar        String?
+  phone         String?
+  emailVerified Boolean @default(false)
+  isPrivate     Boolean @default(false)
+  favoriteGenres String?
+  topAlbums     String?
+  createdAt     DateTime @default(now())
+
+  reviews      Review[]
+  likes        Like[]
+  savedAlbums  SavedAlbum[]
+  comments     Comment[]
+  commentLikes CommentLike[]
+  followers    Follow[] @relation("following")
+  following    Follow[] @relation("follower")
+  followRequestsSent     FollowRequest[] @relation("requester")
+  followRequestsReceived FollowRequest[] @relation("target")
+  artistFollows ArtistFollow[]
+  resetTokens  PasswordResetToken[]
+  emailTokens  EmailVerificationToken[]
+  signInCodes  SignInCode[]
+}
+
+model FollowRequest {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  requesterId String
+  targetId    String
+  requester   User @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  target      User @relation("target", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, targetId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// One-time code for passwordless account recovery / sign-in (sent via email or SMS).
+model SignInCode {
+  id        String   @id @default(cuid())
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id             String   @id @default(cuid())
+  body           String
+  albumSpotifyId String
+  createdAt      DateTime @default(now())
+
+  userId String
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes  CommentLike[]
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  commentId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
+model Album {
+  id        String   @id @default(cuid())
+  spotifyId String   @unique
+  title     String
+  artist    String
+  artwork   String?
+  year      Int?
+  genres    String?
+  createdAt DateTime @default(now())
+
+  reviews Review[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Float
+  subject   String?
+  body      String?
+  favoriteSong      String?
+  leastFavoriteSong String?
+  showSongs         Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId  String
+  albumId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  album   Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  likes   Like[]
+
+  @@unique([userId, albumId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  value     Int      @default(1) // 1 = like, -1 = dislike
+  createdAt DateTime @default(now())
+
+  userId   String
+  reviewId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reviewId])
+}
+
+model SavedAlbum {
+  id        String   @id @default(cuid())
+  spotifyId String
+  title     String
+  artist    String
+  artwork   String?
+  year      Int?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, spotifyId])
+}
+
+model Follow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  followerId  String
+  followingId String
+  follower    User   @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User   @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+model ArtistFollow {
+  id        String   @id @default(cuid())
+  artist    String
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, artist])
+}

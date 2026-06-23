@@ -1,65 +1,93 @@
-import Image from "next/image";
+import { auth } from "@/lib/auth";
+import { getFeed, toDisplayFeed } from "@/lib/feed";
+import Link from "next/link";
+import HomeFeed from "./HomeFeed";
+import AlbumMosaic from "@/components/layout/AlbumMosaic";
+import ReleaseRadar from "@/components/layout/ReleaseRadar";
+import LocalConcerts from "@/components/layout/LocalConcerts";
+import AnniversaryBanner from "@/components/layout/AnniversaryBanner";
+import NewReleaseAd from "@/components/layout/NewReleaseAd";
+import TrendingAlbums from "@/components/album/TrendingAlbums";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const session = await auth();
+  let feed: Awaited<ReturnType<typeof getFeed>> = [];
+  try { feed = await getFeed(session?.user?.id); } catch {}
+
+  const displayFeed = toDisplayFeed(feed, session?.user?.id);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="relative">
+      <AlbumMosaic />
+      {!session && (
+        <div className="relative">
+          <div className="relative z-10 max-w-4xl mx-auto px-5 py-20">
+            <h1 className="slide-down text-5xl font-bold text-[#f0f0f0] leading-tight mb-4" style={{ fontFamily: "var(--font-jakarta)" }}>
+              Your all-in-one music database<br />
+              <span className="text-[#c4a832]">and review hub.</span>
+            </h1>
+            <p className="slide-down-delay hero-sub text-[#a0a0a0] text-sm max-w-md mb-7 leading-relaxed">
+              Track every album you listen to, rate your favorites, explore complete discographies, and discover the next new artist in your rotation.
+            </p>
+            <div className="flex gap-3">
+              <Link
+                href="/register"
+                className="bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111] px-5 py-2.5 rounded text-sm transition-colors"
+              >
+                Create account
+              </Link>
+              <Link
+                href="/search"
+                className="border border-[#2e2e2e] hover:border-[#c4a832] text-[#a0a0a0] hover:text-[#f0f0f0] px-5 py-2.5 rounded text-sm transition-colors"
+              >
+                Browse albums
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      )}
+
+      {session && (
+        <div className="relative">
+          <div className="relative z-10 max-w-6xl mx-auto px-5 pt-12 pb-8">
+            <h2 className="slide-down text-2xl font-bold text-[#f0f0f0]" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
+              Welcome back, <span className="text-[#c4a832]">{session.user.username}</span>!
+            </h2>
+            <p className="slide-down-delay hero-sub text-sm text-[#a0a0a0] mt-1">
+              Check your friends&apos; picks and log in new albums.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className={`relative z-10 max-w-6xl mx-auto px-5 pb-12 ${session ? "pt-4" : "py-10"}`}>
+        {session && <div className="mb-6"><NewReleaseAd /></div>}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main column */}
+          <section className="lg:col-span-2 space-y-6 min-w-0">
+            <TrendingAlbums
+              limit={12}
+              slider
+              heading="Popular This Week"
+              emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div>
+              <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
+              <HomeFeed feed={displayFeed} isLoggedIn={!!session} />
+            </div>
+            <AnniversaryBanner />
+          </section>
+
+          {/* Sidebar widgets */}
+          <aside className="space-y-5 min-w-0">
+            <ReleaseRadar />
+            <LocalConcerts />
+          </aside>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

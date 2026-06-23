@@ -1,0 +1,446 @@
+import { NextRequest, NextResponse } from "next/server";
+import { isLikelyAI } from "@/lib/aiFilter";
+
+// Per-genre curated albums as "Title Artist" search queries.
+// Uses the SEARCH endpoint (works from serverless) rather than album-by-ID (dev-mode restricted).
+export const GENRE_QUERIES: Record<string, string[]> = {
+  "Hip-Hop": [
+    "To Pimp a Butterfly Kendrick Lamar",
+    "good kid, m.A.A.d city Kendrick Lamar",
+    "Section.80 Kendrick Lamar",
+    "Mr. Morale & The Big Steppers Kendrick",
+    "Donuts J Dilla",
+    "Endtroducing DJ Shadow",
+    "Pi\u00f1ata Freddie Gibbs & Madlib",
+    "Bandana Freddie Gibbs & Madlib",
+    "DAYTONA Pusha T",
+    "The Low End Theory A Tribe Called Quest",
+    "Midnight Marauders A Tribe Called Quest",
+    "People's Instinctive Travels ATCQ",
+    "fakemink",
+    "redveil",
+    "MIKE Burning Desire",
+    "Earl Sweatshirt SICK!",
+    "maxo Even God Has a Sense of Humor",
+    "billy woods Aethiopes",
+    "MAVI Let the Sun Talk",
+    "Navy Blue Ways of Knowing",
+    "Pink Siifu",
+    "Mach-Hommy",
+    "Quelle Chris",
+  ],
+  "Rap": [
+    "Illmatic Nas",
+    "Ready to Die Notorious B.I.G.",
+    "Reasonable Doubt Jay-Z",
+    "The Blueprint Jay-Z",
+    "Madvillainy Madvillain",
+    "Supreme Clientele Ghostface Killah",
+    "Only Built 4 Cuban Linx Raekwon",
+    "Enter The Wu-Tang Wu-Tang Clan",
+    "Liquid Swords GZA",
+    "Ironman Ghostface Killah",
+    "Tical Method Man",
+    "Blackout! Method Man & Redman",
+    "Danny Brown Atrocity Exhibition",
+    "Denzel Curry",
+    "Armand Hammer",
+    "Ka Descendants of Cain",
+    "Roc Marciano",
+    "Mick Jenkins",
+    "Your Old Droog",
+    "Boldy James",
+    "Westside Gunn",
+    "Conway the Machine",
+    "Vince Staples",
+    "JID The Forever Story",
+  ],
+  "R&B": [
+    "Ctrl SZA",
+    "Blonde Frank Ocean",
+    "Lemonade Beyonc\u00e9",
+    "What's Going On Marvin Gaye",
+    "Innervisions Stevie Wonder",
+    "Songs in the Key of Life Stevie Wonder",
+    "Purple Rain Prince",
+    "I Never Loved a Man Aretha Franklin",
+    "Lady Soul Aretha Franklin",
+    "Otis Blue Otis Redding",
+    "Curtis Curtis Mayfield",
+    "Extension of a Man Donny Hathaway",
+  ],
+  "Rock": [
+    "OK Computer Radiohead",
+    "In Utero Nirvana",
+    "Ten Pearl Jam",
+    "Superunknown Soundgarden",
+    "Dirt Alice in Chains",
+    "Badmotorfinger Soundgarden",
+    "Bleach Nirvana",
+    "Metallica",
+    "Is This It The Strokes",
+    "Room On Fire The Strokes",
+    "White Blood Cells White Stripes",
+    "Elephant White Stripes",
+  ],
+  "Alternative": [
+    "In Rainbows Radiohead",
+    "Kid A Radiohead",
+    "The Bends Radiohead",
+    "AM Arctic Monkeys",
+    "Whatever People Say Arctic Monkeys",
+    "Is This It The Strokes",
+    "Room On Fire The Strokes",
+    "Turn On The Bright Lights Interpol",
+    "Silent Alarm Bloc Party",
+    "Antidotes Foals",
+    "White Blood Cells White Stripes",
+    "Elephant White Stripes",
+    "Geese 3D Country",
+    "Black Country New Road Ants From Up There",
+    "black midi Cavalcade",
+    "Squid Bright Green Field",
+    "Fontaines D.C. Skinty Fia",
+    "Protomartyr Relatives in Descent",
+    "Shame Songs of Praise",
+    "Parquet Courts Wide Awake",
+    "Gilla Band Most Normal",
+    "Duster Stratosphere",
+  ],
+  "Indie": [
+    "Funeral Arcade Fire",
+    "Neon Bible Arcade Fire",
+    "The Suburbs Arcade Fire",
+    "For Emma, Forever Ago Bon Iver",
+    "Weezer",
+    "Yankee Hotel Foxtrot Wilco",
+    "Illinois Sufjan Stevens",
+    "Michigan Sufjan Stevens",
+    "Person Pitch Panda Bear",
+    "Merriweather Post Pavilion Animal Collective",
+    "Sung Tongs Animal Collective",
+    "Feels Animal Collective",
+    "Geese Projector",
+    "Wednesday Rat Saw God",
+    "MJ Lenderman Manning Fireworks",
+    "Alex G God Save the Animals",
+    "Big Thief Dragon New Warm Mountain",
+    "Snail Mail Lush",
+    "Soccer Mommy Color Theory",
+    "Hovvdy",
+    "Hotline TNT Cartwheel",
+    "They Are Gutting a Body of Water",
+  ],
+  "Metal": [
+    "You Won't Go Before You're Supposed To Knocked Loose",
+    "Take Me Back To Eden Sleep Token",
+    "Eternal Blue Spiritbox",
+    "Fortitude Gojira",
+    "Magma Gojira",
+    "RAT WARS HEALTH",
+    "Of Mice and Men Restoring Force",
+    "Sunbather Deafheaven",
+    "Jane Doe Converge",
+    "Toxicity System of a Down",
+    "Metallica Ride the Lightning",
+    "Vulgar Display of Power Pantera",
+    "Chat Pile God's Country",
+    "Gulch Impenetrable",
+    "Jesus Piece So Unknown",
+    "Gel Only Constant",
+    "Scowl How Flowers Grow",
+    "Full of Hell",
+    "Portrayal of Guilt",
+    "SeeYouSpaceCowboy",
+    "Knocked Loose A Different Shade of Blue",
+    "Drain Living Proof",
+  ],
+  "Jazz": [
+    "Kind of Blue Miles Davis",
+    "Bitches Brew Miles Davis",
+    "A Love Supreme John Coltrane",
+    "Giant Steps John Coltrane",
+    "Speak No Evil Wayne Shorter",
+    "Head Hunters Herbie Hancock",
+    "Maiden Voyage Herbie Hancock",
+    "Time Out Dave Brubeck",
+    "Getz/Gilberto Stan Getz",
+    "Moanin' Art Blakey",
+    "Clifford Brown & Max Roach",
+    "Blue Joni Mitchell",
+  ],
+  "Soul": [
+    "What's Going On Marvin Gaye",
+    "Innervisions Stevie Wonder",
+    "Songs in the Key of Life Stevie Wonder",
+    "I Never Loved a Man Aretha Franklin",
+    "Lady Soul Aretha Franklin",
+    "Otis Blue Otis Redding",
+    "Curtis Curtis Mayfield",
+    "Extension of a Man Donny Hathaway",
+    "Gets Next to You Al Green",
+    "Night Beat Sam Cooke",
+    "Purple Rain Prince",
+    "Ctrl SZA",
+  ],
+  "Electronic": [
+    "Selected Ambient Works Aphex Twin",
+    "Endtroducing DJ Shadow",
+    "Music Has the Right to Children BoC",
+    "Discovery Daft Punk",
+    "Homework Daft Punk",
+    "Dummy Portishead",
+    "Mezzanine Massive Attack",
+    "Blue Lines Massive Attack",
+    "Debut Bj\u00f6rk",
+    "Post Bj\u00f6rk",
+    "Vespertine Bj\u00f6rk",
+    "Donuts J Dilla",
+    "Burial Untrue",
+    "Boards of Canada Geogaddi",
+    "Oneohtrix Point Never",
+    "Jamie xx In Colour",
+    "Four Tet There Is Love in You",
+    "Floating Points",
+    "Clams Casino Instrumentals",
+    "Arca",
+    "Mount Kimbie",
+    "SBTRKT",
+  ],
+  "Pop": [
+    "Thriller Michael Jackson",
+    "Off the Wall Michael Jackson",
+    "Purple Rain Prince",
+    "1989 Taylor Swift",
+    "Born This Way Lady Gaga",
+    "Lemonade Beyonc\u00e9",
+    "Back To Black Amy Winehouse",
+    "21 Adele",
+    "Ray of Light Madonna",
+    "Teenage Dream Katy Perry",
+    "Sgt Pepper The Beatles",
+    "Blonde Frank Ocean",
+  ],
+  "Classical": [
+    "Goldberg Variations Glenn Gould",
+    "Symphony No.9 Beethoven",
+    "Brandenburg Concertos Bach",
+    "The Four Seasons Vivaldi",
+    "Swan Lake Tchaikovsky",
+    "Requiem Mozart",
+    "Symphony Nos. 5 & 6 Beethoven",
+    "Cello Suites Bach / Yo-Yo Ma",
+    "Piano Concerto No.2 Rachmaninoff",
+    "A Love Supreme Coltrane",
+    "Time Out Dave Brubeck",
+    "Kind of Blue Miles Davis",
+  ],
+  "Reggae": [
+    "Exodus Bob Marley",
+    "Catch A Fire Bob Marley",
+    "Burnin' Bob Marley",
+    "Natty Dread Bob Marley",
+    "Legend Bob Marley",
+    "The Harder They Come Jimmy Cliff",
+    "Pressure Drop Toots & The Maytals",
+    "Police And Thieves Junior Murvin",
+    "Handsworth Revolution Steel Pulse",
+    "Marcus Garvey Burning Spear",
+    "Pressure Drop Toots",
+  ],
+  "Latin": [
+    "Un Verano Sin Ti Bad Bunny",
+    "YHLQMDLG Bad Bunny",
+    "X 100PRE Bad Bunny",
+    "Buena Vista Social Club",
+    "Contra La Corriente Marc Anthony",
+    "La Voz H\u00e9ctor Lavoe",
+    "Amor Prohibido Selena",
+    "Laundry Service Shakira",
+    "La Reina Celia Cruz",
+    "Peso Pluma",
+    "KAROL G",
+  ],
+  "Blues": [
+    "King of the Delta Blues Robert Johnson",
+    "The Complete Recordings Robert Johnson",
+    "Live at the Regal B.B. King",
+    "Live at the Checkerboard Muddy Waters",
+    "Moanin' in the Moonlight Howlin' Wolf",
+    "Father of the Delta Blues Son House",
+    "Boom Boom John Lee Hooker",
+    "The Sky is Crying Elmore James",
+    "At Last! Etta James",
+    "Born to Play Guitar Buddy Guy",
+  ],
+  "Punk": [
+    "Never Mind the Bollocks Sex Pistols",
+    "Ramones Ramones",
+    "Rocket to Russia Ramones",
+    "London Calling The Clash",
+    "Combat Rock The Clash",
+    "My War Black Flag",
+    "Singles Going Steady Buzzcocks",
+    "Rock for Light Bad Brains",
+    "Damaged Black Flag",
+    "Group Sex Circle Jerks",
+    "Suffer Bad Religion",
+    "Fresh Fruit for Rotting Vegetables Dead Kennedys",
+    "Jeff Rosenstock Worry",
+    "PUP The Dream Is Over",
+    "Joyce Manor",
+    "Turnstile Glow On",
+    "Militarie Gun Life Under the Gun",
+    "Soul Glo Diaspora Problems",
+    "Gouge Away",
+    "Drug Church Hygiene",
+    "Scowl",
+    "Gel Only Constant",
+  ],
+  "Shoegaze": [
+    "Loveless My Bloody Valentine",
+    "m b v My Bloody Valentine",
+    "Isn't Anything My Bloody Valentine",
+    "Souvlaki Slowdive",
+    "Pygmalion Slowdive",
+    "Nowhere Ride",
+    "Going Blank Again Ride",
+    "Heaven or Las Vegas Cocteau Twins",
+    "Whirlpool Chapterhouse",
+    "Spooky Lush",
+    "Oshin DIIV",
+    "Sunbather Deafheaven",
+    "DIIV Deceiver",
+    "Whirr",
+    "Nothing Guilty of Everything",
+    "Wisp",
+    "Julie my anti-aircraft friend",
+    "They Are Gutting a Body of Water",
+    "Title Fight Hyperview",
+    "Fleeting Joys",
+    "Narrow Head Moments of Clarity",
+    "Flyying Colours",
+  ],
+  "Lo-Fi": [
+    "Donuts J Dilla",
+    "Endtroducing DJ Shadow",
+    "Madvillainy Madvillain",
+    "Blackout! Method Man & Redman",
+    "Pi\u00f1ata Freddie Gibbs",
+    "Bandana Freddie Gibbs",
+    "DAYTONA Pusha T",
+    "Supreme Clientele Ghostface",
+    "Liquid Swords GZA",
+    "Ironman Ghostface",
+    "Tical Method Man",
+    "Only Built 4 Cuban Linx Raekwon",
+    "Alex G Trick",
+    "Duster Stratosphere",
+    "Elliott Smith Either/Or",
+    "(Sandy) Alex G Rocket",
+    "Teen Suicide",
+    "Nicole Dollanganger",
+    "Have a Nice Life Deathconsciousness",
+    "Sweet Trip",
+    "Hovvdy",
+    "Standards",
+  ],
+  "Country": [
+    "Golden Hour Kacey Musgraves",
+    "At Folsom Prison Johnny Cash",
+    "Red Headed Stranger Willie Nelson",
+    "Traveller Chris Stapleton",
+    "Metamodern Sounds in Country Music Sturgill Simpson",
+    "Purgatory Tyler Childers",
+    "American Heartbreak Zach Bryan",
+    "Coal Miner's Daughter Loretta Lynn",
+    "Modern Sounds in Country and Western Music Ray Charles",
+    "Pageant Material Kacey Musgraves",
+    "Stardust Willie Nelson",
+    "The Highwomen The Highwomen",
+    "Wildflowers Tom Petty",
+    "Live at the Ryman Sturgill Simpson",
+  ],
+  "Folk": [
+    "Blue Joni Mitchell",
+    "The Freewheelin' Bob Dylan",
+    "Pink Moon Nick Drake",
+    "For Emma, Forever Ago Bon Iver",
+    "Carrie & Lowell Sufjan Stevens",
+    "Sounds of Silence Simon & Garfunkel",
+    "Songs of Leonard Cohen Leonard Cohen",
+    "Nebraska Bruce Springsteen",
+    "Either/Or Elliott Smith",
+    "Punisher Phoebe Bridgers",
+    "Heartbreaker Ryan Adams",
+    "Seven Swans Sufjan Stevens",
+    "Five Leaves Left Nick Drake",
+    "If You're Feeling Sinister Belle and Sebastian",
+  ],
+};
+
+// Reject tributes, karaoke, covers, instrumentals, etc. (singles & EPs ARE allowed)
+const BAD = /\b(tribute|karaoke|made famous|in the style of|originally performed|cover version|covers of|string quartet|lullaby|piano versions?|instrumental|8-bit|performs|solo violin|sub par|parody|parodies|spoof)\b/i;
+const BAD_ARTIST = /various artists|karaoke|tribute|vitamin string|string quartet|\bvsq\b|the insurgency|sub par all star|\bcover/i;
+
+interface ItunesAlbum {
+  collectionId?: number;
+  collectionName?: string;
+  artistName?: string;
+  artworkUrl100?: string;
+  releaseDate?: string;
+  trackCount?: number;
+  collectionType?: string;
+}
+
+// Look up an album via iTunes (no auth, not rate-limited like Spotify dev mode)
+async function fetchOne(q: string) {
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=5`;
+    const r = await fetch(url, { next: { revalidate: 604800 } });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const results: ItunesAlbum[] = d.results ?? [];
+
+    const a = results.find((x) =>
+      x.collectionId &&
+      x.artworkUrl100 &&
+      x.collectionName &&
+      x.artistName &&
+      !BAD.test(x.collectionName) &&
+      !BAD_ARTIST.test(x.artistName) &&
+      !isLikelyAI(x.artistName, x.collectionName)
+      // singles & EPs allowed — no trackCount restriction
+    );
+    if (!a) return null;
+
+    return {
+      id: String(a.collectionId),
+      title: a.collectionName as string,
+      artist: a.artistName as string,
+      artwork: (a.artworkUrl100 as string).replace("100x100bb", "600x600bb"),
+      year: a.releaseDate ? parseInt(a.releaseDate.slice(0, 4)) : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const genre = req.nextUrl.searchParams.get("genre");
+  if (!genre || !GENRE_QUERIES[genre]) {
+    return NextResponse.json({ error: "Unknown genre" }, { status: 400 });
+  }
+  try {
+    const queries = GENRE_QUERIES[genre];
+    const results = await Promise.all(queries.map(fetchOne));
+    const out: NonNullable<Awaited<ReturnType<typeof fetchOne>>>[] = [];
+    const seen = new Set<string>();
+    for (const a of results) {
+      if (a && !seen.has(a.id)) { seen.add(a.id); out.push(a); }
+    }
+    return NextResponse.json(out);
+  } catch {
+    return NextResponse.json([], { status: 503 });
+  }
+}

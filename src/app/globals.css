@@ -1,26 +1,135 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Dark warm palette */
+  --color-bg:          #111111;
+  --color-surface:     #1a1a1a;
+  --color-raised:      #222222;
+  --color-border:      #2e2e2e;
+  --color-border-dim:  #1f1f1f;
+
+  --color-ink:         #f0f0f0;
+  --color-ink-2:       #a0a0a0;
+  --color-ink-3:       #6b6b6b;
+
+  --color-rust:        #c4a832;
+  --color-rust-light:  #d4ba44;
+  --color-rust-dim:    #7a6520;
+  --color-gold:        #c4a832;
+
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
+
+html { background: #111111; color: #f0f0f0; scroll-behavior: smooth; font-size: 17px; overflow-x: clip; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #111111;
+  color: #f0f0f0;
+  font-family: var(--font-jakarta), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 1rem;
 }
+
+::selection { background: #c4a83240; color: #f0f0f0; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #1a1a1a; }
+::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #c4a832; }
+
+.font-serif { font-family: var(--font-jakarta), Arial, Helvetica, sans-serif; }
+
+/* ---- Themes ----
+   Components are authored in the dark amber palette. .theme-amber keeps that look.
+   .theme-mono (default) is an inverted black-&-white (light) theme. */
+
+/* base surfaces (eggshell off-white) */
+html.theme-mono, html.theme-mono body { background: #f3ecdb !important; color: #1c160c !important; }
+
+/* backgrounds: dark → eggshell tones */
+html.theme-mono .bg-\[\#111111\] { background-color: #f3ecdb !important; }
+html.theme-mono .bg-\[\#1a1a1a\] { background-color: #ece3cd !important; }
+html.theme-mono .bg-\[\#222222\] { background-color: #e3d9bf !important; }
+html.theme-mono .bg-\[\#2e2e2e\] { background-color: #d6caa9 !important; }
+html.theme-mono .bg-\[\#3a3a3a\] { background-color: #c9bc97 !important; }
+html.theme-mono .hover\:bg-\[\#222222\]:hover { background-color: #e6dcc3 !important; }
+html.theme-mono .hover\:bg-\[\#1a1a1a\]:hover { background-color: #ece3cd !important; }
+
+/* borders: dark → warm light */
+html.theme-mono .border-\[\#1a1a1a\] { border-color: #e2d8c0 !important; }
+html.theme-mono .border-\[\#1f1f1f\] { border-color: #ddd2b8 !important; }
+html.theme-mono .border-\[\#2e2e2e\] { border-color: #cfc3a3 !important; }
+html.theme-mono .hover\:border-\[\#2e2e2e\]:hover { border-color: #bcad86 !important; }
+
+/* text: light → dark */
+html.theme-mono .text-\[\#f0f0f0\] { color: #141414 !important; }
+html.theme-mono .text-\[\#d8d8d8\] { color: #2a2a2a !important; }
+html.theme-mono .text-\[\#bbbbbb\] { color: #333333 !important; }
+html.theme-mono .text-\[\#a0a0a0\] { color: #555555 !important; }
+html.theme-mono .text-\[\#888888\] { color: #666666 !important; }
+html.theme-mono .text-\[\#6b6b6b\] { color: #767676 !important; }
+html.theme-mono .text-\[\#555555\] { color: #888888 !important; }
+html.theme-mono .text-\[\#ededed\] { color: #222222 !important; }
+html.theme-mono .hover\:text-\[\#f0f0f0\]:hover { color: #000000 !important; }
+
+/* accent (amber → black) */
+html.theme-mono .text-\[\#c4a832\] { color: #111111 !important; }
+html.theme-mono .hover\:text-\[\#c4a832\]:hover { color: #000000 !important; }
+html.theme-mono .border-\[\#c4a832\] { border-color: #111111 !important; }
+html.theme-mono .hover\:border-\[\#c4a832\]:hover { border-color: #888888 !important; }
+html.theme-mono .focus\:border-\[\#c4a832\]:focus { border-color: #111111 !important; }
+html.theme-mono .bg-\[\#c4a832\] { background-color: #111111 !important; color: #ffffff !important; }
+html.theme-mono .hover\:bg-\[\#d4ba44\]:hover { background-color: #333333 !important; }
+
+/* hero subtitle stays eggshell over the dark album mosaic (light theme) */
+html.theme-mono .hero-sub { color: #f3ecdb !important; }
+
+/* username sits on the dark navbar; keep it eggshell in light theme */
+html.theme-mono .nav-username { color: #f3ecdb !important; }
+
+/* "On this day" label sits over the dark album-art gradient; keep it eggshell in light theme */
+html.theme-mono .on-this-day { color: #f3ecdb !important; }
+
+/* Logo chip geometry is identical in both themes so it doesn't shift when switching;
+   only the colors change per theme. */
+.app-logo {
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: transparent;
+}
+
+/* SETLST logo in eggshell on a dark chip (light theme) */
+html.theme-mono .app-logo {
+  color: #f3ecdb !important;
+  background: #1c160c;
+}
+html.theme-mono .app-logo:hover { color: #ffffff !important; }
+
+/* chrome */
+html.theme-mono ::selection { background: #1c160c18; color: #1c160c; }
+html.theme-mono ::-webkit-scrollbar-track { background: #e6dcc3; }
+html.theme-mono ::-webkit-scrollbar-thumb { background: #cfc3a3; }
+html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c160c; }
+
+/* Welcome message slide-down */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.slide-down { animation: slideDown 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.slide-down-delay { animation: slideDown 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both; }
+
+/* Album slider cards slide/fade in (staggered via inline animation-delay) */
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.album-slide-in { animation: slideInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Onboarding slide transition */
+@keyframes slideInOnb {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.slide-in-onb { animation: slideInOnb 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
