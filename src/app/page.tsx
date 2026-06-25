@@ -23,15 +23,15 @@ export default async function HomePage() {
       <AlbumMosaic />
       {!session && (
         <div className="relative">
-          <div className="relative z-10 max-w-4xl mx-auto px-5 py-20">
-            <h1 className="slide-down text-5xl font-bold text-[#f0f0f0] leading-tight mb-4" style={{ fontFamily: "var(--font-jakarta)" }}>
+          <div className="relative z-10 max-w-4xl mx-auto px-5 py-12 sm:py-20">
+            <h1 className="slide-down text-3xl sm:text-5xl font-bold text-[#f0f0f0] leading-tight mb-3 sm:mb-4" style={{ fontFamily: "var(--font-jakarta)" }}>
               Your all-in-one music database<br />
               <span className="text-[#c4a832]">and review hub.</span>
             </h1>
-            <p className="slide-down-delay hero-sub text-[#a0a0a0] text-sm max-w-md mb-7 leading-relaxed">
+            <p className="slide-down-delay hero-sub text-[#a0a0a0] text-sm max-w-md mb-6 sm:mb-7 leading-relaxed">
               Track every album you listen to, rate your favorites, explore complete discographies, and discover the next new artist in your rotation.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link
                 href="/register"
                 className="bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111] px-5 py-2.5 rounded text-sm transition-colors"
@@ -51,23 +51,23 @@ export default async function HomePage() {
 
       {session && (
         <div className="relative">
-          <div className="relative z-10 max-w-6xl mx-auto px-5 pt-12 pb-8">
-            <h2 className="slide-down text-2xl font-bold text-[#f0f0f0]" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
+          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pt-8 sm:pt-12 pb-5 sm:pb-8">
+            <h2 className="slide-down text-xl sm:text-2xl font-bold text-[#f0f0f0]" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
               Welcome back, <span className="text-[#c4a832]">{session.user.username}</span>!
             </h2>
-            <p className="slide-down-delay hero-sub text-sm text-[#a0a0a0] mt-1">
+            <p className="slide-down-delay hero-sub text-[13px] sm:text-sm text-[#a0a0a0] mt-1">
               Check your friends&apos; picks and log in new albums.
             </p>
           </div>
         </div>
       )}
 
-      <div className={`relative z-10 max-w-6xl mx-auto px-5 pb-12 ${session ? "pt-4" : "py-10"}`}>
-        {session && <div className="mb-6"><NewReleaseAd /></div>}
+      <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
+        {session && <div className="mb-5 sm:mb-6"><NewReleaseAd /></div>}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Main column */}
-          <section className="lg:col-span-2 space-y-6 min-w-0">
+          <section className="lg:col-span-2 space-y-5 sm:space-y-6 min-w-0">
             <TrendingAlbums
               limit={12}
               slider

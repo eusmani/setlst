@@ -393,37 +393,61 @@ interface ItunesAlbum {
   collectionType?: string;
 }
 
-// Look up an album via iTunes (no auth, not rate-limited like Spotify dev mode)
-async function fetchOne(q: string) {
-  try {
-    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=5`;
-    const r = await fetch(url, { next: { revalidate: 604800 } });
-    if (!r.ok) return null;
-    const d = await r.json();
-    const results: ItunesAlbum[] = d.results ?? [];
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-    const a = results.find((x) =>
-      x.collectionId &&
-      x.artworkUrl100 &&
-      x.collectionName &&
-      x.artistName &&
-      !BAD.test(x.collectionName) &&
-      !BAD_ARTIST.test(x.artistName) &&
-      !isLikelyAI(x.artistName, x.collectionName)
-      // singles & EPs allowed — no trackCount restriction
-    );
-    if (!a) return null;
-
-    return {
-      id: String(a.collectionId),
-      title: a.collectionName as string,
-      artist: a.artistName as string,
-      artwork: (a.artworkUrl100 as string).replace("100x100bb", "600x600bb"),
-      year: a.releaseDate ? parseInt(a.releaseDate.slice(0, 4)) : null,
-    };
-  } catch {
-    return null;
+// Run an async fn over items with bounded concurrency. iTunes throttles bursts,
+// so firing all ~22 queries at once made whole genres come back empty; a small
+// pool keeps us under the rate limit while staying fast.
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i]);
+    }
   }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
+// Look up an album via iTunes (no auth). Retries on throttle/network errors so a
+// transient 403 doesn't drop the album (and, in aggregate, the whole genre).
+async function fetchOne(q: string) {
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=5`;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      // Cache successful lookups for a week; bypass cache on retries so a throttled
+      // response isn't what we keep reading back.
+      const r = await fetch(url, attempt === 0 ? { next: { revalidate: 604800 } } : { cache: "no-store" });
+      if (!r.ok) { await sleep(250 * (attempt + 1)); continue; }
+      const d = await r.json();
+      const results: ItunesAlbum[] = d.results ?? [];
+
+      const a = results.find((x) =>
+        x.collectionId &&
+        x.artworkUrl100 &&
+        x.collectionName &&
+        x.artistName &&
+        !BAD.test(x.collectionName) &&
+        !BAD_ARTIST.test(x.artistName) &&
+        !isLikelyAI(x.artistName, x.collectionName)
+        // singles & EPs allowed — no trackCount restriction
+      );
+      if (!a) return null; // genuine no-match — don't waste retries
+
+      return {
+        id: String(a.collectionId),
+        title: a.collectionName as string,
+        artist: a.artistName as string,
+        artwork: (a.artworkUrl100 as string).replace("100x100bb", "600x600bb"),
+        year: a.releaseDate ? parseInt(a.releaseDate.slice(0, 4)) : null,
+      };
+    } catch {
+      await sleep(250 * (attempt + 1));
+    }
+  }
+  return null;
 }
 
 export async function GET(req: NextRequest) {
@@ -433,7 +457,8 @@ export async function GET(req: NextRequest) {
   }
   try {
     const queries = GENRE_QUERIES[genre];
-    const results = await Promise.all(queries.map(fetchOne));
+    // Bounded concurrency (5) keeps us under iTunes' burst rate limit.
+    const results = await mapLimit(queries, 5, fetchOne);
     const out: NonNullable<Awaited<ReturnType<typeof fetchOne>>>[] = [];
     const seen = new Set<string>();
     for (const a of results) {
