@@ -29,6 +29,50 @@ const POPULAR_UNDERGROUND: Artist[] = [
   "DIIV", "Slowdive", "Crumb", "Mac DeMarco",
 ];
 
+// Mainstream — widely-recognized, charting / socially-popular artists across genres.
+const MAINSTREAM: Artist[] = [
+  // pop
+  "Taylor Swift", "Billie Eilish", "Olivia Rodrigo", "Sabrina Carpenter",
+  "Ariana Grande", "Dua Lipa", "Chappell Roan", "Gracie Abrams", "Benson Boone",
+  "Teddy Swims", "Noah Kahan", "Hozier", "Lana Del Rey", "Lorde", "Halsey",
+  "Katy Perry", "Lady Gaga", "Miley Cyrus", "Selena Gomez", "Camila Cabello",
+  "Shawn Mendes", "Maroon 5", "OneRepublic", "Imagine Dragons",
+  "Twenty One Pilots", "Bruno Mars", "Charli XCX",
+  "Troye Sivan", "Conan Gray", "Tate McRae", "Addison Rae", "Tinashe",
+  // hip-hop / rap
+  "Kendrick Lamar", "Drake", "J. Cole", "Travis Scott", "Future", "Metro Boomin",
+  "Playboi Carti", "Lil Uzi Vert", "21 Savage", "Lil Baby", "Gunna", "Lil Durk",
+  "Nicki Minaj", "Cardi B", "Megan Thee Stallion", "Latto", "GloRilla", "Ice Spice",
+  "Doja Cat", "Jack Harlow", "Tyler, the Creator", "A$AP Rocky", "Don Toliver",
+  "JID", "Vince Staples", "Lil Wayne", "Eminem", "Kanye West", "Pusha T",
+  "Central Cee", "Stormzy", "Skepta", "Dave",
+  // R&B / soul
+  "SZA", "The Weeknd", "Frank Ocean", "Brent Faiyaz", "Summer Walker",
+  "Jhené Aiko", "Giveon", "Khalid", "Usher", "Kehlani", "Victoria Monét",
+  "Coco Jones", "Daniel Caesar", "PARTYNEXTDOOR", "Bryson Tiller", "RAYE",
+  // rock / alternative
+  "Arctic Monkeys", "Tame Impala", "The 1975", "Foo Fighters",
+  "Paramore", "Green Day", "Linkin Park", "Gorillaz", "Vampire Weekend",
+  "The Killers", "Glass Animals", "Coldplay", "Phoebe Bridgers", "boygenius", "The National",
+  // country / americana
+  "Morgan Wallen", "Luke Combs", "Zach Bryan", "Chris Stapleton",
+  "Kacey Musgraves", "Jelly Roll", "Lainey Wilson", "Tyler Childers", "Post Malone",
+  // latin / global
+  "Bad Bunny", "Karol G", "Peso Pluma", "Feid", "Rauw Alejandro",
+  "Shakira", "Rosalía", "Rema", "Burna Boy", "Wizkid", "Tems", "Asake", "Tyla",
+  // electronic / dance
+  "Calvin Harris", "Skrillex", "Fred again..", "Disclosure", "Flume",
+  "Kaytranada", "ODESZA", "Daft Punk",
+  // k-pop
+  "BTS", "BLACKPINK", "Stray Kids", "SEVENTEEN", "NewJeans", "LE SSERAFIM", "aespa",
+  // singer-songwriter / other
+  "Ed Sheeran", "Adele", "Harry Styles", "Sam Smith", "Justin Bieber",
+  "FKA twigs", "PinkPantheress",
+];
+
+// One combined radar roster — mainstream, underground, acclaimed and online together.
+const ARTISTS: Artist[] = [...MAINSTREAM, ...POPULAR_UNDERGROUND];
+
 interface ItunesAlbum {
   collectionId?: number;
   collectionName?: string;
@@ -88,47 +132,43 @@ function toRec(album: ItunesAlbum) {
 
 export async function GET(req: NextRequest) {
   const todayStr = new Date().toISOString().slice(0, 10);
-  // ?range=recent → albums already out, on/before today (most recent first).
-  // Default → upcoming-only, today forward (soonest first). Nothing prior to today.
-  const recent = req.nextUrl.searchParams.get("range") === "recent";
-  // Per-artist iTunes fetch lower bound: 90 days back for recent, today for upcoming.
+  // ?range=recent → already out (on/before today).  ?range=all → upcoming + recent.
+  // Default → upcoming-only (today forward).
+  const range = req.nextUrl.searchParams.get("range");
+  const recent = range === "recent";
+  const all = range === "all";
+  // Fetch lower bound: 90 days back when we need recent releases, else today.
   let cutoffStr = todayStr;
-  if (recent) {
+  if (recent || all) {
     const c = new Date();
     c.setDate(c.getDate() - 90);
     cutoffStr = c.toISOString().slice(0, 10);
   }
 
-  // Only the most popular/recognizable underground artists.
-  const mainLists = await Promise.all(
-    [...new Set(POPULAR_UNDERGROUND)].map((a) => recentForArtist(a, cutoffStr))
+  // One combined roster — mainstream, underground, acclaimed and online.
+  const lists = await Promise.all(
+    [...new Set(ARTISTS)].map((a) => recentForArtist(a, cutoffStr))
   );
 
   const seen = new Set<string>();
-  const dedupSort = (lists: { artist: string; album: ItunesAlbum }[][]) =>
-    lists.flat()
-      .filter((r) => {
-        const id = String(r.album.collectionId);
-        if (seen.has(id)) return false;
-        seen.add(id);
-        return true;
-      })
-      .sort((a, b) => (b.album.releaseDate ?? "").localeCompare(a.album.releaseDate ?? ""))
-      .map((r) => toRec(r.album));
+  const recs = lists.flat()
+    .filter((r) => {
+      const id = String(r.album.collectionId);
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .map((r) => toRec(r.album));
 
-  const all = dedupSort(mainLists);
+  const upcoming = recs
+    .filter((r) => r.releaseDate > todayStr)        // strictly after today
+    .sort((a, b) => a.releaseDate.localeCompare(b.releaseDate)); // soonest first
+  const past = recs
+    .filter((r) => r.releaseDate <= todayStr)        // already out
+    .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate)); // most recent first
 
-  // recent → already out (on/before today), most recent first.
-  // default → upcoming (today forward), soonest first. Nothing prior to today.
-  const releases = recent
-    ? all
-        .filter((r) => r.releaseDate <= todayStr)
-        .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate))
-        .slice(0, 80)
-    : all
-        .filter((r) => r.releaseDate >= todayStr)
-        .sort((a, b) => a.releaseDate.localeCompare(b.releaseDate))
-        .slice(0, 80);
+  // all → upcoming first, then recent; recent → past only; default → upcoming only.
+  const releases = (all ? [...upcoming, ...past] : recent ? past : upcoming).slice(0, 80);
 
   return NextResponse.json(releases);
 }
