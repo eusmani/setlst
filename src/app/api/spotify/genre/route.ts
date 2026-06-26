@@ -377,6 +377,141 @@ export const GENRE_QUERIES: Record<string, string[]> = {
     "Five Leaves Left Nick Drake",
     "If You're Feeling Sinister Belle and Sebastian",
   ],
+
+  // --- Subgenre-specific curated lists (keys must match GENRE_TAXONOMY spellings) ---
+  "Grunge": [
+    "Nevermind Nirvana", "In Utero Nirvana", "Bleach Nirvana",
+    "Ten Pearl Jam", "Vs. Pearl Jam", "Dirt Alice in Chains", "Facelift Alice in Chains",
+    "Superunknown Soundgarden", "Badmotorfinger Soundgarden",
+    "Core Stone Temple Pilots", "Sixteen Stone Bush", "Temple of the Dog Temple of the Dog",
+  ],
+  "Britpop": [
+    "Definitely Maybe Oasis", "(What's the Story) Morning Glory? Oasis",
+    "Parklife Blur", "The Great Escape Blur", "Modern Life Is Rubbish Blur",
+    "Different Class Pulp", "His 'n' Hers Pulp", "Urban Hymns The Verve",
+    "Dog Man Star Suede", "Suede Suede", "Elastica Elastica",
+  ],
+  "Post-Punk": [
+    "Unknown Pleasures Joy Division", "Closer Joy Division",
+    "Marquee Moon Television", "Entertainment! Gang of Four", "Pink Flag Wire",
+    "Seventeen Seconds The Cure", "Metal Box Public Image Ltd",
+    "Turn On the Bright Lights Interpol", "Crocodiles Echo & the Bunnymen",
+  ],
+  "Classic Rock": [
+    "Led Zeppelin IV Led Zeppelin", "The Dark Side of the Moon Pink Floyd",
+    "Who's Next The Who", "Exile on Main St. The Rolling Stones",
+    "Rumours Fleetwood Mac", "Hotel California Eagles",
+    "Born to Run Bruce Springsteen", "A Night at the Opera Queen",
+  ],
+  "Hard Rock": [
+    "Back in Black AC/DC", "Highway to Hell AC/DC",
+    "Appetite for Destruction Guns N' Roses", "Paranoid Black Sabbath",
+    "Van Halen Van Halen", "Led Zeppelin II Led Zeppelin", "Toys in the Attic Aerosmith",
+  ],
+  "Psychedelic Rock": [
+    "Sgt. Pepper's Lonely Hearts Club Band The Beatles", "Revolver The Beatles",
+    "Are You Experienced The Jimi Hendrix Experience", "The Doors The Doors",
+    "Surrealistic Pillow Jefferson Airplane", "The Piper at the Gates of Dawn Pink Floyd",
+  ],
+  "Progressive Rock": [
+    "The Dark Side of the Moon Pink Floyd", "Wish You Were Here Pink Floyd",
+    "Close to the Edge Yes", "In the Court of the Crimson King King Crimson",
+    "Selling England by the Pound Genesis", "2112 Rush",
+  ],
+  "Punk Rock": [
+    "Ramones Ramones", "Never Mind the Bollocks Sex Pistols",
+    "London Calling The Clash", "The Clash The Clash", "Damned Damned Damned The Damned",
+  ],
+  "Post-Rock": [
+    "Lift Your Skinny Fists Like Antennas to Heaven Godspeed You! Black Emperor",
+    "F♯ A♯ ∞ Godspeed You! Black Emperor", "Ágætis byrjun Sigur Rós",
+    "( ) Sigur Rós", "Spiderland Slint", "Hymn to the Immortal Wind Mono",
+  ],
+  "Indie Rock": [
+    "Funeral Arcade Fire", "Is This It The Strokes", "Turn On the Bright Lights Interpol",
+    "Silent Alarm Bloc Party", "Boxer The National", "Transatlanticism Death Cab for Cutie",
+  ],
+  "Emo": [
+    "The Black Parade My Chemical Romance", "Clarity Jimmy Eat World",
+    "Bleed American Jimmy Eat World", "Tell All Your Friends Taking Back Sunday",
+    "Deja Entendu Brand New", "The Devil and God Are Raging Inside Me Brand New",
+  ],
+  "Midwest Emo": [
+    "American Football American Football", "Diary Sunny Day Real Estate",
+    "The Power of Failing Mineral", "Nothing Feels Good The Promise Ring",
+    "Analphabetapolothology Cap'n Jazz",
+  ],
+  "Dream Pop": [
+    "Heaven or Las Vegas Cocteau Twins", "So Tonight That I Might See Mazzy Star",
+    "Teen Dream Beach House", "Bloom Beach House", "Souvlaki Slowdive",
+  ],
+  "Trap": [
+    "Rodeo Travis Scott", "Astroworld Travis Scott", "DS2 Future",
+    "Barter 6 Young Thug", "Die Lit Playboi Carti", "Culture Migos", "Without Warning 21 Savage",
+  ],
+  "Boom Bap": [
+    "Illmatic Nas", "Enter the Wu-Tang (36 Chambers) Wu-Tang Clan",
+    "Ready to Die The Notorious B.I.G.", "The Low End Theory A Tribe Called Quest",
+    "Moment of Truth Gang Starr", "Only Built 4 Cuban Linx Raekwon",
+  ],
+  "G-Funk": [
+    "The Chronic Dr. Dre", "Doggystyle Snoop Dogg",
+    "Regulate... G Funk Era Warren G", "All Eyez on Me 2Pac",
+  ],
+  "Conscious Hip Hop": [
+    "To Pimp a Butterfly Kendrick Lamar", "Like Water for Chocolate Common",
+    "Black on Both Sides Mos Def", "The Miseducation of Lauryn Hill Lauryn Hill",
+  ],
+  "Heavy Metal": [
+    "Paranoid Black Sabbath", "The Number of the Beast Iron Maiden",
+    "Master of Puppets Metallica", "Ace of Spades Motörhead", "British Steel Judas Priest",
+  ],
+  "Thrash Metal": [
+    "Master of Puppets Metallica", "Ride the Lightning Metallica",
+    "Reign in Blood Slayer", "Rust in Peace Megadeth", "Among the Living Anthrax",
+  ],
+  "Black Metal": [
+    "De Mysteriis Dom Sathanas Mayhem", "Transilvanian Hunger Darkthrone",
+    "In the Nightside Eclipse Emperor", "A Blaze in the Northern Sky Darkthrone", "Filosofem Burzum",
+  ],
+  "Nu Metal": [
+    "Hybrid Theory Linkin Park", "Meteora Linkin Park", "Toxicity System of a Down",
+    "Korn Korn", "Follow the Leader Korn", "Significant Other Limp Bizkit",
+  ],
+  "Metalcore": [
+    "Jane Doe Converge", "Ascendancy Trivium", "The Poison Bullet for My Valentine",
+    "Waking the Fallen Avenged Sevenfold",
+  ],
+  "Ambient": [
+    "Music for Airports Brian Eno", "Ambient 1 Brian Eno",
+    "Selected Ambient Works 85-92 Aphex Twin", "Substrata Biosphere",
+  ],
+  "Trip Hop": [
+    "Dummy Portishead", "Blue Lines Massive Attack", "Mezzanine Massive Attack", "Maxinquaye Tricky",
+  ],
+  "Synth-Pop": [
+    "Violator Depeche Mode", "Dare The Human League",
+    "Speak & Spell Depeche Mode", "Non-Stop Erotic Cabaret Soft Cell",
+  ],
+  "Pop Punk": [
+    "Dookie Green Day", "American Idiot Green Day", "Enema of the State blink-182",
+    "Take Off Your Pants and Jacket blink-182", "The Black Parade My Chemical Romance",
+  ],
+  "Jazz Fusion": [
+    "Bitches Brew Miles Davis", "Head Hunters Herbie Hancock",
+    "Birds of Fire Mahavishnu Orchestra", "Heavy Weather Weather Report",
+  ],
+  "Spiritual Jazz": [
+    "A Love Supreme John Coltrane", "Karma Pharoah Sanders", "Journey in Satchidananda Alice Coltrane",
+  ],
+  "Neo Soul": [
+    "Voodoo D'Angelo", "Brown Sugar D'Angelo", "Baduizm Erykah Badu",
+    "Mama's Gun Erykah Badu", "The Miseducation of Lauryn Hill Lauryn Hill",
+  ],
+  "Funk": [
+    "Maggot Brain Funkadelic", "One Nation Under a Groove Funkadelic",
+    "Mothership Connection Parliament", "Superfly Curtis Mayfield",
+  ],
 };
 
 // Reject tributes, karaoke, covers, instrumentals, etc. (singles & EPs ARE allowed)

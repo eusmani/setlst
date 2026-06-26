@@ -93,17 +93,24 @@ export default function GenreResults({ genre }: { genre: string }) {
         // Broad genres → curated "best of genre". Subgenres → subgenre-specific
         // MusicBrainz albums first, then fill with the parent genre's curated list
         // so the page is never sparse.
+        const dedupe = (arr: GenreAlbum[]) => {
+          const seen = new Set<string>();
+          return arr.filter((a) => (seen.has(a.id) ? false : (seen.add(a.id), true)));
+        };
         let res: GenreAlbum[];
         if (PARENT_GENRES.has(genre.toLowerCase())) {
           res = await curated(genre);
         } else {
           const key = resolveCuratedKey(genre);
-          const [sub, parent] = await Promise.all([
-            mbSubgenre(genre),
-            key ? curated(key) : Promise.resolve([] as GenreAlbum[]),
-          ]);
-          const seen = new Set(sub.map((a) => a.id));
-          res = [...sub, ...parent.filter((a) => !seen.has(a.id))];
+          // Subgenre-specific first: a curated subgenre list (if we have one) +
+          // MusicBrainz tag matches — so the page shows the actual subgenre.
+          const [curatedSub, mb] = await Promise.all([curated(genre), mbSubgenre(genre)]);
+          res = dedupe([...curatedSub, ...mb]);
+          // Only top up with the parent genre's best-of if the subgenre is still thin,
+          // so a sparse subgenre page never floods with unrelated parent-genre albums.
+          if (res.length < 8 && key && key.toLowerCase() !== genre.toLowerCase()) {
+            res = dedupe([...res, ...await curated(key)]);
+          }
         }
         // Last resort if nothing mapped or returned.
         if (res.length === 0) res = await searchTerm(genre);
