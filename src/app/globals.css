@@ -133,3 +133,11 @@ html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c160c; }
   to   { opacity: 1; transform: translateX(0); }
 }
 .slide-in-onb { animation: slideInOnb 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Prevent iOS from auto-zooming the page when focusing a form field on phones
+   (it only zooms when the field's font-size is < 16px). Keeps the screen fixed. */
+@media (max-width: 640px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}

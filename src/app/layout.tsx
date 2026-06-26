@@ -36,6 +36,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#111111",
+  // Keep the app fixed in place — no pinch / focus zoom inside the native shell.
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
