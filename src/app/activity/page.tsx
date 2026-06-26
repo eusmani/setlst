@@ -21,7 +21,7 @@ export default async function ActivityPage() {
   return (
     <div className="max-w-3xl mx-auto px-5 py-10">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#f0f0f0]" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
+        <h1 className="font-serif text-3xl text-[#f0f0f0]">
           Activity
         </h1>
         <p className="text-sm text-[#6b6b6b] mt-1">
