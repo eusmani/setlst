@@ -1,0 +1,62 @@
+name: Re-alias production domain
+
+# reruns.vercel.app is a system *.vercel.app subdomain — it can't be a project
+# production domain, so it does NOT auto-follow deploys. This job waits for the
+# git-triggered production deploy of the pushed commit to go READY, then re-points
+# reruns.vercel.app at it.
+
+on:
+  push:
+    branches: [main]
+
+# Don't let two pushes race on the same alias.
+concurrency:
+  group: realias-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  realias:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for production deploy, then re-point reruns.vercel.app
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          TEAM_ID: team_WgfTRzAlZ5jCqdhMOQQroKyx
+          PROJECT_ID: prj_N9YghWij11BNl08DJmtUPN4yWpmw
+          ALIAS: reruns.vercel.app
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "::error::VERCEL_TOKEN secret is not set. Add it in repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          base="https://api.vercel.com"
+          api() { curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" "$@"; }
+
+          echo "Looking for production deployment of commit $SHA ..."
+          dep_id=""; state=""
+          for i in $(seq 1 60); do
+            resp=$(api "$base/v6/deployments?projectId=$PROJECT_ID&teamId=$TEAM_ID&target=production&meta-githubCommitSha=$SHA&limit=1" || true)
+            dep_id=$(echo "$resp" | jq -r '.deployments[0].uid // empty')
+            state=$(echo "$resp" | jq -r '.deployments[0].state // empty')
+            echo "[$((i*10))s] id=${dep_id:-none} state=${state:-none}"
+            case "$state" in
+              READY) break ;;
+              ERROR|CANCELED) echo "::error::Deployment $state — not aliasing."; exit 1 ;;
+            esac
+            sleep 10
+          done
+
+          if [ -z "$dep_id" ] || [ "$state" != "READY" ]; then
+            echo "::error::Timed out waiting for a READY production deploy of $SHA."
+            exit 1
+          fi
+
+          echo "Aliasing $dep_id -> $ALIAS"
+          api -X POST "$base/v2/deployments/$dep_id/aliases?teamId=$TEAM_ID" \
+            -H "Content-Type: application/json" \
+            -d "{\"alias\":\"$ALIAS\"}" \
+            | jq -r '.alias // .error.message // "(no response body)"'
+
+          echo "reruns.vercel.app now points at $dep_id"
