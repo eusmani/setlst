@@ -80,7 +80,7 @@ export default async function HomePage() {
                 albums={myRecentAlbums}
                 limit={12}
                 slider
-                heading="Most Recent Activity"
+                heading="Your recent activity"
                 showSeeAll
                 seeAllHref="/activity"
                 emptyMessage="You haven't added any albums yet. Log or save one and it'll show up here."
