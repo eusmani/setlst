@@ -6,6 +6,7 @@ import Avatar from "@/components/ui/Avatar";
 import ReviewCard from "@/components/review/ReviewCard";
 import FollowButton from "./FollowButton";
 import TopAlbums from "./TopAlbums";
+import Crates from "./Crates";
 import EditProfile from "./EditProfile";
 import FollowRequests from "./FollowRequests";
 
@@ -174,6 +175,11 @@ export default async function ProfilePage({
       {/* Favorite albums */}
       <div id="favorites" className="scroll-mt-24">
         <TopAlbums initial={topAlbums} isOwner={isOwnProfile} />
+      </div>
+
+      {/* Crates — user-curated folders of favorite albums */}
+      <div id="crates" className="scroll-mt-24">
+        <Crates username={user.username} isOwner={isOwnProfile} />
       </div>
 
       {/* Reviews */}

@@ -24,6 +24,7 @@ model User {
   reviews      Review[]
   likes        Like[]
   savedAlbums  SavedAlbum[]
+  crates       Crate[]
   comments     Comment[]
   commentLikes CommentLike[]
   followers    Follow[] @relation("following")
@@ -184,4 +185,31 @@ model ArtistFollow {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, artist])
+}
+
+// A user-curated folder of favorite albums, shown on their profile.
+model Crate {
+  id        String       @id @default(cuid())
+  name      String
+  createdAt DateTime     @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  albums CrateAlbum[]
+}
+
+model CrateAlbum {
+  id        String   @id @default(cuid())
+  spotifyId String
+  title     String
+  artist    String
+  artwork   String?
+  year      Int?
+  addedAt   DateTime @default(now())
+
+  crateId String
+  crate   Crate  @relation(fields: [crateId], references: [id], onDelete: Cascade)
+
+  @@unique([crateId, spotifyId])
 }

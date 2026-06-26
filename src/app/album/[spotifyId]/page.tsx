@@ -11,6 +11,7 @@ import AlbumPlayButton from "./AlbumPlayButton";
 import AlbumBackdrop from "./AlbumBackdrop";
 import RatingBars from "./RatingBars";
 import ListenListButton from "./ListenListButton";
+import AddToCrate from "./AddToCrate";
 import GenrePills from "./GenrePills";
 import SimilarAlbums from "./SimilarAlbums";
 import { RatingMeter } from "@/components/ui/RatingMeter";
@@ -255,6 +256,9 @@ export default async function AlbumPage({
             artwork={artwork ?? null}
             year={year ?? null}
           />
+          <div className="mt-2">
+            <AddToCrate album={album} isLoggedIn={!!session} />
+          </div>
         </div>
 
         <div>
