@@ -123,7 +123,7 @@ export default function Navbar() {
                 onClick={() => setUserOpen(!userOpen)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors"
               >
-                <div className="w-6 h-6 rounded-full bg-[#222222] border border-[#2e2e2e] flex items-center justify-center text-[10px]  text-[#c4a832]">
+                <div className="w-9 h-9 rounded-full bg-[#222222] border border-[#2e2e2e] flex items-center justify-center text-xs text-[#c4a832]">
                   {session.user.username.slice(0, 2).toUpperCase()}
                 </div>
                 <span className="nav-username text-sm text-[#f0f0f0] hidden sm:block">{session.user.username}</span>
