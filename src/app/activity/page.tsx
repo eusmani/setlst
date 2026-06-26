@@ -19,7 +19,7 @@ export default async function ActivityPage() {
   const myFeed = toDisplayFeed(mine, userId);
 
   return (
-    <div className="max-w-3xl mx-auto px-5 py-10">
+    <div className="max-w-3xl mx-auto px-5 pt-5 pb-10">
       <div className="mb-8">
         <h1 className="font-serif text-3xl text-[#f0f0f0]">
           Activity

@@ -28,7 +28,7 @@ export default function DiaryPage() {
   const displayed = filter === "All" ? posts : posts.filter((p) => p.source === filter);
 
   return (
-    <div className="max-w-4xl mx-auto px-5 py-12">
+    <div className="max-w-4xl mx-auto px-5 pt-5 pb-12">
       <div className="flex items-baseline justify-between gap-4 mb-8 flex-wrap">
         <div>
           <h1 className="font-serif text-3xl text-[#f0f0f0] mb-1">News</h1>

@@ -89,7 +89,7 @@ export default function SearchPage() {
   const showSearchResults = !activeGenre && searchResults.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-5 py-12">
+    <div className="max-w-4xl mx-auto px-5 pt-5 pb-12">
       <h1 className="font-serif text-3xl text-[#f0f0f0] mb-6">Search Albums</h1>
 
       {/* Search bar */}
