@@ -22,6 +22,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           TEAM_ID: team_WgfTRzAlZ5jCqdhMOQQroKyx
+          TEAM_SLUG: usmaniebaad-6980
           PROJECT_ID: prj_N9YghWij11BNl08DJmtUPN4yWpmw
           ALIAS: reruns.vercel.app
           SHA: ${{ github.sha }}
@@ -35,12 +36,12 @@ jobs:
           api() { curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" "$@"; }
 
           echo "Looking for production deployment of commit $SHA ..."
-          dep_id=""; state=""
+          url=""; state=""
           for i in $(seq 1 60); do
             resp=$(api "$base/v6/deployments?projectId=$PROJECT_ID&teamId=$TEAM_ID&target=production&meta-githubCommitSha=$SHA&limit=1" || true)
-            dep_id=$(echo "$resp" | jq -r '.deployments[0].uid // empty')
+            url=$(echo "$resp" | jq -r '.deployments[0].url // empty')
             state=$(echo "$resp" | jq -r '.deployments[0].state // empty')
-            echo "[$((i*10))s] id=${dep_id:-none} state=${state:-none}"
+            echo "[$((i*10))s] url=${url:-none} state=${state:-none}"
             case "$state" in
               READY) break ;;
               ERROR|CANCELED) echo "::error::Deployment $state — not aliasing."; exit 1 ;;
@@ -48,15 +49,15 @@ jobs:
             sleep 10
           done
 
-          if [ -z "$dep_id" ] || [ "$state" != "READY" ]; then
+          if [ -z "$url" ] || [ "$state" != "READY" ]; then
             echo "::error::Timed out waiting for a READY production deploy of $SHA."
             exit 1
           fi
 
-          echo "Aliasing $dep_id -> $ALIAS"
-          api -X POST "$base/v2/deployments/$dep_id/aliases?teamId=$TEAM_ID" \
-            -H "Content-Type: application/json" \
-            -d "{\"alias\":\"$ALIAS\"}" \
-            | jq -r '.alias // .error.message // "(no response body)"'
+          # Assign via the Vercel CLI — it handles re-pointing the system *.vercel.app
+          # alias, which the raw REST deployments/aliases endpoint rejects.
+          echo "Aliasing $url -> $ALIAS"
+          npm i -g vercel@latest >/dev/null 2>&1
+          vercel alias set "$url" "$ALIAS" --token="$VERCEL_TOKEN" --scope="$TEAM_SLUG" --yes
 
-          echo "reruns.vercel.app now points at $dep_id"
+          echo "reruns.vercel.app now points at $url"
