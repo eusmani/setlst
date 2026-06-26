@@ -21,7 +21,9 @@ export default function ReleaseRadar() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/releases")
+    // Recent drops — underground artists rarely have iTunes pre-orders, so the
+    // "upcoming" feed would be near-empty.
+    fetch("/api/releases?range=recent")
       .then((r) => r.json())
       .then((d) => { setReleases(Array.isArray(d) ? d : []); setLoading(false); });
   }, []);

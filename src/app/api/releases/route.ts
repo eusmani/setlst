@@ -4,54 +4,29 @@ import { isLikelyAI } from "@/lib/aiFilter";
 // An artist is either a name (search) or {name, id} pinned to a specific iTunes artist
 type Artist = string | { name: string; id: number };
 
-// Mainstream — a broad, genre-spanning roster of widely-recognized, socially-popular
-// artists (charts, Instagram/TikTok). The radar only surfaces releases from these so
-// every entry is one users instantly recognize.
-const MAINSTREAM: Artist[] = [
-  // pop
-  "Taylor Swift", "Billie Eilish", "Olivia Rodrigo", "Sabrina Carpenter",
-  "Ariana Grande", "Dua Lipa", "Chappell Roan", "Gracie Abrams", "Benson Boone",
-  "Teddy Swims", "Noah Kahan", "Hozier", "Lana Del Rey", "Lorde", "Halsey",
-  "Katy Perry", "Lady Gaga", "Miley Cyrus", "Selena Gomez", "Camila Cabello",
-  "Demi Lovato", "Shawn Mendes", "Maroon 5", "OneRepublic", "Imagine Dragons",
-  "Twenty One Pilots", "P!nk", "Kelly Clarkson", "Bruno Mars", "Charli XCX",
-  "Troye Sivan", "Conan Gray", "Tate McRae", "Addison Rae", "Tinashe",
-  // hip-hop / rap
-  "Kendrick Lamar", "Drake", "J. Cole", "Travis Scott", "Future", "Metro Boomin",
-  "Playboi Carti", "Lil Uzi Vert", "21 Savage", "Lil Baby", "Gunna", "Lil Durk",
-  "Nicki Minaj", "Cardi B", "Megan Thee Stallion", "Latto", "GloRilla", "Ice Spice",
-  "Doja Cat", "Jack Harlow", "Tyler, the Creator", "A$AP Rocky", "Don Toliver",
-  "JID", "Vince Staples", "Lil Wayne", "Eminem", "Kanye West", "Pusha T",
-  "Roddy Ricch", "Polo G", "NLE Choppa", "Offset", "Quavo", "Central Cee",
-  "Stormzy", "Skepta", "Dave",
-  // R&B / soul
-  "SZA", "The Weeknd", "Frank Ocean", "Brent Faiyaz", "Summer Walker",
-  "Jhené Aiko", "H.E.R.", "Giveon", "Khalid", "Chris Brown", "Usher", "Miguel",
-  "Kehlani", "Victoria Monét", "Coco Jones", "Muni Long", "Daniel Caesar",
-  "PARTYNEXTDOOR", "Bryson Tiller", "Solange", "Janelle Monáe", "RAYE",
-  // rock / alternative
-  "Arctic Monkeys", "Tame Impala", "The 1975", "Foo Fighters",
-  "Red Hot Chili Peppers", "Paramore", "Green Day", "Fall Out Boy", "Linkin Park",
-  "Pearl Jam", "Muse", "Gorillaz", "Vampire Weekend", "The Killers",
-  "Kings of Leon", "Glass Animals", "Cage the Elephant", "Coldplay",
-  "Phoebe Bridgers", "boygenius", "The National",
-  // country / americana
-  "Morgan Wallen", "Luke Combs", "Zach Bryan", "Chris Stapleton",
-  "Kacey Musgraves", "Jelly Roll", "Lainey Wilson", "Kelsea Ballerini",
-  "Cody Johnson", "Tyler Childers", "Megan Moroney", "Post Malone",
-  // latin / global
-  "Bad Bunny", "Karol G", "Peso Pluma", "Feid", "Rauw Alejandro", "J Balvin",
-  "Maluma", "Shakira", "Rosalía", "Myke Towers", "Rema", "Burna Boy", "Wizkid",
-  "Tems", "Asake", "Tyla",
-  // electronic / dance
-  "Calvin Harris", "David Guetta", "Marshmello", "Skrillex", "Fred again..",
-  "Disclosure", "Flume", "Kaytranada", "ODESZA", "Zedd", "Illenium", "Daft Punk",
-  // k-pop
-  "BTS", "BLACKPINK", "Stray Kids", "SEVENTEEN", "TWICE", "NewJeans",
-  "LE SSERAFIM", "aespa", "Jung Kook", "Jimin", "ROSÉ", "Lisa",
-  // singer-songwriter / other
-  "Ed Sheeran", "Adele", "Harry Styles", "Sam Smith", "Justin Bieber",
-  "Carly Rae Jepsen", "Charlotte Cardin", "FKA twigs", "PinkPantheress",
+// The most popular / recognizable UNDERGROUND artists — the online digicore,
+// hyperpop, underground rap and shoegaze scenes that fans instantly recognize.
+const POPULAR_UNDERGROUND: Artist[] = [
+  // digicore / hyperpop / glitchcore
+  "fakemink", "underscores", "Jane Remover", "ericdoa", "glaive", "midwxst",
+  "aldn", "brakence", "quannnic", "Wisp", "d0llywood1", "p4rkr", "osquinn",
+  "twikipedia", "8485", "Frost Children", "food house", "Gupi", "fraxiom",
+  "umru", "Dorian Electra", "Hannah Diamond", "A. G. Cook", "100 gecs",
+  "Black Dresses", "Machine Girl", "Sematary", "Foxes",
+  // drain gang / sad boys
+  "Bladee", "Ecco2k", "Thaiboy Digital", "Yung Lean",
+  // online / underground rap
+  "Nettspend", "xaviersobased", "2hollis", "redveil", "SoFaygo", "Ka$hdami",
+  "TiaCorine", "che", "Lazer Dim 700", "loveboatluciano", "1oneam",
+  // acclaimed underground hip-hop
+  "MIKE", "Earl Sweatshirt", "Navy Blue", "billy woods", "Mach-Hommy",
+  "JPEGMAFIA", "Danny Brown", "Denzel Curry", "Westside Gunn",
+  "Conway the Machine", "Benny the Butcher",
+  // online shoegaze / underground indie
+  "Parannoul", "Weatherday", "feeble little horse", "julie",
+  "They Are Gutting a Body of Water", "Narrow Head", "Wednesday",
+  "MJ Lenderman", "Alex G", "Hotline TNT", "Snail Mail", "Soccer Mommy",
+  "DIIV", "Slowdive", "Crumb", "Mac DeMarco",
 ];
 
 interface ItunesAlbum {
@@ -124,10 +99,9 @@ export async function GET(req: NextRequest) {
     cutoffStr = c.toISOString().slice(0, 10);
   }
 
-  // Only widely-recognized, socially-popular artists so every release on the
-  // radar is one users instantly recognize.
+  // Only the most popular/recognizable underground artists.
   const mainLists = await Promise.all(
-    [...new Set(MAINSTREAM)].map((a) => recentForArtist(a, cutoffStr))
+    [...new Set(POPULAR_UNDERGROUND)].map((a) => recentForArtist(a, cutoffStr))
   );
 
   const seen = new Set<string>();
