@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
-import { getFeed, getFriendsFeed, getUserFeed, getUserAddedAlbums, toDisplayFeed, type AddedAlbum } from "@/lib/feed";
-import MobileHome from "@/components/home/MobileHome";
+import { getFeed, getUserAddedAlbums, toDisplayFeed, type AddedAlbum } from "@/lib/feed";
+import ReviewCard from "@/components/review/ReviewCard";
 import Link from "next/link";
 import HomeFeed from "./HomeFeed";
 import AlbumMosaic from "@/components/layout/AlbumMosaic";
@@ -22,19 +22,8 @@ export default async function HomePage() {
   // Albums the logged-in user has recently added (reviewed or saved), most
   // recent first — rendered in the same slider layout as "Popular This Week".
   let myRecentAlbums: AddedAlbum[] = [];
-  let myFeed: ReturnType<typeof toDisplayFeed> = [];
-  let friendsFeed: ReturnType<typeof toDisplayFeed> = [];
   if (session?.user?.id) {
-    try {
-      const [added, mine, friends] = await Promise.all([
-        getUserAddedAlbums(session.user.id, 24),
-        getUserFeed(session.user.id, 30),
-        getFriendsFeed(session.user.id, 30),
-      ]);
-      myRecentAlbums = added;
-      myFeed = toDisplayFeed(mine, session.user.id);
-      friendsFeed = toDisplayFeed(friends, session.user.id);
-    } catch {}
+    try { myRecentAlbums = await getUserAddedAlbums(session.user.id, 24); } catch {}
   }
 
   return (
@@ -82,15 +71,27 @@ export default async function HomePage() {
       )}
 
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
-        {/* Mobile (logged-in): Spotify/Letterboxd-style tabbed home */}
-        {session && (
-          <div className="lg:hidden">
-            <MobileHome myRecentAlbums={myRecentAlbums} myFeed={myFeed} friendsFeed={friendsFeed} />
-          </div>
-        )}
+        {/* Mobile: simple home — your & friends' activity feed */}
+        <div className="lg:hidden">
+          <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your &amp; Friends&apos; Activity</h2>
+          {displayFeed.length === 0 ? (
+            <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
+              <p className="text-sm mb-2">No activity yet.</p>
+              {session ? (
+                <Link href="/members" className="text-xs text-[#c4a832] hover:underline">Follow friends to see their reviews →</Link>
+              ) : (
+                <Link href="/register" className="text-xs text-[#c4a832] hover:underline">Join to start logging albums →</Link>
+              )}
+            </div>
+          ) : (
+            <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
+              {displayFeed.map((r) => <ReviewCard key={r.id} review={r} isLoggedIn={!!session} />)}
+            </div>
+          )}
+        </div>
 
-        {/* Desktop — and logged-out at all sizes */}
-        <div className={session ? "hidden lg:block" : ""}>
+        {/* Desktop */}
+        <div className="hidden lg:block">
         {session && <div className="hidden lg:block mb-5 sm:mb-6"><NewReleaseAd /></div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">

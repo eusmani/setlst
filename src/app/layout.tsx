@@ -4,6 +4,7 @@ import { Wallpoet, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import Navbar from "@/components/layout/Navbar";
+import BottomNav from "@/components/layout/BottomNav";
 import VerifyBanner from "@/components/layout/VerifyBanner";
 import RegisterSW from "@/components/layout/RegisterSW";
 import UpcomingBanner from "@/components/layout/UpcomingBanner";
@@ -53,13 +54,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#111111] text-[#f0f0f0] overflow-x-clip">
+      <body className="min-h-screen flex flex-col bg-[#111111] text-[#f0f0f0] overflow-x-clip pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
         <Providers>
           <RegisterSW />
           <NativeBridge />
           <Onboarding />
           <UpcomingBanner />
           <Navbar />
+          <BottomNav />
           <VerifyBanner />
           <main className="flex-1">{children}</main>
           <footer className="mt-auto border-t border-[#1f1f1f] py-5 text-center text-xs text-[#6b6b6b]">
