@@ -71,23 +71,29 @@ export default async function HomePage() {
       )}
 
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
-        {/* Mobile: simple home — your & friends' activity feed */}
-        <div className="lg:hidden">
-          <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your &amp; Friends&apos; Activity</h2>
-          {displayFeed.length === 0 ? (
-            <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
-              <p className="text-sm mb-2">No activity yet.</p>
-              {session ? (
-                <Link href="/members" className="text-xs text-[#c4a832] hover:underline">Follow friends to see their reviews →</Link>
-              ) : (
-                <Link href="/register" className="text-xs text-[#c4a832] hover:underline">Join to start logging albums →</Link>
-              )}
-            </div>
-          ) : (
-            <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
-              {displayFeed.map((r) => <ReviewCard key={r.id} review={r} isLoggedIn={!!session} />)}
-            </div>
-          )}
+        {/* Mobile: your & friends' activity feed + desktop discovery widgets */}
+        <div className="lg:hidden space-y-6">
+          <section>
+            <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your &amp; Friends&apos; Activity</h2>
+            {displayFeed.length === 0 ? (
+              <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
+                <p className="text-sm mb-2">No activity yet.</p>
+                {session ? (
+                  <Link href="/members" className="text-xs text-[#c4a832] hover:underline">Follow friends to see their reviews →</Link>
+                ) : (
+                  <Link href="/register" className="text-xs text-[#c4a832] hover:underline">Join to start logging albums →</Link>
+                )}
+              </div>
+            ) : (
+              <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
+                {displayFeed.map((r) => <ReviewCard key={r.id} review={r} isLoggedIn={!!session} />)}
+              </div>
+            )}
+          </section>
+
+          <AnniversaryBanner />
+          <ReleaseRadar />
+          <LocalConcerts />
         </div>
 
         {/* Desktop */}
