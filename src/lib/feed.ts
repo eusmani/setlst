@@ -31,7 +31,8 @@ export async function getFriendsFeed(userId: string, take = 30) {
     where: { followerId: userId },
     select: { followingId: true },
   });
-  const ids = followed.map((f) => f.followingId);
+  // Only people you follow — never your own activity (guards against a self-follow row).
+  const ids = followed.map((f) => f.followingId).filter((id) => id !== userId);
   if (ids.length === 0) return [];
   return prisma.review.findMany({
     where: { userId: { in: ids } },
