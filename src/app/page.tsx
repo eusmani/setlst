@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { getFeed, getUserAddedAlbums, toDisplayFeed, type AddedAlbum } from "@/lib/feed";
+import { getFeed, getFriendsFeed, getUserFeed, getUserAddedAlbums, toDisplayFeed, type AddedAlbum } from "@/lib/feed";
 import ReviewCard from "@/components/review/ReviewCard";
 import Link from "next/link";
 import HomeFeed from "./HomeFeed";
@@ -22,8 +22,19 @@ export default async function HomePage() {
   // Albums the logged-in user has recently added (reviewed or saved), most
   // recent first — rendered in the same slider layout as "Popular This Week".
   let myRecentAlbums: AddedAlbum[] = [];
+  let myFeed: ReturnType<typeof toDisplayFeed> = [];
+  let friendsFeed: ReturnType<typeof toDisplayFeed> = [];
   if (session?.user?.id) {
-    try { myRecentAlbums = await getUserAddedAlbums(session.user.id, 24); } catch {}
+    try {
+      const [added, mine, friends] = await Promise.all([
+        getUserAddedAlbums(session.user.id, 24),
+        getUserFeed(session.user.id, 30),
+        getFriendsFeed(session.user.id, 30),
+      ]);
+      myRecentAlbums = added;
+      myFeed = toDisplayFeed(mine, session.user.id);
+      friendsFeed = toDisplayFeed(friends, session.user.id);
+    } catch {}
   }
 
   return (
@@ -71,29 +82,58 @@ export default async function HomePage() {
       )}
 
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
-        {/* Mobile: your & friends' activity feed + desktop discovery widgets */}
+        {/* Mobile: separate Your / Friends' activity sections + discovery widgets */}
         <div className="lg:hidden space-y-6">
-          <section>
-            <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your &amp; Friends&apos; Activity</h2>
-            {displayFeed.length === 0 ? (
-              <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
-                <p className="text-sm mb-2">No activity yet.</p>
-                {session ? (
-                  <Link href="/members" className="text-xs text-[#c4a832] hover:underline">Follow friends to see their reviews →</Link>
+          {session ? (
+            <>
+              <section>
+                <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your Activity</h2>
+                {myFeed.length === 0 ? (
+                  <div className="py-12 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
+                    <p className="text-sm mb-2">You haven&apos;t reviewed any albums yet.</p>
+                    <Link href="/search" className="text-xs text-[#c4a832] hover:underline">Find an album to review →</Link>
+                  </div>
                 ) : (
-                  <Link href="/register" className="text-xs text-[#c4a832] hover:underline">Join to start logging albums →</Link>
+                  <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
+                    {myFeed.map((r) => <ReviewCard key={r.id} review={r} isLoggedIn />)}
+                  </div>
                 )}
-              </div>
-            ) : (
-              <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
-                {displayFeed.map((r) => <ReviewCard key={r.id} review={r} isLoggedIn={!!session} />)}
-              </div>
-            )}
-          </section>
+              </section>
 
-          <AnniversaryBanner />
+              <section>
+                <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
+                {friendsFeed.length === 0 ? (
+                  <div className="py-12 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
+                    <p className="text-sm mb-2">No reviews from people you follow yet.</p>
+                    <Link href="/members" className="text-xs text-[#c4a832] hover:underline">Follow friends to see their reviews →</Link>
+                  </div>
+                ) : (
+                  <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
+                    {friendsFeed.map((r) => <ReviewCard key={r.id} review={r} isLoggedIn />)}
+                  </div>
+                )}
+              </section>
+            </>
+          ) : (
+            <section>
+              <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Recent Activity</h2>
+              {displayFeed.length === 0 ? (
+                <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
+                  <p className="text-sm mb-2">No activity yet.</p>
+                  <Link href="/register" className="text-xs text-[#c4a832] hover:underline">Join to start logging albums →</Link>
+                </div>
+              ) : (
+                <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
+                  {displayFeed.map((r) => <ReviewCard key={r.id} review={r} isLoggedIn={!!session} />)}
+                </div>
+              )}
+            </section>
+          )}
+
           <ReleaseRadar />
           <LocalConcerts />
+          {/* On This Day — pinned to the bottom of the mobile home */}
+          <AnniversaryBanner />
         </div>
 
         {/* Desktop */}
