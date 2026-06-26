@@ -32,16 +32,46 @@ function spotifySearch(track: string, artist: string) {
   return `https://open.spotify.com/search/${encodeURIComponent(`${track} ${artist}`)}`;
 }
 
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
 export async function getTracklist(title: string, artist: string): Promise<TrackItem[]> {
   try {
-    // 1. Find the album to get its iTunes collectionId
-    const searchUrl =
-      `https://itunes.apple.com/search?term=${encodeURIComponent(`${artist} ${title}`)}` +
-      `&entity=album&limit=1`;
-    const sRes = await fetch(searchUrl, { next: { revalidate: 604800 } });
-    if (!sRes.ok) return [];
-    const sData = await sRes.json();
-    const collectionId = sData.results?.[0]?.collectionId;
+    const term = encodeURIComponent(`${artist} ${title}`);
+
+    // 1. Album-entity search → collectionId.
+    let collectionId: number | undefined;
+    const sRes = await fetch(
+      `https://itunes.apple.com/search?term=${term}&entity=album&limit=5`,
+      { next: { revalidate: 604800 } }
+    );
+    if (sRes.ok) {
+      const sData = await sRes.json();
+      const want = norm(title);
+      const albums = sData.results ?? [];
+      collectionId =
+        albums.find((a: { collectionName?: string }) => norm(a.collectionName ?? "") === want)?.collectionId ??
+        albums[0]?.collectionId;
+    }
+
+    // 2. Fallback: some albums (odd punctuation, obscure releases) don't surface in the
+    // album search but their songs do — recover the collectionId from a song search.
+    if (!collectionId) {
+      const songRes = await fetch(
+        `https://itunes.apple.com/search?term=${term}&entity=song&limit=25`,
+        { next: { revalidate: 604800 } }
+      );
+      if (songRes.ok) {
+        const songData = await songRes.json();
+        const want = norm(title);
+        const wantArtist = norm(artist).slice(0, 8);
+        const songs: { collectionId?: number; collectionName?: string; artistName?: string }[] = songData.results ?? [];
+        const match = songs.find(
+          (r) => r.collectionId && norm(r.collectionName ?? "").includes(want) && norm(r.artistName ?? "").includes(wantArtist)
+        );
+        collectionId = match?.collectionId ?? songs[0]?.collectionId;
+      }
+    }
+
     if (!collectionId) return [];
 
     // 2. Look up all songs in that album, in order
