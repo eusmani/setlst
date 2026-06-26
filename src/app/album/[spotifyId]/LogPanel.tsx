@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReviewForm from "./ReviewForm";
 import type { ReviewDraft } from "./AlbumClient";
 
@@ -13,12 +13,18 @@ interface Props {
   trackNames: string[];
   initialReview: ReviewDraft | null;
   isLoggedIn: boolean;
+  autoOpenReview?: boolean; // open the composer immediately (e.g. from the + flow)
 }
 
-export default function LogPanel({ album, trackNames, initialReview, isLoggedIn }: Props) {
+export default function LogPanel({ album, trackNames, initialReview, isLoggedIn, autoOpenReview }: Props) {
   const [myReview, setMyReview] = useState(initialReview);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Land here from the "+" review flow → open the composer right away.
+  useEffect(() => {
+    if (autoOpenReview && isLoggedIn) setEditing(true);
+  }, [autoOpenReview, isLoggedIn]);
 
   function onSaved(r: ReviewDraft) {
     setMyReview(r);

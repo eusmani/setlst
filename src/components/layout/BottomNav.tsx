@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
-const NAV = [
+const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean }[] = [
   {
     href: "/members", label: "Friends",
     icon: (
@@ -25,11 +26,11 @@ const NAV = [
     ),
   },
   {
-    href: "/", label: "Home",
+    href: "/log", label: "Review", plus: true,
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
-        <polyline points="9,21 9,12 15,12 15,21" />
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
       </svg>
     ),
   },
@@ -60,8 +61,20 @@ export default function BottomNav() {
   return (
     <nav className="sm:hidden fixed bottom-0 inset-x-0 z-50 border-t border-[#1f1f1f] bg-[#111111]/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-stretch justify-around h-14">
-        {NAV.map(({ href, label, icon }) => {
+        {NAV.map(({ href, label, icon, plus }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+          // The center "+" is a prominent yellow action button (write a review).
+          if (plus) {
+            return (
+              <Link key={href} href={href} aria-label={label} className="flex items-center justify-center flex-1">
+                <span className="flex items-center justify-center w-12 h-12 -mt-3 rounded-full bg-[#c4a832] text-[#111111] shadow-lg shadow-black/40 active:scale-95 transition-transform">
+                  {icon}
+                </span>
+              </Link>
+            );
+          }
+
           return (
             <Link
               key={href}

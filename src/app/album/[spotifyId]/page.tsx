@@ -89,7 +89,7 @@ export default async function AlbumPage({
   searchParams,
 }: {
   params: Promise<{ spotifyId: string }>;
-  searchParams: Promise<{ title?: string; artist?: string; artwork?: string; year?: string }>;
+  searchParams: Promise<{ title?: string; artist?: string; artwork?: string; year?: string; review?: string }>;
 }) {
   const { spotifyId } = await params;
   const sp = await searchParams;
@@ -245,6 +245,7 @@ export default async function AlbumPage({
                 showSongs: myReview.showSongs,
               } : null}
               isLoggedIn={!!session}
+              autoOpenReview={sp.review === "1"}
             />
           </div>
           <ListenListButton
