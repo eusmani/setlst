@@ -51,6 +51,48 @@ export async function getUserFeed(userId: string, take = 30) {
   });
 }
 
+export interface AddedAlbum {
+  spotifyId: string;
+  title: string;
+  artist: string;
+  artwork: string | null;
+  year: number | null;
+}
+
+// Albums a user has "added" — reviewed or saved to their listen-list — most
+// recent first, de-duped by spotifyId (keeping the most recent action).
+export async function getUserAddedAlbums(userId: string, take = 24): Promise<AddedAlbum[]> {
+  const [reviews, saved] = await Promise.all([
+    prisma.review.findMany({
+      where: { userId },
+      select: { createdAt: true, album: { select: { spotifyId: true, title: true, artist: true, artwork: true, year: true } } },
+      orderBy: { createdAt: "desc" },
+      take,
+    }),
+    prisma.savedAlbum.findMany({
+      where: { userId },
+      select: { createdAt: true, spotifyId: true, title: true, artist: true, artwork: true, year: true },
+      orderBy: { createdAt: "desc" },
+      take,
+    }),
+  ]);
+
+  const merged = [
+    ...reviews.map((r) => ({ at: r.createdAt.getTime(), a: r.album })),
+    ...saved.map((s) => ({ at: s.createdAt.getTime(), a: { spotifyId: s.spotifyId, title: s.title, artist: s.artist, artwork: s.artwork, year: s.year } })),
+  ].sort((x, y) => y.at - x.at);
+
+  const seen = new Set<string>();
+  const out: AddedAlbum[] = [];
+  for (const { a } of merged) {
+    if (seen.has(a.spotifyId)) continue;
+    seen.add(a.spotifyId);
+    out.push({ spotifyId: a.spotifyId, title: a.title, artist: a.artist, artwork: a.artwork ?? null, year: a.year ?? null });
+    if (out.length >= take) break;
+  }
+  return out;
+}
+
 type FeedItem = Awaited<ReturnType<typeof getFeed>>[number];
 
 // Serialize feed rows into the shape ReviewCard expects (dates → strings,
