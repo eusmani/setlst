@@ -71,10 +71,10 @@ export default async function HomePage() {
       {session && (
         <div className="relative">
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pt-8 sm:pt-12 pb-5 sm:pb-8">
-            <h2 className="slide-down text-xl sm:text-2xl font-bold text-[#f0f0f0]" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
+            <h2 className="slide-down text-2xl sm:text-3xl font-bold text-[#f0f0f0]" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
               Welcome back, <span className="text-[#c4a832]">{session.user.username}</span>!
             </h2>
-            <p className="slide-down-delay hero-sub text-[13px] sm:text-sm text-[#a0a0a0] mt-1">
+            <p className="slide-down-delay hero-sub text-sm sm:text-base text-[#a0a0a0] mt-1.5">
               Check your friends&apos; picks and log in new albums.
             </p>
           </div>
@@ -95,11 +95,13 @@ export default async function HomePage() {
               <MobileActivitySection
                 heading="Your Activity"
                 feed={myFeed}
+                href="/activity?tab=you"
                 empty={{ msg: "You haven't reviewed any albums yet.", href: "/search", cta: "Find an album to review →" }}
               />
               <MobileActivitySection
                 heading="Friends' Activity"
                 feed={friendsFeed}
+                href="/activity?tab=friends"
                 empty={{ msg: "No reviews from people you follow yet.", href: "/members", cta: "Follow friends to see their reviews →" }}
               />
             </>
@@ -107,6 +109,7 @@ export default async function HomePage() {
             <MobileActivitySection
               heading="Recent Activity"
               feed={displayFeed}
+              href="/activity"
               empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }}
             />
           )}

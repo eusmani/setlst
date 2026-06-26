@@ -10,6 +10,7 @@ interface Props {
   friendsFeed: ReviewData[];
   myFeed: ReviewData[];
   isLoggedIn: boolean;
+  initialTab?: Tab | null;
 }
 
 const TABS: { key: Tab; label: string }[] = [
@@ -37,9 +38,9 @@ function ReviewList({ feed, isLoggedIn }: { feed: ReviewData[]; isLoggedIn: bool
   );
 }
 
-export default function ActivityTabs({ friendsFeed, myFeed, isLoggedIn }: Props) {
-  // No tab is open until the user clicks one.
-  const [tab, setTab] = useState<Tab | null>(null);
+export default function ActivityTabs({ friendsFeed, myFeed, isLoggedIn, initialTab = null }: Props) {
+  // Opens to the tab passed via ?tab= (e.g. from the home screen), else nothing until clicked.
+  const [tab, setTab] = useState<Tab | null>(initialTab);
 
   // Albums your friends have recently reviewed (favorites bubble up first), de-duped.
   const friendsAlbums = useMemo(() => {
