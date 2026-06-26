@@ -82,7 +82,7 @@ export default function Navbar() {
 
   return (
     <>
-    <nav className="sticky top-0 z-50 border-b border-[#1f1f1f] bg-[#111111]/96 backdrop-blur-sm pt-[env(safe-area-inset-top)]">
+    <nav className="sticky top-0 z-50 border-b border-[#1f1f1f] bg-[#111111]/96 backdrop-blur-sm">
       <div className="max-w-4xl mx-auto px-5 h-14 flex items-center gap-6">
 
         {/* Logo */}

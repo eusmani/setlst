@@ -17,7 +17,7 @@ const config: CapacitorConfig = {
     url: "https://reruns.vercel.app",
   },
   ios: {
-    contentInset: "never",
+    contentInset: "always",
     backgroundColor: "#111111",
   },
 };

@@ -36,7 +36,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#111111",
-  viewportFit: "cover", // extend into the iPhone safe areas (edge-to-edge, no borders)
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
