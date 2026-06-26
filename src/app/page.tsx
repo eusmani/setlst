@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
-import { getFeed, getUserAddedAlbums, toDisplayFeed, type AddedAlbum } from "@/lib/feed";
+import { getFeed, getFriendsFeed, getUserFeed, getUserAddedAlbums, toDisplayFeed, type AddedAlbum } from "@/lib/feed";
+import MobileHome from "@/components/home/MobileHome";
 import Link from "next/link";
 import HomeFeed from "./HomeFeed";
 import AlbumMosaic from "@/components/layout/AlbumMosaic";
@@ -21,8 +22,19 @@ export default async function HomePage() {
   // Albums the logged-in user has recently added (reviewed or saved), most
   // recent first — rendered in the same slider layout as "Popular This Week".
   let myRecentAlbums: AddedAlbum[] = [];
+  let myFeed: ReturnType<typeof toDisplayFeed> = [];
+  let friendsFeed: ReturnType<typeof toDisplayFeed> = [];
   if (session?.user?.id) {
-    try { myRecentAlbums = await getUserAddedAlbums(session.user.id, 24); } catch {}
+    try {
+      const [added, mine, friends] = await Promise.all([
+        getUserAddedAlbums(session.user.id, 24),
+        getUserFeed(session.user.id, 30),
+        getFriendsFeed(session.user.id, 30),
+      ]);
+      myRecentAlbums = added;
+      myFeed = toDisplayFeed(mine, session.user.id);
+      friendsFeed = toDisplayFeed(friends, session.user.id);
+    } catch {}
   }
 
   return (
@@ -70,6 +82,15 @@ export default async function HomePage() {
       )}
 
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
+        {/* Mobile (logged-in): Spotify/Letterboxd-style tabbed home */}
+        {session && (
+          <div className="lg:hidden">
+            <MobileHome myRecentAlbums={myRecentAlbums} myFeed={myFeed} friendsFeed={friendsFeed} />
+          </div>
+        )}
+
+        {/* Desktop — and logged-out at all sizes */}
+        <div className={session ? "hidden lg:block" : ""}>
         {session && <div className="hidden lg:block mb-5 sm:mb-6"><NewReleaseAd /></div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
@@ -107,6 +128,7 @@ export default async function HomePage() {
             <ReleaseRadar />
             <LocalConcerts />
           </aside>
+        </div>
         </div>
       </div>
     </div>
