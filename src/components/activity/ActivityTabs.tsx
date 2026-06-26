@@ -43,21 +43,23 @@ export default function ActivityTabs({ friendsFeed, myFeed, isLoggedIn }: Props)
 
   return (
     <div>
-      {/* Horizontal nested tab bar (segmented control) */}
-      <div className="inline-flex items-center gap-1 mb-6 p-1 rounded-full bg-[#1a1a1a] border border-[#1f1f1f]">
-        {TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab((cur) => (cur === key ? null : key))}
-            className={`px-4 py-1.5 text-xs uppercase tracking-[0.12em] rounded-full transition-colors ${
-              tab === key
-                ? "bg-[#c4a832] text-[#111111]"
-                : "text-[#6b6b6b] hover:text-[#a0a0a0]"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Horizontal nested tab bar (segmented control), centered on its line */}
+      <div className="flex justify-center mb-6">
+        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-[#1a1a1a] border border-[#1f1f1f]">
+          {TABS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab((cur) => (cur === key ? null : key))}
+              className={`px-4 py-1.5 text-xs uppercase tracking-[0.12em] rounded-full transition-colors ${
+                tab === key
+                  ? "bg-[#c4a832] text-[#111111]"
+                  : "text-[#6b6b6b] hover:text-[#a0a0a0]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Nothing selected yet */}
