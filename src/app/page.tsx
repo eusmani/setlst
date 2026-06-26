@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { getFeed, toDisplayFeed } from "@/lib/feed";
+import { getFeed, getUserFeed, toDisplayFeed } from "@/lib/feed";
 import Link from "next/link";
 import HomeFeed from "./HomeFeed";
 import AlbumMosaic from "@/components/layout/AlbumMosaic";
@@ -17,6 +17,23 @@ export default async function HomePage() {
   try { feed = await getFeed(session?.user?.id); } catch {}
 
   const displayFeed = toDisplayFeed(feed, session?.user?.id);
+
+  // Albums the logged-in user has recently added (their own reviews), de-duped,
+  // most recent first — rendered in the same slider layout as "Popular This Week".
+  let myRecentAlbums: { spotifyId: string; title: string; artist: string; artwork: string | null; year: number | null }[] = [];
+  if (session?.user?.id) {
+    try {
+      const mine = await getUserFeed(session.user.id, 24);
+      const seen = new Set<string>();
+      myRecentAlbums = mine
+        .map((r) => r.album)
+        .filter((a) => (seen.has(a.spotifyId) ? false : (seen.add(a.spotifyId), true)))
+        .map((a) => ({
+          spotifyId: a.spotifyId, title: a.title, artist: a.artist,
+          artwork: a.artwork ?? null, year: a.year ?? null,
+        }));
+    } catch {}
+  }
 
   return (
     <div className="relative">
@@ -68,6 +85,16 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Main column */}
           <section className="lg:col-span-2 space-y-5 sm:space-y-6 min-w-0">
+            {session && myRecentAlbums.length > 0 && (
+              <TrendingAlbums
+                albums={myRecentAlbums}
+                limit={12}
+                slider
+                heading="Most Recent Activity"
+                showSeeAll
+                seeAllHref="/activity"
+              />
+            )}
             <TrendingAlbums
               limit={12}
               slider

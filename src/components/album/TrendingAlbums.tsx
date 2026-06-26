@@ -16,6 +16,8 @@ export default function TrendingAlbums({
   limit = 6,
   heading = "Trending Now",
   showSeeAll = true,
+  seeAllHref = "/charts",
+  albums,
   fallback = null,
   fallbackToPopular = false,
   slider = false,
@@ -24,12 +26,14 @@ export default function TrendingAlbums({
   limit?: number;
   heading?: string;
   showSeeAll?: boolean;
+  seeAllHref?: string; // where the "See more" link points
+  albums?: TrendingRow[]; // when provided, render these instead of fetching /api/trending
   fallback?: React.ReactNode;
   fallbackToPopular?: boolean; // when there's no activity yet, show a popular sample under the same heading
   slider?: boolean; // horizontal sliding bar (3 visible at a time)
   emptyMessage?: string; // keep the section (with heading) and show this prompt when there's no activity
 }) {
-  const [rows, setRows] = useState<TrendingRow[] | null>(null);
+  const [rows, setRows] = useState<TrendingRow[] | null>(albums ?? null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -47,11 +51,12 @@ export default function TrendingAlbums({
   }
 
   useEffect(() => {
+    if (albums) return; // caller supplied the albums directly
     fetch("/api/trending")
       .then((r) => r.json())
       .then((d) => setRows(Array.isArray(d) ? d : []))
       .catch(() => setRows([]));
-  }, []);
+  }, [albums]);
 
   const display: TrendingRow[] =
     rows && rows.length === 0 && fallbackToPopular
@@ -101,7 +106,7 @@ export default function TrendingAlbums({
       <div className="flex items-center justify-between mb-4">
         <p className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em]">{heading}</p>
         {showSeeAll && (
-          <Link href="/charts" className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">
+          <Link href={seeAllHref} className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">
             See more →
           </Link>
         )}
