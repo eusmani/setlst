@@ -43,18 +43,28 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(crate);
 }
 
-// PATCH /api/crates  { id, name }  → rename a crate.
+// PATCH /api/crates  { id, name?, cover? }  → rename and/or set the cover.
+// cover: a data-URL string to set, or null to clear (revert to the album collage).
 export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { id, name } = await req.json();
-  const clean = String(name ?? "").trim();
-  if (!id || !clean) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  const { id, name, cover } = await req.json();
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const crate = await prisma.crate.findUnique({ where: { id }, select: { userId: true } });
   if (!crate || crate.userId !== session.user.id) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  await prisma.crate.update({ where: { id }, data: { name: clean.slice(0, 60) } });
+  const data: { name?: string; cover?: string | null } = {};
+  if (typeof name === "string" && name.trim()) data.name = name.trim().slice(0, 60);
+  if (cover !== undefined) {
+    if (cover && String(cover).length > 400_000) {
+      return NextResponse.json({ error: "Image too large" }, { status: 400 });
+    }
+    data.cover = cover || null;
+  }
+  if (Object.keys(data).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+
+  await prisma.crate.update({ where: { id }, data });
   return NextResponse.json({ ok: true });
 }
 

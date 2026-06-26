@@ -191,6 +191,7 @@ model ArtistFollow {
 model Crate {
   id        String       @id @default(cuid())
   name      String
+  cover     String?      // custom cover image (data URL); falls back to a 4-album collage
   createdAt DateTime     @default(now())
 
   userId String

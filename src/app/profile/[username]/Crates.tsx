@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import CrateCover from "@/components/crate/CrateCover";
 
 interface CrateAlbum {
   id: string;
@@ -13,14 +14,8 @@ interface CrateAlbum {
 interface Crate {
   id: string;
   name: string;
+  cover: string | null;
   albums: CrateAlbum[];
-}
-
-function albumHref(a: CrateAlbum) {
-  const p = new URLSearchParams({ title: a.title, artist: a.artist });
-  if (a.artwork) p.set("artwork", a.artwork);
-  if (a.year) p.set("year", String(a.year));
-  return `/album/${a.spotifyId}?${p.toString()}`;
 }
 
 export default function Crates({ username, isOwner }: { username: string; isOwner: boolean }) {
@@ -71,37 +66,23 @@ export default function Crates({ username, isOwner }: { username: string; isOwne
           <p className="text-xs">Make a crate, then add albums from any album page.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
           {crates.map((crate) => (
-            <div key={crate.id} className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <p className="text-sm text-[#f0f0f0] truncate">{crate.name}</p>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-[#6b6b6b]">{crate.albums.length}</span>
-                  {isOwner && (
-                    <button onClick={() => deleteCrate(crate.id)} aria-label="Delete crate"
-                      className="text-[#6b6b6b] hover:text-red-400 transition-colors">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" />
-                      </svg>
-                    </button>
-                  )}
+            <div key={crate.id} className="relative group">
+              <Link href={`/crate/${crate.id}`} className="block">
+                <div className="rounded-xl overflow-hidden border border-[#1f1f1f] group-hover:border-[#2e2e2e] transition-colors">
+                  <CrateCover cover={crate.cover} albums={crate.albums} />
                 </div>
-              </div>
-              {crate.albums.length === 0 ? (
-                <p className="text-xs text-[#6b6b6b] py-4 text-center">Empty — add albums from an album page.</p>
-              ) : (
-                <div className="grid grid-cols-4 gap-2">
-                  {crate.albums.slice(0, 8).map((a) => (
-                    <Link key={a.id} href={albumHref(a)} title={`${a.title} — ${a.artist}`} className="block group">
-                      {a.artwork ? (
-                        <img src={a.artwork} alt={a.title} className="w-full aspect-square rounded object-cover group-hover:opacity-80 transition-opacity" />
-                      ) : (
-                        <div className="w-full aspect-square rounded bg-[#222222]" />
-                      )}
-                    </Link>
-                  ))}
-                </div>
+                <p className="mt-1.5 text-xs text-[#f0f0f0] truncate">{crate.name}</p>
+                <p className="text-[11px] text-[#6b6b6b]">{crate.albums.length} {crate.albums.length === 1 ? "album" : "albums"}</p>
+              </Link>
+              {isOwner && (
+                <button onClick={() => deleteCrate(crate.id)} aria-label="Delete crate"
+                  className="absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center rounded-full bg-black/60 text-[#d0d0d0] opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" />
+                  </svg>
+                </button>
               )}
             </div>
           ))}
