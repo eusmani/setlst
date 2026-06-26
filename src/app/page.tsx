@@ -70,7 +70,7 @@ export default async function HomePage() {
       )}
 
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
-        {session && <div className="mb-5 sm:mb-6"><NewReleaseAd /></div>}
+        {session && <div className="hidden lg:block mb-5 sm:mb-6"><NewReleaseAd /></div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Main column */}
@@ -86,21 +86,24 @@ export default async function HomePage() {
                 emptyMessage="You haven't added any albums yet. Log or save one and it'll show up here."
               />
             )}
-            <TrendingAlbums
-              limit={12}
-              slider
-              heading="Popular This Week"
-              emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
-            />
+            {/* Popular This Week — desktop only; mobile keeps a simpler home */}
+            <div className="hidden lg:block">
+              <TrendingAlbums
+                limit={12}
+                slider
+                heading="Popular This Week"
+                emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
+              />
+            </div>
             <div>
               <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
               <HomeFeed feed={displayFeed} isLoggedIn={!!session} />
             </div>
-            <AnniversaryBanner />
+            <div className="hidden lg:block"><AnniversaryBanner /></div>
           </section>
 
-          {/* Sidebar widgets */}
-          <aside className="space-y-5 min-w-0">
+          {/* Sidebar widgets — desktop only */}
+          <aside className="hidden lg:block space-y-5 min-w-0">
             <ReleaseRadar />
             <LocalConcerts />
           </aside>
