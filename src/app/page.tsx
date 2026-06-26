@@ -84,6 +84,12 @@ export default async function HomePage() {
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
         {/* Mobile: Your / Friends' activity (preview 3, expandable) + discovery widgets */}
         <div className="lg:hidden space-y-6">
+          <TrendingAlbums
+            limit={12}
+            slider
+            heading="Popular This Week"
+            emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
+          />
           {session ? (
             <>
               <MobileActivitySection
