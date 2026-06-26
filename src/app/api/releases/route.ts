@@ -4,51 +4,9 @@ import { isLikelyAI } from "@/lib/aiFilter";
 // An artist is either a name (search) or {name, id} pinned to a specific iTunes artist
 type Artist = string | { name: string; id: number };
 
-// Underground artists — prioritized on the radar
-const UNDERGROUND: Artist[] = [
-  // underground hip-hop
-  "fakemink", "Terrified", "Nettspend", "xaviersobased", "2hollis", "redveil",
-  "MIKE", "Earl Sweatshirt", "Navy Blue",
-  { name: "MAVI", id: 1195625355 }, // pin to the rapper MAVI (not the pop artist)
-  "billy woods", "Mach-Hommy",
-  "Boldy James", "Westside Gunn", "JPEGMAFIA", "Danny Brown", "Denzel Curry",
-  "Quelle Chris", "Pink Siifu", "maxo", "AKAI SOLO", "Wiki",
-  "Conway the Machine", "Benny the Butcher", "Ka", "Roc Marciano", "Your Old Droog",
-  "medhane", "Bruiser Wolf", "veeze", "BabyTron", "RXKNephew", "Lukah",
-  "Pa Salieu", "Sampa the Great",
-  // indie / alt underground
-  "Wednesday", "MJ Lenderman", "Geese", "Black Country, New Road", "black midi",
-  "Fontaines D.C.", "Alex G", "Hotline TNT", "They Are Gutting a Body of Water",
-  "julie", "Narrow Head", "Title Fight",
-  "Snail Mail", "Soccer Mommy", "Horsegirl", "Wishy", "feeble little horse",
-  "Friko", "Been Stellar", "Crumb", "Momma", "Hovvdy", "Truth Club", "Wild Pink",
-  "Mannequin Pussy", "Militarie Gun", "Origami Angel", "Carly Cosgrove",
-  // metal / hardcore underground
-  "Knocked Loose", "Chat Pile", "Gulch", "Jesus Piece", "Gel", "Scowl",
-  "Full of Hell", "Portrayal of Guilt", "SeeYouSpaceCowboy", "Spiritbox", "Deafheaven",
-  "Turnstile", "Drug Church", "End It", "Zulu", "Speed", "Sunami", "Mizery",
-  // electronic / shoegaze underground
-  "Burial", "DIIV", "Slowdive", "Four Tet", "Jamie xx",
-  "Wisp", "Julie Christmas", "Parannoul", "Weatherday", "Jane Remover", "quannnic",
-  // UK underground — grime / rap / drill
-  "Knucks", "Ghetts", "Kano", "Berwyn", "Jeshi", "Wu-Lu", "Loyle Carner",
-  "Lancey Foux", "Little Simz", "Headie One", "Nia Archives",
-  // UK post-punk / indie
-  "Squid", "Shame", "Dry Cleaning", "Sorry", "Jockstrap", "Folly Group",
-  "caroline", "Goat Girl", "English Teacher", "The Last Dinner Party",
-  "Lambrini Girls", "Sprints",
-  // UK jazz
-  "Ezra Collective", "Nubya Garcia", "Moses Boyd", "Yussef Dayes", "Kokoroko",
-  // UK electronic
-  "Overmono", "Joy Orbison",
-  // Canadian underground
-  "Mustafa", "Charlotte Day Wilson", "BADBADNOTGOOD", "Men I Trust", "Crack Cloud",
-  "Snotty Nose Rez Kids", "TOBi", "Haviah Mighty", "Homeshake", "METZ",
-  "Fucked Up", "Mac DeMarco", "Yves Jarvis", "Cadence Weapon",
-];
-
-// Mainstream — a broad, genre-spanning roster of major artists so the radar
-// catches essentially anyone putting out music across the year.
+// Mainstream — a broad, genre-spanning roster of widely-recognized, socially-popular
+// artists (charts, Instagram/TikTok). The radar only surfaces releases from these so
+// every entry is one users instantly recognize.
 const MAINSTREAM: Artist[] = [
   // pop
   "Taylor Swift", "Billie Eilish", "Olivia Rodrigo", "Sabrina Carpenter",
@@ -166,10 +124,11 @@ export async function GET(req: NextRequest) {
     cutoffStr = c.toISOString().slice(0, 10);
   }
 
-  const [underLists, mainLists] = await Promise.all([
-    Promise.all([...new Set(UNDERGROUND)].map((a) => recentForArtist(a, cutoffStr))),
-    Promise.all([...new Set(MAINSTREAM)].map((a) => recentForArtist(a, cutoffStr))),
-  ]);
+  // Only widely-recognized, socially-popular artists so every release on the
+  // radar is one users instantly recognize.
+  const mainLists = await Promise.all(
+    [...new Set(MAINSTREAM)].map((a) => recentForArtist(a, cutoffStr))
+  );
 
   const seen = new Set<string>();
   const dedupSort = (lists: { artist: string; album: ItunesAlbum }[][]) =>
@@ -183,10 +142,7 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => (b.album.releaseDate ?? "").localeCompare(a.album.releaseDate ?? ""))
       .map((r) => toRec(r.album));
 
-  // Underground claims duplicate IDs first, then mainstream fills the rest.
-  const underground = dedupSort(underLists);
-  const mainstream = dedupSort(mainLists);
-  const all = [...underground, ...mainstream];
+  const all = dedupSort(mainLists);
 
   // recent → already out (on/before today), most recent first.
   // default → upcoming (today forward), soonest first. Nothing prior to today.
