@@ -45,21 +45,24 @@ export default function RegisterPage() {
           {error && <p className="text-red-400 text-sm bg-red-950/30 border border-red-900/30 px-3 py-2 rounded-lg">{error}</p>}
 
           {[
-            { label: "Username", type: "text", val: username, set: setUsername, ph: "yourname", min: 3, max: 20, optional: false },
+            { label: "Username", type: "text", val: username, set: setUsername, ph: "yourname", min: 3, max: 20, optional: false, lc: true },
             { label: "Email", type: "email", val: email, set: setEmail, ph: "you@example.com", optional: false },
             { label: "Phone number", type: "tel", val: phone, set: setPhone, ph: "(555) 123-4567" },
             { label: "Password", type: "password", val: password, set: setPassword, ph: "min 8 characters", min: 8 },
-          ].map(({ label, type, val, set, ph, min, max }) => (
+          ].map(({ label, type, val, set, ph, min, max, lc }) => (
             <div key={label}>
               <label className="block text-xs text-[#a0a0a0] mb-1.5">{label}</label>
               <input
                 type={type}
                 value={val}
-                onChange={(e) => set(e.target.value)}
+                onChange={(e) => set(lc ? e.target.value.toLowerCase() : e.target.value)}
                 required
                 minLength={min}
                 maxLength={max}
                 placeholder={ph}
+                autoCapitalize={lc ? "none" : undefined}
+                autoCorrect={lc ? "off" : undefined}
+                spellCheck={lc ? false : undefined}
                 className="w-full bg-[#222222] border border-[#2e2e2e] text-[#f0f0f0] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b] transition-colors"
               />
             </div>

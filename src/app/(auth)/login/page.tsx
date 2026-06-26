@@ -34,9 +34,9 @@ export default function LoginPage() {
           {error && <p className="text-red-400 text-sm bg-red-950/30 border border-red-900/30 px-3 py-2 rounded-lg">{error}</p>}
 
           {[
-            { label: "Email or username", type: "text", val: identifier, set: setIdentifier, ph: "you@example.com or your username" },
+            { label: "Email or username", type: "text", val: identifier, set: setIdentifier, ph: "you@example.com or your username", noCap: true },
             { label: "Password", type: "password", val: password, set: setPassword, ph: "••••••••" },
-          ].map(({ label, type, val, set, ph }) => (
+          ].map(({ label, type, val, set, ph, noCap }) => (
             <div key={label}>
               <label className="block text-xs text-[#a0a0a0] mb-1.5">{label}</label>
               <input
@@ -45,6 +45,9 @@ export default function LoginPage() {
                 onChange={(e) => set(e.target.value)}
                 required
                 placeholder={ph}
+                autoCapitalize={noCap ? "none" : undefined}
+                autoCorrect={noCap ? "off" : undefined}
+                spellCheck={noCap ? false : undefined}
                 className="w-full bg-[#222222] border border-[#2e2e2e] text-[#f0f0f0] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b] transition-colors"
               />
             </div>

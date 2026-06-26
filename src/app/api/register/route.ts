@@ -26,8 +26,9 @@ export async function POST(req: NextRequest) {
   const { username, email, password, phone } = await req.json();
   if (!username || !email || !password || !phone)
     return NextResponse.json({ error: "All fields required" }, { status: 400 });
-  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username))
-    return NextResponse.json({ error: "Username: 3–20 chars, letters/numbers/underscores" }, { status: 400 });
+  const cleanUsername = String(username).trim().toLowerCase();
+  if (!/^[a-z0-9_]{3,20}$/.test(cleanUsername))
+    return NextResponse.json({ error: "Username: 3–20 chars, lowercase letters/numbers/underscores" }, { status: 400 });
   if (password.length < 8)
     return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
   const normalizedPhone = normalizePhone(phone);
@@ -40,18 +41,18 @@ export async function POST(req: NextRequest) {
   if (!(await emailDomainIsReal(cleanEmail)))
     return NextResponse.json({ error: "That email address doesn't look real — check for typos." }, { status: 400 });
 
-  const exists = await prisma.user.findFirst({ where: { OR: [{ email: cleanEmail }, { username }] } });
+  const exists = await prisma.user.findFirst({ where: { OR: [{ email: cleanEmail }, { username: cleanUsername }] } });
   if (exists) return NextResponse.json({ error: "Email or username already taken" }, { status: 409 });
 
   const hash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
-    data: { username, email: cleanEmail, password: hash, phone: normalizedPhone },
+    data: { username: cleanUsername, email: cleanEmail, password: hash, phone: normalizedPhone },
   });
 
   // Send the verification email — non-blocking: registration still succeeds if email fails.
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
-    await sendVerificationEmail({ userId: user.id, username, email: cleanEmail, appUrl });
+    await sendVerificationEmail({ userId: user.id, username: cleanUsername, email: cleanEmail, appUrl });
   } catch { /* ignore email errors */ }
 
   return NextResponse.json({ id: user.id, username: user.username });

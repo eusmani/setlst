@@ -22,7 +22,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!rateLimit(`login:${id.toLowerCase()}`, 10, 15 * 60 * 1000).ok) return null;
         // Accept either an email or a username.
         const user = await prisma.user.findFirst({
-          where: { OR: [{ email: id.toLowerCase() }, { username: id }] },
+          where: { OR: [{ email: id.toLowerCase() }, { username: id.toLowerCase() }] },
         });
         if (!user) return null;
         const ok = await bcrypt.compare(credentials.password as string, user.password);
