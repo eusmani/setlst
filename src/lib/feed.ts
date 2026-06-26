@@ -1,16 +1,16 @@
 import { prisma } from "@/lib/prisma";
 
-// Friends' Activity feed: a user's own + followed users' reviews (most recent
-// first); for logged-out visitors, the most recent reviews site-wide.
-export async function getFeed(userId?: string, take = 20) {
-  const include = {
-    user: { select: { id: true, username: true, avatar: true } },
-    album: true,
-    likes: { select: { value: true, userId: true } },
-  } as const;
+const feedInclude = {
+  user: { select: { id: true, username: true, avatar: true } },
+  album: true,
+  likes: { select: { value: true, userId: true } },
+} as const;
 
+// Home feed: a user's own + followed users' reviews (most recent first); for
+// logged-out visitors, the most recent reviews site-wide.
+export async function getFeed(userId?: string, take = 20) {
   if (!userId) {
-    return prisma.review.findMany({ include, orderBy: { createdAt: "desc" }, take });
+    return prisma.review.findMany({ include: feedInclude, orderBy: { createdAt: "desc" }, take });
   }
   const followed = await prisma.follow.findMany({
     where: { followerId: userId },
@@ -19,7 +19,33 @@ export async function getFeed(userId?: string, take = 20) {
   const ids = [userId, ...followed.map((f) => f.followingId)];
   return prisma.review.findMany({
     where: { userId: { in: ids } },
-    include,
+    include: feedInclude,
+    orderBy: { createdAt: "desc" },
+    take,
+  });
+}
+
+// Reviews from people the user follows (excluding their own).
+export async function getFriendsFeed(userId: string, take = 30) {
+  const followed = await prisma.follow.findMany({
+    where: { followerId: userId },
+    select: { followingId: true },
+  });
+  const ids = followed.map((f) => f.followingId);
+  if (ids.length === 0) return [];
+  return prisma.review.findMany({
+    where: { userId: { in: ids } },
+    include: feedInclude,
+    orderBy: { createdAt: "desc" },
+    take,
+  });
+}
+
+// A single user's own reviews.
+export async function getUserFeed(userId: string, take = 30) {
+  return prisma.review.findMany({
+    where: { userId },
+    include: feedInclude,
     orderBy: { createdAt: "desc" },
     take,
   });
