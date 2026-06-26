@@ -18,6 +18,7 @@ export default function TrendingAlbums({
   showSeeAll = true,
   seeAllHref = "/charts",
   albums,
+  endpoint = "/api/trending",
   fallback = null,
   fallbackToPopular = false,
   slider = false,
@@ -27,7 +28,8 @@ export default function TrendingAlbums({
   heading?: string;
   showSeeAll?: boolean;
   seeAllHref?: string; // where the "See more" link points
-  albums?: TrendingRow[]; // when provided, render these instead of fetching /api/trending
+  albums?: TrendingRow[]; // when provided, render these instead of fetching
+  endpoint?: string; // API to fetch the album list from (default /api/trending)
   fallback?: React.ReactNode;
   fallbackToPopular?: boolean; // when there's no activity yet, show a popular sample under the same heading
   slider?: boolean; // horizontal sliding bar (3 visible at a time)
@@ -52,11 +54,11 @@ export default function TrendingAlbums({
 
   useEffect(() => {
     if (albums) return; // caller supplied the albums directly
-    fetch("/api/trending")
+    fetch(endpoint)
       .then((r) => r.json())
       .then((d) => setRows(Array.isArray(d) ? d : []))
       .catch(() => setRows([]));
-  }, [albums]);
+  }, [albums, endpoint]);
 
   const display: TrendingRow[] =
     rows && rows.length === 0 && fallbackToPopular

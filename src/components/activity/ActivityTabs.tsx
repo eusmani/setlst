@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import ReviewCard, { ReviewData } from "@/components/review/ReviewCard";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
@@ -40,6 +40,18 @@ function ReviewList({ feed, isLoggedIn }: { feed: ReviewData[]; isLoggedIn: bool
 export default function ActivityTabs({ friendsFeed, myFeed, isLoggedIn }: Props) {
   // No tab is open until the user clicks one.
   const [tab, setTab] = useState<Tab | null>(null);
+
+  // Albums your friends have recently reviewed (favorites bubble up first), de-duped.
+  const friendsAlbums = useMemo(() => {
+    const seen = new Set<string>();
+    return [...friendsFeed]
+      .sort((a, b) => (b.rating - a.rating) || (b.createdAt < a.createdAt ? -1 : 1))
+      .filter((r) => (seen.has(r.album.spotifyId) ? false : (seen.add(r.album.spotifyId), true)))
+      .map((r) => ({
+        spotifyId: r.album.spotifyId, title: r.album.title,
+        artist: r.album.artist, artwork: r.album.artwork, year: null,
+      }));
+  }, [friendsFeed]);
 
   return (
     <div>
@@ -93,13 +105,29 @@ export default function ActivityTabs({ friendsFeed, myFeed, isLoggedIn }: Props)
 
       {/* Trending */}
       {tab === "trending" && (
-        <TrendingAlbums
-          heading="Most popular albums reviewed"
-          limit={12}
-          slider
-          showSeeAll
-          emptyMessage="No trending albums yet — review and like albums to fill this out."
-        />
+        <div className="space-y-7">
+          <TrendingAlbums
+            heading="Most popular albums reviewed"
+            limit={12}
+            slider
+            showSeeAll
+            emptyMessage="No trending albums yet — review and like albums to fill this out."
+          />
+          <TrendingAlbums
+            heading="Popular with your friends"
+            albums={friendsAlbums}
+            limit={12}
+            slider
+            emptyMessage="Follow friends and their favorites will show up here."
+          />
+          <TrendingAlbums
+            heading="New & hot — fresh releases"
+            endpoint="/api/hot-albums"
+            limit={12}
+            slider
+            emptyMessage="Couldn't load new releases right now."
+          />
+        </div>
       )}
     </div>
   );
