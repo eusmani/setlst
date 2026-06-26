@@ -10,11 +10,15 @@ const config: CapacitorConfig = {
   appId: "app.setlst.mobile",
   appName: "SETLST",
   webDir: "mobile-shell",
+  // Dark native background so the iPhone safe areas (notch / home indicator)
+  // match the app instead of showing white borders.
+  backgroundColor: "#111111",
   server: {
     url: "https://reruns.vercel.app",
   },
   ios: {
-    contentInset: "always",
+    contentInset: "never",
+    backgroundColor: "#111111",
   },
 };
 

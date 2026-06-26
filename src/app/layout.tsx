@@ -36,6 +36,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#111111",
+  viewportFit: "cover", // extend into the iPhone safe areas (edge-to-edge, no borders)
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -54,7 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#111111] text-[#f0f0f0] overflow-x-clip pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
+      <body className="min-h-screen flex flex-col bg-[#111111] text-[#f0f0f0] overflow-x-clip pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
         <Providers>
           <RegisterSW />
           <NativeBridge />
