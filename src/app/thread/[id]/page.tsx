@@ -47,7 +47,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     album: { spotifyId: thread.albumSpotifyId, title: thread.albumTitle, artist: thread.albumArtist, artwork: thread.albumArtwork },
     user: thread.user,
     replies: thread.replies.map((r) => ({
-      id: r.id, body: r.body, createdAt: r.createdAt.toISOString(), user: r.user,
+      id: r.id, body: r.body, createdAt: r.createdAt.toISOString(), user: r.user, parentId: r.parentId,
       likeCount: r.votes.filter((v) => v.value === 1).length,
       dislikeCount: r.votes.filter((v) => v.value === -1).length,
       myVote: viewerId ? (r.votes.find((v) => v.userId === viewerId)?.value ?? 0) : 0,

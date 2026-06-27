@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { threadId, body } = await req.json();
+  const { threadId, body, parentId } = await req.json();
   const b = String(body ?? "").trim();
   if (!threadId || !b) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   if (b.length > 5000) return NextResponse.json({ error: "Reply too long" }, { status: 400 });
@@ -15,8 +15,15 @@ export async function POST(req: NextRequest) {
   const thread = await prisma.thread.findUnique({ where: { id: threadId }, select: { id: true } });
   if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
 
+  // Validate the parent reply belongs to this thread (reply-to-reply).
+  let parent: string | null = null;
+  if (parentId) {
+    const p = await prisma.threadReply.findUnique({ where: { id: parentId }, select: { threadId: true } });
+    if (p && p.threadId === threadId) parent = parentId;
+  }
+
   const reply = await prisma.threadReply.create({
-    data: { threadId, body: b, userId: session.user.id },
+    data: { threadId, body: b, userId: session.user.id, parentId: parent },
     include: { user: { select: { id: true, username: true, avatar: true } } },
   });
   return NextResponse.json(reply);

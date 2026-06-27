@@ -275,6 +275,7 @@ model ThreadReply {
   id        String   @id @default(cuid())
   body      String
   createdAt DateTime @default(now())
+  parentId  String?  // reply-to-reply (nested comments); null = top-level
 
   threadId String
   thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
@@ -285,6 +286,7 @@ model ThreadReply {
   votes  ReplyVote[]
 
   @@index([threadId])
+  @@index([parentId])
 }
 
 model ReplyVote {
