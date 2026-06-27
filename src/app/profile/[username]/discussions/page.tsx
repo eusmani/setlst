@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Avatar from "@/components/ui/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function UserDiscussionsPage({ params }: { params: Promise<
   const threads = await prisma.thread.findMany({
     where: { OR: [{ userId: u.id }, { id: { in: ids } }] },
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { replies: true } } },
+    include: { user: { select: { username: true, avatar: true } }, _count: { select: { replies: true } } },
   });
 
   return (
@@ -41,8 +42,11 @@ export default async function UserDiscussionsPage({ params }: { params: Promise<
                 <img src={t.albumArtwork} alt="" className="w-14 h-14 rounded object-cover shrink-0" />
               )}
               <div className="min-w-0 flex-1">
-                <span className="text-[9px] uppercase tracking-wide text-[#c4a832]">{t.userId === u.id ? "Started" : "Replied"}</span>
-                <p className="text-base text-[#f0f0f0] group-hover:text-[#c4a832] transition-colors leading-snug mt-0.5">{t.title}</p>
+                <div className="flex items-center gap-1.5">
+                  <Avatar username={t.user.username} avatar={t.user.avatar} size={18} />
+                  <span className="text-xs text-[#a0a0a0] truncate">{t.user.username}</span>
+                </div>
+                <p className="text-base text-[#f0f0f0] group-hover:text-[#c4a832] transition-colors leading-snug mt-1">{t.title}</p>
                 <p className="text-sm text-[#a0a0a0] line-clamp-3 mt-1 leading-relaxed">{t.body}</p>
                 <div className="flex items-center gap-2 mt-2 text-[11px] text-[#6b6b6b]">
                   <span className="truncate">{t.albumTitle} · {t.albumArtist}</span>
