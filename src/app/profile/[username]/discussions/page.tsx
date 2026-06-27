@@ -42,9 +42,9 @@ export default async function UserDiscussionsPage({ params }: { params: Promise<
                 <img src={t.albumArtwork} alt="" className="w-14 h-14 rounded object-cover shrink-0" />
               )}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <Avatar username={t.user.username} avatar={t.user.avatar} size={18} />
-                  <span className="text-xs text-[#a0a0a0] truncate">{t.user.username}</span>
+                <div className="flex items-center gap-2">
+                  <Avatar username={t.user.username} avatar={t.user.avatar} size={24} />
+                  <span className="text-sm text-[#a0a0a0] truncate">{t.user.username}</span>
                 </div>
                 <p className="text-base text-[#f0f0f0] group-hover:text-[#c4a832] transition-colors leading-snug mt-1">{t.title}</p>
                 <p className="text-sm text-[#a0a0a0] line-clamp-3 mt-1 leading-relaxed">{t.body}</p>

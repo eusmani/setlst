@@ -190,7 +190,7 @@ export default async function ProfilePage({
 
       {/* Reviews */}
       <div id="reviews" className="scroll-mt-24 flex items-center gap-3 mb-4">
-        <h2 className="text-sm text-[#a0a0a0] uppercase tracking-[0.15em]">
+        <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em]">
           Reviews{shownType ? ` · ${shownType === "ep" ? "EPs" : shownType === "single" ? "Singles" : "Albums"}` : ""}
         </h2>
         {shownType && (
@@ -227,7 +227,7 @@ export default async function ProfilePage({
       )}
 
       {/* Activity / history */}
-      <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mt-10 mb-2">Activity</h2>
+      <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mt-10 mb-2">Activity</h2>
       <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg divide-y divide-[#1f1f1f]">
         {activity.map(({ label, val, href }) => (
           <Link

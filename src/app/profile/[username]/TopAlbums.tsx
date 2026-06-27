@@ -92,7 +92,7 @@ export default function TopAlbums({ initial, isOwner }: Props) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em]">Favorite Albums</h2>
+        <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em]">Favorite Albums</h2>
         {isOwner && !editing && (
           <button onClick={() => { setDraft(albums); setEditing(true); }}
             className="text-[10px] text-[#6b6b6b] hover:text-[#c4a832] transition-colors">

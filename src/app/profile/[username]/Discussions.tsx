@@ -41,9 +41,9 @@ export default function Discussions({ username, isOwner }: { username: string; i
             {threads.slice(0, 3).map((t) => (
               <Link key={t.id} href={`/thread/${t.id}`}
                 className="flex flex-col bg-[#1a1a1a] border border-[#1f1f1f] hover:border-[#2e2e2e] rounded-xl p-3 transition-colors group min-h-[96px]">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <Avatar username={t.user.username} avatar={t.user.avatar} size={16} />
-                  <span className="text-[11px] text-[#a0a0a0] truncate">{t.user.username}</span>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Avatar username={t.user.username} avatar={t.user.avatar} size={22} />
+                  <span className="text-sm text-[#a0a0a0] truncate">{t.user.username}</span>
                 </div>
                 <p className="text-sm text-[#f0f0f0] line-clamp-2 group-hover:text-[#c4a832] transition-colors leading-snug">{t.title}</p>
                 <p className="text-[11px] text-[#6b6b6b] truncate mt-auto pt-1">{t.albumTitle}</p>
