@@ -37,7 +37,7 @@ export default function MobileActivitySection({ heading, feed, href, empty }: Pr
                 aria-label="See all reviews"
                 className="flex items-center gap-1.5 text-xs text-[#a0a0a0] hover:text-[#c4a832] border border-[#2e2e2e] hover:border-[#c4a832] rounded-full px-4 py-2 transition-colors"
               >
-                Show all {feed.length}
+                Show all
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                   strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 6 15 12 9 18" />
