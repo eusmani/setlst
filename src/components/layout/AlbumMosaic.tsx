@@ -35,8 +35,8 @@ export const ARTWORKS = [
 ];
 
 // Tile the cover set enough times to cover the whole backdrop even on narrow
-// phones (1500px tall ÷ ~72px per cover ≈ 21 rows of 5). Same URLs repeat, so
-// the browser caches them — no extra network. Multiple of 5 → always full rows.
+// phones (4 per row on mobile, 5 at sm+). Same URLs repeat, so the browser
+// caches them — no extra network. Multiple of 4 and 5 → always full rows.
 const TILE_COUNT = 120;
 const tiled = (offset = 0) =>
   Array.from({ length: TILE_COUNT }, (_, i) => ARTWORKS[(i + offset) % ARTWORKS.length]);
@@ -80,8 +80,7 @@ export default function AlbumMosaic() {
             key={i}
             src={src}
             alt=""
-            className="object-cover"
-            style={{ width: "20%", aspectRatio: "1" }}
+            className="object-cover aspect-square w-1/4 sm:w-1/5"
           />
         ))}
       </div>
