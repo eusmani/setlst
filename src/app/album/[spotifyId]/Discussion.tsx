@@ -25,6 +25,11 @@ export default function Discussion({ album, isLoggedIn }: { album: Album; isLogg
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const composeHref =
+    `/thread/new?album=${encodeURIComponent(album.spotifyId)}` +
+    `&title=${encodeURIComponent(album.title)}&artist=${encodeURIComponent(album.artist)}` +
+    (album.artwork ? `&artwork=${encodeURIComponent(album.artwork)}` : "");
+
   useEffect(() => {
     fetch(`/api/threads?album=${encodeURIComponent(album.spotifyId)}`)
       .then((r) => r.json())
@@ -56,14 +61,21 @@ export default function Discussion({ album, isLoggedIn }: { album: Album; isLogg
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em]">Discussion</h2>
         {isLoggedIn && (
-          <button onClick={() => setComposing((c) => !c)} className="text-xs text-[#c4a832] hover:underline">
-            {composing ? "Cancel" : "Start a discussion"}
-          </button>
+          <>
+            {/* Mobile: open a fullscreen composer screen */}
+            <Link href={composeHref} className="sm:hidden text-xs text-[#c4a832] hover:underline">
+              Start a discussion
+            </Link>
+            {/* Desktop: inline composer */}
+            <button onClick={() => setComposing((c) => !c)} className="hidden sm:inline text-xs text-[#c4a832] hover:underline">
+              {composing ? "Cancel" : "Start a discussion"}
+            </button>
+          </>
         )}
       </div>
 
       {composing && (
-        <div className="mb-4 space-y-2">
+        <div className="mb-4 space-y-2 hidden sm:block">
           <input
             value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140}
             placeholder="Discussion title"
