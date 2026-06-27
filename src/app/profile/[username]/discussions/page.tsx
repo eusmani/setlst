@@ -33,14 +33,22 @@ export default async function UserDiscussionsPage({ params }: { params: Promise<
           <p className="text-sm">No discussions yet.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="space-y-3">
           {threads.map((t) => (
             <Link key={t.id} href={`/thread/${t.id}`}
-              className="flex flex-col bg-[#1a1a1a] border border-[#1f1f1f] hover:border-[#2e2e2e] rounded-xl p-3 transition-colors group min-h-[96px]">
-              <span className="text-[9px] uppercase tracking-wide text-[#c4a832] mb-1">{t.userId === u.id ? "Started" : "Replied"}</span>
-              <p className="text-sm text-[#f0f0f0] line-clamp-2 group-hover:text-[#c4a832] transition-colors leading-snug">{t.title}</p>
-              <p className="text-[11px] text-[#6b6b6b] truncate mt-auto pt-1">{t.albumTitle}</p>
-              <p className="text-[11px] text-[#6b6b6b]">{t._count.replies} {t._count.replies === 1 ? "reply" : "replies"}</p>
+              className="flex gap-3 bg-[#1a1a1a] border border-[#1f1f1f] hover:border-[#2e2e2e] rounded-xl p-4 transition-colors group">
+              {t.albumArtwork && (
+                <img src={t.albumArtwork} alt="" className="w-14 h-14 rounded object-cover shrink-0" />
+              )}
+              <div className="min-w-0 flex-1">
+                <span className="text-[9px] uppercase tracking-wide text-[#c4a832]">{t.userId === u.id ? "Started" : "Replied"}</span>
+                <p className="text-base text-[#f0f0f0] group-hover:text-[#c4a832] transition-colors leading-snug mt-0.5">{t.title}</p>
+                <p className="text-sm text-[#a0a0a0] line-clamp-3 mt-1 leading-relaxed">{t.body}</p>
+                <div className="flex items-center gap-2 mt-2 text-[11px] text-[#6b6b6b]">
+                  <span className="truncate">{t.albumTitle} · {t.albumArtist}</span>
+                  <span>· {t._count.replies} {t._count.replies === 1 ? "reply" : "replies"}</span>
+                </div>
+              </div>
             </Link>
           ))}
         </div>
