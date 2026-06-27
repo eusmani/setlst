@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
 
 interface UserLite { id: string; username: string; avatar: string | null }
-interface Reply { id: string; body: string; createdAt: string; user: UserLite }
+interface Reply { id: string; body: string; createdAt: string; user: UserLite; likeCount: number; dislikeCount: number; myVote: number }
 interface ThreadData {
   id: string;
   title: string;
@@ -76,12 +76,24 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
       body: JSON.stringify({ threadId: thread.id, body: text }),
     });
     setPosting(false);
-    if (r.ok) { const reply = await r.json(); setReplies((rs) => [...rs, reply]); setText(""); }
+    if (r.ok) { const reply = await r.json(); setReplies((rs) => [...rs, { ...reply, likeCount: 0, dislikeCount: 0, myVote: 0 }]); setText(""); }
   }
 
   async function removeReply(id: string) {
     setReplies((rs) => rs.filter((x) => x.id !== id));
     await fetch(`/api/threads/replies?id=${id}`, { method: "DELETE" });
+  }
+
+  async function voteReply(replyId: string, value: 1 | -1) {
+    if (!isLoggedIn) { router.push("/login"); return; }
+    const r = await fetch("/api/threads/replies/vote", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ replyId, value }),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      setReplies((rs) => rs.map((x) => x.id === replyId ? { ...x, likeCount: d.likeCount, dislikeCount: d.dislikeCount, myVote: d.myVote } : x));
+    }
   }
 
   async function deleteThread() {
@@ -185,6 +197,18 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
               )}
             </div>
             <p className="text-sm text-[#e8e8e8] whitespace-pre-wrap leading-relaxed">{r.body}</p>
+            <div className="flex items-center gap-3 mt-2">
+              <button onClick={() => voteReply(r.id, 1)}
+                className={`flex items-center gap-1 text-[11px] transition-colors ${r.myVote === 1 ? "text-[#c4a832]" : "text-[#6b6b6b] hover:text-[#a0a0a0]"}`}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={r.myVote === 1 ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8"><path d="M7 10v12M15 5.88L14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7" /></svg>
+                {r.likeCount > 0 && r.likeCount}
+              </button>
+              <button onClick={() => voteReply(r.id, -1)}
+                className={`flex items-center gap-1 text-[11px] transition-colors ${r.myVote === -1 ? "text-red-400" : "text-[#6b6b6b] hover:text-[#a0a0a0]"}`}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={r.myVote === -1 ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8"><path d="M17 14V2M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17" /></svg>
+                {r.dislikeCount > 0 && r.dislikeCount}
+              </button>
+            </div>
           </div>
         ))}
         {replies.length === 0 && <p className="text-xs text-[#6b6b6b]">No replies yet — start the conversation.</p>}

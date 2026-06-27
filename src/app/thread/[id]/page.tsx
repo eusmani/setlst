@@ -16,7 +16,10 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
       user: { select: { id: true, username: true, avatar: true } },
       replies: {
         orderBy: { createdAt: "asc" },
-        include: { user: { select: { id: true, username: true, avatar: true } } },
+        include: {
+          user: { select: { id: true, username: true, avatar: true } },
+          votes: { select: { value: true, userId: true } },
+        },
       },
     },
   });
@@ -45,6 +48,9 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     user: thread.user,
     replies: thread.replies.map((r) => ({
       id: r.id, body: r.body, createdAt: r.createdAt.toISOString(), user: r.user,
+      likeCount: r.votes.filter((v) => v.value === 1).length,
+      dislikeCount: r.votes.filter((v) => v.value === -1).length,
+      myVote: viewerId ? (r.votes.find((v) => v.userId === viewerId)?.value ?? 0) : 0,
     })),
     likeCount,
     dislikeCount,

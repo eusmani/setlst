@@ -28,6 +28,7 @@ model User {
   threads       Thread[]
   threadReplies ThreadReply[]
   threadVotes    ThreadVote[]
+  replyVotes     ReplyVote[]
   sharesSent     ThreadShare[] @relation("sharesSent")
   sharesReceived ThreadShare[] @relation("sharesReceived")
   comments     Comment[]
@@ -281,5 +282,18 @@ model ThreadReply {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  votes  ReplyVote[]
+
   @@index([threadId])
+}
+
+model ReplyVote {
+  id      String @id @default(cuid())
+  value   Int    @default(1) // 1 = like, -1 = dislike
+  userId  String
+  replyId String
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reply   ThreadReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, replyId])
 }
