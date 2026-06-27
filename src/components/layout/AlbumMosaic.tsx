@@ -34,8 +34,20 @@ export const ARTWORKS = [
   "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/36/86/ec/3686ec99-dec4-0a01-8b74-2d8a9a0263a7/12UMGIM52988.rgb.jpg/600x600bb.jpg", // good kid, m.A.A.d city — Kendrick Lamar
 ];
 
+const COLS = 5; // images are 20% wide → 5 per row
+
 export default function AlbumMosaic() {
   const [fade, setFade] = useState(1);
+  const [display, setDisplay] = useState<string[]>(ARTWORKS);
+
+  // Fill out the last row with random albums so it's never a partial row.
+  // Done after mount (not during render) to avoid a hydration mismatch.
+  useEffect(() => {
+    const pad = (COLS - (ARTWORKS.length % COLS)) % COLS;
+    if (pad === 0) return;
+    const extra = Array.from({ length: pad }, () => ARTWORKS[Math.floor(Math.random() * ARTWORKS.length)]);
+    setDisplay([...ARTWORKS, ...extra]);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -56,7 +68,7 @@ export default function AlbumMosaic() {
     >
       {/* Album grid */}
       <div className="flex flex-wrap gap-0 opacity-50">
-        {ARTWORKS.map((src, i) => (
+        {display.map((src, i) => (
           <img
             key={i}
             src={src}
