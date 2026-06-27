@@ -148,7 +148,7 @@ export default async function HomePage() {
               />
             </div>
             <div>
-              <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
+              <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
               {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. */}
               <HomeFeed feed={session ? friendsFeed : displayFeed} isLoggedIn={!!session} />
             </div>

@@ -143,11 +143,9 @@ html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c160c; }
 }
 
 /* Section headers (POPULAR THIS WEEK, YOUR ACTIVITY, FRIENDS' ACTIVITY,
-   BROWSE ALL SUBGENRES, etc.) — Circular Bold (Studio Brunner). Circular is a
-   licensed font: request it first, then fall back to a close geometric sans
-   (Plus Jakarta Sans, already loaded) so it looks Circular-like without it. */
+   BROWSE ALL SUBGENRES, etc.) — same font as the "Welcome back" heading
+   (Plus Jakarta Sans, bold). Size is bumped per-header below. */
 [class*="uppercase"][class*="tracking-["] {
-  font-family: "Circular Std", "CircularStd", Circular, "Studio Brunner", var(--font-jakarta), system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 0.875rem; /* bigger than the original 10–12px labels */
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-weight: 700;
 }

@@ -17,7 +17,7 @@ export default function MobileActivitySection({ heading, feed, href, empty }: Pr
 
   return (
     <section>
-      <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">{heading}</h2>
+      <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">{heading}</h2>
 
       {feed.length === 0 ? (
         <div className="py-12 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">

@@ -155,7 +155,7 @@ export default function SearchPage() {
       <div className="mb-8">
         <button
           onClick={() => setShowSubgenres((s) => !s)}
-          className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors flex items-center gap-1"
+          className="text-xl uppercase tracking-[0.15em] text-[#a0a0a0] hover:text-[#c4a832] transition-colors flex items-center gap-1.5"
         >
           {showSubgenres ? "Hide subgenres ↑" : "Browse all subgenres ↓"}
         </button>
@@ -163,7 +163,7 @@ export default function SearchPage() {
           <div className="mt-4 space-y-4">
             {Object.entries(GENRE_TAXONOMY).map(([parent, subs]) => (
               <div key={parent}>
-                <p className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-2">{parent}</p>
+                <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-2">{parent}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {subs.map((s) => (
                     <Link
@@ -203,7 +203,7 @@ export default function SearchPage() {
       {/* People results — add friends right from search */}
       {!loading && !activeGenre && searched && people.length > 0 && (
         <div className="mb-7">
-          <p className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">People</p>
+          <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">People</p>
           <div className="space-y-2">
             {people.map((p) => (
               <div key={p.id} className="flex items-center gap-3 p-3 bg-[#1a1a1a] border border-[#1f1f1f] hover:border-[#2e2e2e] rounded-xl transition-colors">
@@ -224,7 +224,7 @@ export default function SearchPage() {
       {/* Genre browse results */}
       {!loading && showGenreResults && (
         <>
-          <p className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-4">{activeGenre}</p>
+          <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-4">{activeGenre}</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {(showAll ? genreResults : genreResults.slice(0, 10)).map((a) => (
               <AlbumCard key={a.id} spotifyId={a.id} title={a.title} artist={a.artist} artwork={a.artwork} year={a.year} />
@@ -255,7 +255,7 @@ export default function SearchPage() {
             if (artists.length === 0) return null;
             return (
               <div className="mb-7">
-                <p className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">Artists</p>
+                <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">Artists</p>
                 <div className="flex gap-4 overflow-x-auto pb-1">
                   {artists.map(([name, art]) => (
                     <Link

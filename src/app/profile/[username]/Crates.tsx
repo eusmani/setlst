@@ -54,7 +54,7 @@ export default function Crates({ username, isOwner }: { username: string; isOwne
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm text-[#a0a0a0] uppercase tracking-[0.15em]">{isOwner ? "Your crates" : "Crates"}</h2>
+        <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em]">{isOwner ? "Your crates" : "Crates"}</h2>
         {isOwner && (
           <button onClick={createCrate} className="text-xs text-[#c4a832] hover:underline">+ New crate</button>
         )}
