@@ -12,8 +12,7 @@ export default async function ActivityPage({
   const session = await auth();
   const userId = session?.user?.id;
   const { tab } = await searchParams;
-  const initialTab =
-    tab === "you" || tab === "friends" || tab === "trending" || tab === "discussions" || tab === "replies" ? tab : null;
+  const initialTab = tab === "you" || tab === "friends" || tab === "trending" ? tab : null;
 
   let friendsActivity: ActivityItem[] = [];
   let myActivity: ActivityItem[] = [];

@@ -74,9 +74,12 @@ export default async function ProfilePage({
     (acc, r) => { acc[releaseType(r.album.title)]++; return acc; },
     { album: 0, ep: 0, single: 0 } as Record<"album" | "ep" | "single", number>
   );
-  const [wishlistCount, commentLikesReceived] = await Promise.all([
+  const [wishlistCount, commentLikesReceived, discussionsCount, threadReplyCount, commentCount] = await Promise.all([
     prisma.savedAlbum.count({ where: { userId: user.id } }),
     prisma.commentLike.count({ where: { comment: { userId: user.id } } }),
+    prisma.thread.count({ where: { userId: user.id } }),
+    prisma.threadReply.count({ where: { userId: user.id } }),
+    prisma.comment.count({ where: { userId: user.id } }),
   ]);
 
   const base = `/profile/${user.username}`;
@@ -84,6 +87,8 @@ export default async function ProfilePage({
     { label: "Albums reviewed", val: reviewedCounts.album, href: `${base}/reviews?type=album` },
     { label: "EPs reviewed", val: reviewedCounts.ep, href: `${base}/reviews?type=ep` },
     { label: "Singles reviewed", val: reviewedCounts.single, href: `${base}/reviews?type=single` },
+    { label: "Discussions", val: discussionsCount, href: `${base}/discussions` },
+    { label: "Replies", val: threadReplyCount + commentCount, href: `${base}/discussions` },
     { label: "Listen list", val: wishlistCount, href: `${base}/wishlist` },
     { label: "Likes on comments", val: commentLikesReceived, href: `${base}/likes` },
   ];

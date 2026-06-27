@@ -5,7 +5,7 @@ import ActivityList from "@/components/activity/ActivityList";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
 import type { ActivityItem } from "@/lib/feed";
 
-type Tab = "friends" | "you" | "discussions" | "replies" | "trending";
+type Tab = "friends" | "you" | "trending";
 
 interface Props {
   friendsActivity: ActivityItem[];
@@ -17,8 +17,6 @@ interface Props {
 const TABS: { key: Tab; label: string }[] = [
   { key: "friends", label: "Friends" },
   { key: "you", label: "You" },
-  { key: "discussions", label: "Discussions" },
-  { key: "replies", label: "Replies" },
   { key: "trending", label: "Trending" },
 ];
 
@@ -55,14 +53,6 @@ export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, 
         artist: r.album.artist, artwork: r.album.artwork, year: null,
       }));
   }, [friendsActivity]);
-
-  // Combined you + friends activity, by type, for the Discussions / Replies tabs.
-  const combined = useMemo(
-    () => [...myActivity, ...friendsActivity].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
-    [myActivity, friendsActivity]
-  );
-  const discussionItems = useMemo(() => combined.filter((it) => it.kind === "thread"), [combined]);
-  const replyItems = useMemo(() => combined.filter((it) => it.kind === "reply" || it.kind === "comment"), [combined]);
 
   return (
     <div>
@@ -111,28 +101,6 @@ export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, 
           <EmptyState message="You haven't posted any activity yet." href="/search" cta="Find an album to review or discuss →" />
         ) : (
           <FeedList items={myActivity} isLoggedIn={isLoggedIn} />
-        )
-      )}
-
-      {/* Discussions — thread posts (you + friends) */}
-      {tab === "discussions" && (
-        !isLoggedIn ? (
-          <EmptyState message="Log in to see discussions." href="/login" cta="Sign in →" />
-        ) : discussionItems.length === 0 ? (
-          <EmptyState message="No discussions yet." href="/search" cta="Start one on any album →" />
-        ) : (
-          <FeedList items={discussionItems} isLoggedIn={isLoggedIn} />
-        )
-      )}
-
-      {/* Replies — discussion replies + album comments (you + friends) */}
-      {tab === "replies" && (
-        !isLoggedIn ? (
-          <EmptyState message="Log in to see replies." href="/login" cta="Sign in →" />
-        ) : replyItems.length === 0 ? (
-          <EmptyState message="No replies yet." href="/search" cta="Join a discussion →" />
-        ) : (
-          <FeedList items={replyItems} isLoggedIn={isLoggedIn} />
         )
       )}
 

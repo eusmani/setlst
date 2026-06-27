@@ -27,7 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!user) return null;
         const ok = await bcrypt.compare(credentials.password as string, user.password);
         if (!ok) return null;
-        return { id: user.id, email: user.email, name: user.username, avatar: user.avatar };
+        return { id: user.id, email: user.email, name: user.username };
       },
     }),
     // Passwordless recovery: sign in with a one-time code (sent via email/SMS by
@@ -75,23 +75,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         // Success: burn all codes for this user.
         await prisma.signInCode.deleteMany({ where: { userId: user.id } });
-        return { id: user.id, email: user.email, name: user.username, avatar: user.avatar };
+        return { id: user.id, email: user.email, name: user.username };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (user) { token.id = user.id; token.username = user.name; token.avatar = (user as { avatar?: string | null }).avatar ?? null; }
-      // Reflect username/avatar changes pushed via useSession().update({ ... }).
+      if (user) { token.id = user.id; token.username = user.name; }
+      // Reflect a username change pushed via useSession().update({ username }).
       if (trigger === "update" && session?.username) token.username = session.username;
-      if (trigger === "update" && session?.avatar !== undefined) token.avatar = session.avatar;
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
-        session.user.avatar = (token.avatar as string | null) ?? null;
+        // Avatar is a large data URL — load it from the DB here (computed per
+        // request, never stored in the JWT cookie) so the top-bar pfp is always
+        // current for everyone, including pre-existing sessions.
+        const u = await prisma.user.findUnique({ where: { id: token.id as string }, select: { avatar: true } });
+        session.user.avatar = u?.avatar ?? null;
       }
       return session;
     },
