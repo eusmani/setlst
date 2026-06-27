@@ -149,3 +149,10 @@ html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c160c; }
   font-family: var(--font-jakarta), system-ui, sans-serif;
   font-weight: 700;
 }
+/* The large section headers: white on dark mode, black on light (mono) mode. */
+[class*="text-xl"][class*="uppercase"][class*="tracking-["] {
+  color: #f0f0f0;
+}
+html.theme-mono [class*="text-xl"][class*="uppercase"][class*="tracking-["] {
+  color: #141414 !important;
+}
