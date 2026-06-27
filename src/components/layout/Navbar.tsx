@@ -149,9 +149,10 @@ export default function Navbar() {
                       </svg>
                       Profile
                     </Link>
+                    {/* Desktop only — on mobile the bottom-bar + button covers logging. */}
                     <Link
                       href="/search"
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
+                      className="hidden sm:flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
                       onClick={() => setUserOpen(false)}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
