@@ -14,7 +14,11 @@ interface ThreadData {
   album: { spotifyId: string; title: string; artist: string; artwork: string | null };
   user: UserLite;
   replies: Reply[];
+  likeCount: number;
+  dislikeCount: number;
+  myVote: number;
 }
+interface Friend { id: string; username: string; avatar: string | null }
 
 function fmt(d: string) {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -25,6 +29,43 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
   const [replies, setReplies] = useState<Reply[]>(thread.replies);
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
+
+  // Like / dislike
+  const [vote, setVote] = useState({ like: thread.likeCount, dislike: thread.dislikeCount, mine: thread.myVote });
+  async function castVote(value: 1 | -1) {
+    if (!isLoggedIn) { router.push("/login"); return; }
+    const r = await fetch("/api/threads/vote", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threadId: thread.id, value }),
+    });
+    if (r.ok) { const d = await r.json(); setVote({ like: d.likeCount, dislike: d.dislikeCount, mine: d.myVote }); }
+  }
+
+  // Share to friends
+  const [shareOpen, setShareOpen] = useState(false);
+  const [friends, setFriends] = useState<Friend[] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [sending, setSending] = useState(false);
+  const [sentCount, setSentCount] = useState(0);
+
+  function openShare() {
+    if (!isLoggedIn) { router.push("/login"); return; }
+    setShareOpen(true); setSentCount(0);
+    if (friends === null) fetch("/api/threads/share").then((r) => r.json()).then((d) => setFriends(Array.isArray(d) ? d : [])).catch(() => setFriends([]));
+  }
+  function toggleFriend(id: string) {
+    setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+  async function send() {
+    if (selected.size === 0) return;
+    setSending(true);
+    const r = await fetch("/api/threads/share", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threadId: thread.id, toUserIds: [...selected] }),
+    });
+    setSending(false);
+    if (r.ok) { setSentCount(selected.size); setSelected(new Set()); setTimeout(() => setShareOpen(false), 1000); }
+  }
 
   async function postReply() {
     if (!text.trim()) return;
@@ -67,7 +108,66 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
           <button onClick={deleteThread} className="ml-auto text-[#6b6b6b] hover:text-red-400 transition-colors">Delete</button>
         )}
       </div>
-      <p className="text-sm text-[#e8e8e8] whitespace-pre-wrap leading-relaxed mb-8">{thread.body}</p>
+      <p className="text-sm text-[#e8e8e8] whitespace-pre-wrap leading-relaxed mb-4">{thread.body}</p>
+
+      {/* Like / dislike / share */}
+      <div className="flex items-center gap-2 mb-8">
+        <button onClick={() => castVote(1)}
+          className={`flex items-center gap-1.5 text-xs border rounded-full px-3 py-1.5 transition-colors ${vote.mine === 1 ? "border-[#c4a832] text-[#c4a832]" : "border-[#2e2e2e] text-[#a0a0a0] hover:text-[#f0f0f0]"}`}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill={vote.mine === 1 ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8"><path d="M7 10v12M15 5.88L14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7" /></svg>
+          {vote.like}
+        </button>
+        <button onClick={() => castVote(-1)}
+          className={`flex items-center gap-1.5 text-xs border rounded-full px-3 py-1.5 transition-colors ${vote.mine === -1 ? "border-red-400 text-red-400" : "border-[#2e2e2e] text-[#a0a0a0] hover:text-[#f0f0f0]"}`}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill={vote.mine === -1 ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8"><path d="M17 14V2M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17" /></svg>
+          {vote.dislike}
+        </button>
+        <button onClick={openShare}
+          className="flex items-center gap-1.5 text-xs border border-[#2e2e2e] text-[#a0a0a0] hover:text-[#f0f0f0] rounded-full px-3 py-1.5 transition-colors ml-auto">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
+          Share
+        </button>
+      </div>
+
+      {/* Share modal */}
+      {shareOpen && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/70 px-4 py-8" onClick={() => setShareOpen(false)}>
+          <div className="w-full max-w-md bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm text-[#f0f0f0] font-semibold">Share with friends</h3>
+              <button onClick={() => setShareOpen(false)} className="text-[#6b6b6b] hover:text-[#f0f0f0]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></svg>
+              </button>
+            </div>
+            {sentCount > 0 ? (
+              <p className="text-sm text-[#c4a832] py-6 text-center">Sent to {sentCount} {sentCount === 1 ? "friend" : "friends"} ✓</p>
+            ) : friends === null ? (
+              <p className="text-xs text-[#6b6b6b] py-6 text-center">Loading…</p>
+            ) : friends.length === 0 ? (
+              <p className="text-xs text-[#6b6b6b] py-6 text-center">Follow people to share with them.</p>
+            ) : (
+              <>
+                <div className="max-h-64 overflow-y-auto -mx-1 mb-4">
+                  {friends.map((f) => (
+                    <button key={f.id} onClick={() => toggleFriend(f.id)}
+                      className="w-full flex items-center gap-2 px-1 py-2 hover:bg-[#222222] rounded-lg transition-colors">
+                      <Avatar username={f.username} avatar={f.avatar} size={28} />
+                      <span className="text-sm text-[#f0f0f0] flex-1 text-left truncate">{f.username}</span>
+                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center ${selected.has(f.id) ? "bg-[#c4a832] border-[#c4a832]" : "border-[#2e2e2e]"}`}>
+                        {selected.has(f.id) && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <button onClick={send} disabled={sending || selected.size === 0}
+                  className="w-full bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-40 text-[#111111] text-sm py-2.5 rounded-lg transition-colors">
+                  {sending ? "Sending…" : selected.size > 0 ? `Send to ${selected.size}` : "Select friends"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Replies */}
       <h2 className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">

@@ -68,7 +68,14 @@ export default function Navbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [userOpen, setUserOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Unread shared-discussion count for the inbox badge.
+  useEffect(() => {
+    if (!session) { setUnread(0); return; }
+    fetch("/api/inbox", { method: "POST" }).then((r) => r.json()).then((d) => setUnread(d.count ?? 0)).catch(() => {});
+  }, [session]);
 
   // Close the user dropdown when clicking anywhere outside it.
   useEffect(() => {
@@ -123,8 +130,11 @@ export default function Navbar() {
                 onClick={() => setUserOpen(!userOpen)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors"
               >
-                <div className="w-9 h-9 rounded-full bg-[#222222] border border-[#2e2e2e] flex items-center justify-center text-xs text-[#c4a832]">
-                  {session.user.username.slice(0, 2).toUpperCase()}
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full bg-[#222222] border border-[#2e2e2e] flex items-center justify-center text-xs text-[#c4a832]">
+                    {session.user.username.slice(0, 2).toUpperCase()}
+                  </div>
+                  {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c4a832] border border-[#111111]" />}
                 </div>
                 <span className="nav-username text-sm text-[#f0f0f0] hidden sm:block">{session.user.username}</span>
                 <svg className="text-[#6b6b6b] hidden sm:block" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
@@ -148,6 +158,17 @@ export default function Navbar() {
                         <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                       </svg>
                       Profile
+                    </Link>
+                    <Link
+                      href="/inbox"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
+                      onClick={() => { setUserOpen(false); setUnread(0); }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                      </svg>
+                      Inbox
+                      {unread > 0 && <span className="ml-auto text-[10px] bg-[#c4a832] text-[#111111] rounded-full px-1.5 py-0.5 font-bold">{unread}</span>}
                     </Link>
                     {/* Desktop only — on mobile the bottom-bar + button covers logging. */}
                     <Link

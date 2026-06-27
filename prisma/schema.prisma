@@ -27,6 +27,9 @@ model User {
   crates       Crate[]
   threads       Thread[]
   threadReplies ThreadReply[]
+  threadVotes    ThreadVote[]
+  sharesSent     ThreadShare[] @relation("sharesSent")
+  sharesReceived ThreadShare[] @relation("sharesReceived")
   comments     Comment[]
   commentLikes CommentLike[]
   followers    Follow[] @relation("following")
@@ -234,9 +237,37 @@ model Thread {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   replies ThreadReply[]
+  votes   ThreadVote[]
+  shares  ThreadShare[]
 
   @@index([albumSpotifyId])
   @@index([userId])
+}
+
+model ThreadVote {
+  id       String @id @default(cuid())
+  value    Int    @default(1) // 1 = like, -1 = dislike
+  userId   String
+  threadId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, threadId])
+}
+
+// A discussion shared from one user to another, in-app (shows in the recipient's inbox).
+model ThreadShare {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  read       Boolean  @default(false)
+  threadId   String
+  fromUserId String
+  toUserId   String
+  thread     Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  fromUser   User   @relation("sharesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User   @relation("sharesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@index([toUserId])
 }
 
 model ThreadReply {

@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function ThreadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
+  const viewerId = session?.user?.id;
 
   const thread = await prisma.thread.findUnique({
     where: { id },
@@ -29,6 +30,12 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     );
   }
 
+  const [likeCount, dislikeCount, myVoteRow] = await Promise.all([
+    prisma.threadVote.count({ where: { threadId: id, value: 1 } }),
+    prisma.threadVote.count({ where: { threadId: id, value: -1 } }),
+    viewerId ? prisma.threadVote.findUnique({ where: { userId_threadId: { userId: viewerId, threadId: id } } }) : null,
+  ]);
+
   const data = {
     id: thread.id,
     title: thread.title,
@@ -39,7 +46,10 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     replies: thread.replies.map((r) => ({
       id: r.id, body: r.body, createdAt: r.createdAt.toISOString(), user: r.user,
     })),
+    likeCount,
+    dislikeCount,
+    myVote: myVoteRow?.value ?? 0,
   };
 
-  return <ThreadView thread={data} currentUserId={session?.user?.id ?? null} isLoggedIn={!!session} />;
+  return <ThreadView thread={data} currentUserId={viewerId ?? null} isLoggedIn={!!session} />;
 }
