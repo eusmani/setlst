@@ -34,19 +34,26 @@ export const ARTWORKS = [
   "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/36/86/ec/3686ec99-dec4-0a01-8b74-2d8a9a0263a7/12UMGIM52988.rgb.jpg/600x600bb.jpg", // good kid, m.A.A.d city — Kendrick Lamar
 ];
 
-const COLS = 5; // images are 20% wide → 5 per row
+// Tile the cover set enough times to cover the whole backdrop even on narrow
+// phones (1500px tall ÷ ~72px per cover ≈ 21 rows of 5). Same URLs repeat, so
+// the browser caches them — no extra network. Multiple of 5 → always full rows.
+const TILE_COUNT = 120;
+const tiled = (offset = 0) =>
+  Array.from({ length: TILE_COUNT }, (_, i) => ARTWORKS[(i + offset) % ARTWORKS.length]);
 
 export default function AlbumMosaic() {
   const [fade, setFade] = useState(1);
-  const [display, setDisplay] = useState<string[]>(ARTWORKS);
+  const [display, setDisplay] = useState<string[]>(() => tiled());
 
-  // Fill out the last row with random albums so it's never a partial row.
-  // Done after mount (not during render) to avoid a hydration mismatch.
+  // Shuffle after mount so the tiling isn't an obvious repeating pattern.
+  // (Client-only → deterministic SSR render, no hydration mismatch.)
   useEffect(() => {
-    const pad = (COLS - (ARTWORKS.length % COLS)) % COLS;
-    if (pad === 0) return;
-    const extra = Array.from({ length: pad }, () => ARTWORKS[Math.floor(Math.random() * ARTWORKS.length)]);
-    setDisplay([...ARTWORKS, ...extra]);
+    const arr = tiled();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    setDisplay(arr);
   }, []);
 
   useEffect(() => {
