@@ -6,9 +6,11 @@ const userSelect = { id: true, username: true, avatar: true } as const;
 
 // GET /api/threads?album=<spotifyId>  → threads on an album (newest first).
 // GET /api/threads?id=<id>            → a single thread with replies.
+// GET /api/threads?user=<username>    → threads a user created or replied to.
 export async function GET(req: NextRequest) {
   const album = req.nextUrl.searchParams.get("album");
   const id = req.nextUrl.searchParams.get("id");
+  const username = req.nextUrl.searchParams.get("user");
 
   if (id) {
     const thread = await prisma.thread.findUnique({
@@ -28,6 +30,22 @@ export async function GET(req: NextRequest) {
       include: { user: { select: userSelect }, _count: { select: { replies: true } } },
     });
     return NextResponse.json(threads);
+  }
+
+  if (username) {
+    const u = await prisma.user.findUnique({ where: { username }, select: { id: true } });
+    if (!u) return NextResponse.json([]);
+    const repliedIds = await prisma.threadReply.findMany({
+      where: { userId: u.id }, select: { threadId: true },
+    });
+    const ids = [...new Set(repliedIds.map((r) => r.threadId))];
+    const threads = await prisma.thread.findMany({
+      where: { OR: [{ userId: u.id }, { id: { in: ids } }] },
+      orderBy: { createdAt: "desc" },
+      include: { user: { select: userSelect }, _count: { select: { replies: true } } },
+    });
+    // Flag whether this user authored each thread (vs. only replied).
+    return NextResponse.json(threads.map((t) => ({ ...t, authored: t.userId === u.id })));
   }
 
   return NextResponse.json([]);
