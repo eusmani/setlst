@@ -141,3 +141,12 @@ html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c160c; }
     font-size: 16px !important;
   }
 }
+
+/* Section headers (POPULAR THIS WEEK, YOUR ACTIVITY, FRIENDS' ACTIVITY,
+   BROWSE ALL SUBGENRES, etc.) — Circular Bold (Studio Brunner). Circular is a
+   licensed font: request it first, then fall back to a close geometric sans
+   (Plus Jakarta Sans, already loaded) so it looks Circular-like without it. */
+[class*="uppercase"][class*="tracking-["] {
+  font-family: "Circular Std", "CircularStd", Circular, "Studio Brunner", var(--font-jakarta), system-ui, sans-serif;
+  font-weight: 700;
+}
