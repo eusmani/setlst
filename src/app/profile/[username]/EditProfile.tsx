@@ -76,6 +76,8 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
     setSaving(false);
     if (!res.ok) { setErr(data.error ?? "Failed to save"); return; }
     setOpen(false);
+    // Push the new avatar to the session so the top-bar pfp updates immediately.
+    await update({ avatar });
     if (data.username && data.username !== username) {
       // Username changed: update the session token and move to the new profile URL.
       await update({ username: data.username });

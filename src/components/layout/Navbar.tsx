@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import Avatar from "@/components/ui/Avatar";
 
 const NAV = [
   {
@@ -131,9 +132,7 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors"
               >
                 <div className="relative">
-                  <div className="w-9 h-9 rounded-full bg-[#222222] border border-[#2e2e2e] flex items-center justify-center text-xs text-[#c4a832]">
-                    {session.user.username.slice(0, 2).toUpperCase()}
-                  </div>
+                  <Avatar username={session.user.username} avatar={session.user.avatar} size={36} />
                   {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c4a832] border border-[#111111]" />}
                 </div>
                 <span className="nav-username text-sm text-[#f0f0f0] hidden sm:block">{session.user.username}</span>

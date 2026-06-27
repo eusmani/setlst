@@ -115,17 +115,27 @@ export interface ReplyActivity {
   album: { spotifyId: string; title: string; artist: string; artwork: string | null };
 }
 
+// A comment on an album (treated as a reply to that album's reviews).
+export interface CommentActivity {
+  id: string;
+  body: string;
+  createdAt: string;
+  user: { id: string; username: string; avatar: string | null };
+  album: { spotifyId: string; title: string; artist: string; artwork: string | null };
+}
+
 export type ActivityItem =
   | { kind: "review"; createdAt: string; review: ReturnType<typeof toDisplayFeed>[number] }
   | { kind: "thread"; createdAt: string; thread: ThreadActivity }
-  | { kind: "reply"; createdAt: string; reply: ReplyActivity };
+  | { kind: "reply"; createdAt: string; reply: ReplyActivity }
+  | { kind: "comment"; createdAt: string; comment: CommentActivity };
 
 // Merge a set of users' reviews, discussion threads, and discussion replies into
 // one activity stream, most recent first. viewerId reflects like-votes on reviews.
 async function getActivity(userIds: string[] | null, viewerId: string | undefined, take: number): Promise<ActivityItem[]> {
   if (userIds && userIds.length === 0) return [];
   const where = userIds ? { userId: { in: userIds } } : {};
-  const [reviews, threads, replies] = await Promise.all([
+  const [reviews, threads, replies, comments] = await Promise.all([
     prisma.review.findMany({ where, include: feedInclude, orderBy: { createdAt: "desc" }, take }),
     prisma.thread.findMany({
       where,
@@ -142,7 +152,20 @@ async function getActivity(userIds: string[] | null, viewerId: string | undefine
         thread: { select: { id: true, title: true, albumSpotifyId: true, albumTitle: true, albumArtist: true, albumArtwork: true } },
       },
     }),
+    prisma.comment.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take,
+      include: { user: { select: { id: true, username: true, avatar: true } } },
+    }),
   ]);
+
+  // Comments only store the album's spotifyId — look up album metadata for context.
+  const albumIds = [...new Set(comments.map((c) => c.albumSpotifyId))];
+  const albums = albumIds.length
+    ? await prisma.album.findMany({ where: { spotifyId: { in: albumIds } }, select: { spotifyId: true, title: true, artist: true, artwork: true } })
+    : [];
+  const albumMap = new Map(albums.map((a) => [a.spotifyId, a]));
 
   const reviewItems: ActivityItem[] = toDisplayFeed(reviews, viewerId).map((r) => ({
     kind: "review", createdAt: r.createdAt, review: r,
@@ -167,8 +190,20 @@ async function getActivity(userIds: string[] | null, viewerId: string | undefine
       album: { spotifyId: r.thread.albumSpotifyId, title: r.thread.albumTitle, artist: r.thread.albumArtist, artwork: r.thread.albumArtwork ?? null },
     },
   }));
+  const commentItems: ActivityItem[] = comments.map((c) => {
+    const a = albumMap.get(c.albumSpotifyId);
+    return {
+      kind: "comment",
+      createdAt: c.createdAt.toISOString(),
+      comment: {
+        id: c.id, body: c.body, createdAt: c.createdAt.toISOString(),
+        user: c.user,
+        album: { spotifyId: c.albumSpotifyId, title: a?.title ?? "an album", artist: a?.artist ?? "", artwork: a?.artwork ?? null },
+      },
+    };
+  });
 
-  return [...reviewItems, ...threadItems, ...replyItems]
+  return [...reviewItems, ...threadItems, ...replyItems, ...commentItems]
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
     .slice(0, take);
 }
