@@ -44,34 +44,29 @@ export default function UpcomingBanner() {
   const onAlbums = pathname === "/search" || pathname.startsWith("/album");
   if (onAlbums || !release || dismissed) return null;
 
-  const date = new Date(release.releaseDate + "T00:00:00").toLocaleDateString("en-US", {
-    month: "short", day: "numeric", year: "numeric",
-  });
-
   return (
-    <div className="relative bg-[#1a1a1a] border-b border-[#2e2e2e] overflow-hidden">
-      <div className="relative z-10 max-w-4xl mx-auto px-5 py-2.5 flex items-center gap-3">
-        <span className="text-[10px] text-[#c4a832] uppercase tracking-widest shrink-0 hidden sm:block">
-          New Release
-        </span>
+    <div
+      className="relative bg-gradient-to-r from-[#1DB954]/20 via-[#0c0c0c] to-[#0c0c0c] border-b border-[#1DB954]/25 overflow-hidden"
+      style={{ fontFamily: "var(--font-jakarta), sans-serif" }}
+    >
+      <div className="relative z-10 max-w-4xl mx-auto px-5 py-2 flex items-center gap-3">
         {release.artwork && (
-          <img src={release.artwork} alt={release.title} width={32} height={32}
-            className="rounded w-8 h-8 object-cover shrink-0" />
+          <a href={release.spotifyUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
+            <img src={release.artwork} alt={release.title} width={40} height={40}
+              className="rounded w-10 h-10 object-cover ring-1 ring-white/10" />
+          </a>
         )}
-        <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-[#f0f0f0] truncate">
-            <span className="text-[#c4a832]">{release.artist}</span>
-            {" — "}
-            <a
-              href={release.spotifyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-[#1DB954] hover:underline transition-colors"
-            >
-              {release.title}
-            </a>
+        <div className="flex-1 min-w-0">
+          <span className="flex items-center gap-1.5 text-[9px] text-[#1DB954] font-bold uppercase tracking-[0.18em] mb-0.5">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 14.42a.62.62 0 0 1-.86.21c-2.35-1.44-5.3-1.76-8.79-.96a.62.62 0 1 1-.28-1.21c3.8-.87 7.07-.5 9.71 1.11.3.18.39.57.22.85zm1.23-2.74a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.17a.78.78 0 1 1-.45-1.49c3.63-1.1 8.15-.56 11.24 1.33.37.22.49.7.25 1.07zm.11-2.85C14.73 8.98 9.6 8.8 6.66 9.69a.93.93 0 1 1-.54-1.78c3.38-1.02 9.04-.82 12.61 1.29a.93.93 0 1 1-.95 1.6z" />
+            </svg>
+            New on Spotify
           </span>
-          <span className="text-[10px] text-[#6b6b6b] shrink-0">{date}</span>
+          <p className="text-sm text-white font-extrabold truncate leading-tight tracking-tight">
+            {release.title}
+            <span className="text-[#b3b3b3] font-semibold"> · {release.artist}</span>
+          </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <a
