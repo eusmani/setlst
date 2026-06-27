@@ -45,27 +45,15 @@ export default function AlbumMosaic() {
   const [fade, setFade] = useState(1);
   const [display, setDisplay] = useState<string[]>(() => tiled());
 
-  // After mount, pull a large set of *distinct* covers (Apple Music Top Albums)
-  // and fill the mural with albums beyond the curated set — so it isn't repeats.
+  // Shuffle after mount so the tiling isn't an obvious repeating pattern.
+  // (Client-only → deterministic SSR render, no hydration mismatch.)
   useEffect(() => {
-    let cancelled = false;
-    fetch("/api/mosaic-covers")
-      .then((r) => r.json())
-      .then((extra: string[]) => {
-        if (cancelled) return;
-        const existing = new Set(ARTWORKS);
-        const fresh = (Array.isArray(extra) ? extra : []).filter((u) => !existing.has(u));
-        const pool = [...ARTWORKS, ...fresh];
-        // shuffle the pool
-        for (let i = pool.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-        // fill TILE_COUNT slots — all distinct when the pool is large enough
-        setDisplay(Array.from({ length: TILE_COUNT }, (_, i) => pool[i % pool.length]));
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
+    const arr = tiled();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    setDisplay(arr);
   }, []);
 
   useEffect(() => {
