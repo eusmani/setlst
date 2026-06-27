@@ -106,22 +106,41 @@ export interface ThreadActivity {
   replyCount: number;
 }
 
+export interface ReplyActivity {
+  id: string;
+  body: string;
+  createdAt: string;
+  user: { id: string; username: string; avatar: string | null };
+  thread: { id: string; title: string };
+  album: { spotifyId: string; title: string; artist: string; artwork: string | null };
+}
+
 export type ActivityItem =
   | { kind: "review"; createdAt: string; review: ReturnType<typeof toDisplayFeed>[number] }
-  | { kind: "thread"; createdAt: string; thread: ThreadActivity };
+  | { kind: "thread"; createdAt: string; thread: ThreadActivity }
+  | { kind: "reply"; createdAt: string; reply: ReplyActivity };
 
-// Merge a set of users' reviews and discussion threads into one activity stream,
-// most recent first. viewerId is whose like-votes to reflect on reviews.
+// Merge a set of users' reviews, discussion threads, and discussion replies into
+// one activity stream, most recent first. viewerId reflects like-votes on reviews.
 async function getActivity(userIds: string[] | null, viewerId: string | undefined, take: number): Promise<ActivityItem[]> {
   if (userIds && userIds.length === 0) return [];
   const where = userIds ? { userId: { in: userIds } } : {};
-  const [reviews, threads] = await Promise.all([
+  const [reviews, threads, replies] = await Promise.all([
     prisma.review.findMany({ where, include: feedInclude, orderBy: { createdAt: "desc" }, take }),
     prisma.thread.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take,
       include: { user: { select: { id: true, username: true, avatar: true } }, _count: { select: { replies: true } } },
+    }),
+    prisma.threadReply.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take,
+      include: {
+        user: { select: { id: true, username: true, avatar: true } },
+        thread: { select: { id: true, title: true, albumSpotifyId: true, albumTitle: true, albumArtist: true, albumArtwork: true } },
+      },
     }),
   ]);
 
@@ -138,8 +157,18 @@ async function getActivity(userIds: string[] | null, viewerId: string | undefine
       replyCount: t._count.replies,
     },
   }));
+  const replyItems: ActivityItem[] = replies.map((r) => ({
+    kind: "reply",
+    createdAt: r.createdAt.toISOString(),
+    reply: {
+      id: r.id, body: r.body, createdAt: r.createdAt.toISOString(),
+      user: r.user,
+      thread: { id: r.thread.id, title: r.thread.title },
+      album: { spotifyId: r.thread.albumSpotifyId, title: r.thread.albumTitle, artist: r.thread.albumArtist, artwork: r.thread.albumArtwork ?? null },
+    },
+  }));
 
-  return [...reviewItems, ...threadItems]
+  return [...reviewItems, ...threadItems, ...replyItems]
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
     .slice(0, take);
 }
