@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import ReviewCard, { ReviewData } from "@/components/review/ReviewCard";
 import AlbumCard from "@/components/album/AlbumCard";
+import ActivityList from "@/components/activity/ActivityList";
+import type { ActivityItem } from "@/lib/feed";
 import { SAMPLE_ALBUMS } from "@/lib/sampleData";
 import Link from "next/link";
 
@@ -12,13 +13,13 @@ interface Rec {
 }
 
 interface Props {
-  feed: ReviewData[];
+  items: ActivityItem[];
   isLoggedIn: boolean;
 }
 
 type Tab = "feed" | "recommended";
 
-export default function HomeFeed({ feed, isLoggedIn }: Props) {
+export default function HomeFeed({ items, isLoggedIn }: Props) {
   const [tab, setTab] = useState<Tab>("feed");
   const [recs, setRecs] = useState<Rec[]>([]);
   const [recsLoaded, setRecsLoaded] = useState(false);
@@ -67,12 +68,12 @@ export default function HomeFeed({ feed, isLoggedIn }: Props) {
       {/* Feed */}
       {tab === "feed" && (
         <>
-          {feed.length === 0 ? (
+          {items.length === 0 ? (
             <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
-              <p className="text-sm mb-2">No reviews yet.</p>
+              <p className="text-sm mb-2">No activity yet.</p>
               {isLoggedIn ? (
                 <Link href="/members" className="text-xs text-[#c4a832] hover:underline">
-                  Follow friends to see their reviews here →
+                  Follow friends to see their activity here →
                 </Link>
               ) : (
                 <Link href="/register" className="text-xs text-[#c4a832] hover:underline">
@@ -83,9 +84,9 @@ export default function HomeFeed({ feed, isLoggedIn }: Props) {
           ) : (
             <>
               <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
-                {feed.slice(0, FEED_PREVIEW).map((r) => <ReviewCard key={r.id} review={r} isLoggedIn={isLoggedIn} />)}
+                <ActivityList items={items.slice(0, FEED_PREVIEW)} isLoggedIn={isLoggedIn} />
               </div>
-              {feed.length > FEED_PREVIEW && (
+              {items.length > FEED_PREVIEW && (
                 <div className="mt-4 text-center">
                   <Link
                     href="/activity"

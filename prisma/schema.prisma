@@ -25,6 +25,8 @@ model User {
   likes        Like[]
   savedAlbums  SavedAlbum[]
   crates       Crate[]
+  threads       Thread[]
+  threadReplies ThreadReply[]
   comments     Comment[]
   commentLikes CommentLike[]
   followers    Follow[] @relation("following")
@@ -213,4 +215,40 @@ model CrateAlbum {
   crate   Crate  @relation(fields: [crateId], references: [id], onDelete: Cascade)
 
   @@unique([crateId, spotifyId])
+}
+
+// A discussion thread on an album — the album forum. Album metadata is
+// denormalized (like SavedAlbum/CrateAlbum) so threads work for any album.
+model Thread {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+
+  albumSpotifyId String
+  albumTitle     String
+  albumArtist    String
+  albumArtwork   String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  replies ThreadReply[]
+
+  @@index([albumSpotifyId])
+  @@index([userId])
+}
+
+model ThreadReply {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+
+  threadId String
+  thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
 }

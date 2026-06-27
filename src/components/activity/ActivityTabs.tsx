@@ -1,14 +1,15 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import ReviewCard, { ReviewData } from "@/components/review/ReviewCard";
+import ActivityList from "@/components/activity/ActivityList";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
+import type { ActivityItem } from "@/lib/feed";
 
 type Tab = "friends" | "you" | "trending";
 
 interface Props {
-  friendsFeed: ReviewData[];
-  myFeed: ReviewData[];
+  friendsActivity: ActivityItem[];
+  myActivity: ActivityItem[];
   isLoggedIn: boolean;
   initialTab?: Tab | null;
 }
@@ -28,31 +29,30 @@ function EmptyState({ message, href, cta }: { message: string; href: string; cta
   );
 }
 
-function ReviewList({ feed, isLoggedIn }: { feed: ReviewData[]; isLoggedIn: boolean }) {
+function FeedList({ items, isLoggedIn }: { items: ActivityItem[]; isLoggedIn: boolean }) {
   return (
     <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-4">
-      {feed.map((r) => (
-        <ReviewCard key={r.id} review={r} isLoggedIn={isLoggedIn} />
-      ))}
+      <ActivityList items={items} isLoggedIn={isLoggedIn} />
     </div>
   );
 }
 
-export default function ActivityTabs({ friendsFeed, myFeed, isLoggedIn, initialTab = null }: Props) {
+export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, initialTab = null }: Props) {
   // Opens to the tab passed via ?tab= (e.g. from the home screen), else nothing until clicked.
   const [tab, setTab] = useState<Tab | null>(initialTab);
 
   // Albums your friends have recently reviewed (favorites bubble up first), de-duped.
   const friendsAlbums = useMemo(() => {
     const seen = new Set<string>();
-    return [...friendsFeed]
+    return friendsActivity
+      .flatMap((it) => (it.kind === "review" ? [it.review] : []))
       .sort((a, b) => (b.rating - a.rating) || (b.createdAt < a.createdAt ? -1 : 1))
       .filter((r) => (seen.has(r.album.spotifyId) ? false : (seen.add(r.album.spotifyId), true)))
       .map((r) => ({
         spotifyId: r.album.spotifyId, title: r.album.title,
         artist: r.album.artist, artwork: r.album.artwork, year: null,
       }));
-  }, [friendsFeed]);
+  }, [friendsActivity]);
 
   return (
     <div>
@@ -85,11 +85,11 @@ export default function ActivityTabs({ friendsFeed, myFeed, isLoggedIn, initialT
       {/* Friends */}
       {tab === "friends" && (
         !isLoggedIn ? (
-          <EmptyState message="Log in to see your friends' reviews." href="/login" cta="Sign in →" />
-        ) : friendsFeed.length === 0 ? (
-          <EmptyState message="No reviews from people you follow yet." href="/members" cta="Follow friends to see their reviews here →" />
+          <EmptyState message="Log in to see your friends' activity." href="/login" cta="Sign in →" />
+        ) : friendsActivity.length === 0 ? (
+          <EmptyState message="No activity from people you follow yet." href="/members" cta="Follow friends to see their activity here →" />
         ) : (
-          <ReviewList feed={friendsFeed} isLoggedIn={isLoggedIn} />
+          <FeedList items={friendsActivity} isLoggedIn={isLoggedIn} />
         )
       )}
 
@@ -97,10 +97,10 @@ export default function ActivityTabs({ friendsFeed, myFeed, isLoggedIn, initialT
       {tab === "you" && (
         !isLoggedIn ? (
           <EmptyState message="Log in to see your activity." href="/login" cta="Sign in →" />
-        ) : myFeed.length === 0 ? (
-          <EmptyState message="You haven't logged any reviews yet." href="/search" cta="Find an album to log →" />
+        ) : myActivity.length === 0 ? (
+          <EmptyState message="You haven't posted any activity yet." href="/search" cta="Find an album to review or discuss →" />
         ) : (
-          <ReviewList feed={myFeed} isLoggedIn={isLoggedIn} />
+          <FeedList items={myActivity} isLoggedIn={isLoggedIn} />
         )
       )}
 

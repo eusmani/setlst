@@ -14,6 +14,7 @@ import ListenListButton from "./ListenListButton";
 import AddToCrate from "./AddToCrate";
 import GenrePills from "./GenrePills";
 import SimilarAlbums from "./SimilarAlbums";
+import Discussion from "./Discussion";
 import { RatingMeter } from "@/components/ui/RatingMeter";
 
 export const dynamic = "force-dynamic";
@@ -392,6 +393,10 @@ export default async function AlbumPage({
         reviews={reviewsForClient}
         isLoggedIn={!!session}
       />
+
+      <div className="mt-6">
+        <Discussion album={album} isLoggedIn={!!session} />
+      </div>
 
       <SimilarAlbums
         artist={artist}

@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { getFeed, getFriendsFeed, getUserFeed, getUserAddedAlbums, toDisplayFeed, type AddedAlbum } from "@/lib/feed";
+import { getUserActivity, getFriendsActivity, getRecentActivity, getUserAddedAlbums, type AddedAlbum, type ActivityItem } from "@/lib/feed";
 import MobileActivitySection from "@/components/home/MobileActivitySection";
 import Link from "next/link";
 import HomeFeed from "./HomeFeed";
@@ -14,27 +14,26 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const session = await auth();
-  let feed: Awaited<ReturnType<typeof getFeed>> = [];
-  try { feed = await getFeed(session?.user?.id); } catch {}
 
-  const displayFeed = toDisplayFeed(feed, session?.user?.id);
-
-  // Albums the logged-in user has recently added (reviewed or saved), most
-  // recent first — rendered in the same slider layout as "Popular This Week".
+  // Activity = reviews + discussion threads, merged. Recent (site-wide) for
+  // logged-out; your own + friends' for logged-in.
+  let recentActivity: ActivityItem[] = [];
+  let myActivity: ActivityItem[] = [];
+  let friendsActivity: ActivityItem[] = [];
   let myRecentAlbums: AddedAlbum[] = [];
-  let myFeed: ReturnType<typeof toDisplayFeed> = [];
-  let friendsFeed: ReturnType<typeof toDisplayFeed> = [];
   if (session?.user?.id) {
     try {
       const [added, mine, friends] = await Promise.all([
         getUserAddedAlbums(session.user.id, 24),
-        getUserFeed(session.user.id, 30),
-        getFriendsFeed(session.user.id, 30),
+        getUserActivity(session.user.id, 30),
+        getFriendsActivity(session.user.id, 30),
       ]);
       myRecentAlbums = added;
-      myFeed = toDisplayFeed(mine, session.user.id);
-      friendsFeed = toDisplayFeed(friends, session.user.id);
+      myActivity = mine;
+      friendsActivity = friends;
     } catch {}
+  } else {
+    try { recentActivity = await getRecentActivity(20); } catch {}
   }
 
   return (
@@ -94,21 +93,21 @@ export default async function HomePage() {
             <>
               <MobileActivitySection
                 heading="Your Activity"
-                feed={myFeed}
+                items={myActivity}
                 href="/activity?tab=you"
-                empty={{ msg: "You haven't reviewed any albums yet.", href: "/search", cta: "Find an album to review →" }}
+                empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }}
               />
               <MobileActivitySection
                 heading="Friends' Activity"
-                feed={friendsFeed}
+                items={friendsActivity}
                 href="/activity?tab=friends"
-                empty={{ msg: "No reviews from people you follow yet.", href: "/members", cta: "Follow friends to see their reviews →" }}
+                empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }}
               />
             </>
           ) : (
             <MobileActivitySection
               heading="Recent Activity"
-              feed={displayFeed}
+              items={recentActivity}
               href="/activity"
               empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }}
             />
@@ -150,7 +149,7 @@ export default async function HomePage() {
             <div>
               <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
               {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. */}
-              <HomeFeed feed={session ? friendsFeed : displayFeed} isLoggedIn={!!session} />
+              <HomeFeed items={session ? friendsActivity : recentActivity} isLoggedIn={!!session} />
             </div>
             <div className="hidden lg:block"><AnniversaryBanner /></div>
           </section>
