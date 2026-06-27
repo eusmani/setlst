@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 export default function VerifyBanner() {
   const { status } = useSession();
+  const pathname = usePathname();
   const [verified, setVerified] = useState<boolean | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [sending, setSending] = useState(false);
@@ -25,7 +27,8 @@ export default function VerifyBanner() {
     } catch {} finally { setSending(false); }
   }
 
-  if (verified !== false || dismissed) return null;
+  // Only on the home screen — not on other sections.
+  if (pathname !== "/" || verified !== false || dismissed) return null;
 
   return (
     <div className="relative bg-[#c4a832] text-[#111111]">
