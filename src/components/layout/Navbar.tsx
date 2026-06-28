@@ -70,6 +70,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [userOpen, setUserOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [me, setMe] = useState<{ username: string; avatar: string | null } | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Unread shared-discussion count for the inbox badge.
@@ -77,6 +78,16 @@ export default function Navbar() {
     if (!session) { setUnread(0); return; }
     fetch("/api/inbox", { method: "POST" }).then((r) => r.json()).then((d) => setUnread(d.count ?? 0)).catch(() => {});
   }, [session]);
+
+  // Live username + avatar for the top-bar pfp and profile link (kept out of the
+  // session so auth() stays fast). Re-fetches on navigation so a pic/name change shows.
+  useEffect(() => {
+    if (!session) { setMe(null); return; }
+    fetch("/api/me").then((r) => r.json()).then((d) => { if (d) setMe(d); }).catch(() => {});
+  }, [session, pathname]);
+
+  const displayName = me?.username ?? session?.user?.username ?? "";
+  const pfp = me?.avatar ?? null;
 
   // Close the user dropdown when clicking anywhere outside it.
   useEffect(() => {
@@ -132,10 +143,10 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors"
               >
                 <div className="relative">
-                  <Avatar username={session.user.username} avatar={session.user.avatar} size={36} />
+                  <Avatar username={displayName} avatar={pfp} size={36} />
                   {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c4a832] border border-[#111111]" />}
                 </div>
-                <span className="nav-username text-sm text-[#f0f0f0] hidden sm:block">{session.user.username}</span>
+                <span className="nav-username text-sm text-[#f0f0f0] hidden sm:block">{displayName}</span>
                 <svg className="text-[#6b6b6b] hidden sm:block" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="2,4 6,8 10,4" />
                 </svg>
@@ -146,10 +157,10 @@ export default function Navbar() {
                   <div className="absolute right-0 top-10 z-20 w-44 bg-[#1a1a1a] border border-[#2e2e2e] rounded-lg overflow-hidden shadow-2xl">
                     <div className="px-4 py-2.5 border-b border-[#1f1f1f]">
                       <p className="text-xs text-[#6b6b6b]">Signed in as</p>
-                      <p className="text-sm  text-[#f0f0f0] truncate">{session.user.username}</p>
+                      <p className="text-sm  text-[#f0f0f0] truncate">{displayName}</p>
                     </div>
                     <Link
-                      href={`/profile/${session.user.username}`}
+                      href={`/profile/${displayName}`}
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
                       onClick={() => setUserOpen(false)}
                     >
