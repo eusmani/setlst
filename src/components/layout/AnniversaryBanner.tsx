@@ -102,11 +102,11 @@ export default function AnniversaryBanner() {
       {/* Full-text modal */}
       {showFull && description && (
         <div
-          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/70 px-4 py-8"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-4 py-6"
           onClick={() => setShowFull(false)}
         >
           <div
-            className="w-full max-w-lg max-h-[80vh] overflow-y-auto bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-6 shadow-2xl"
+            className="w-full max-w-lg max-h-[78vh] overflow-y-auto overscroll-contain bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 mb-1">
