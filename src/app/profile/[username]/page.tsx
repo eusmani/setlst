@@ -105,7 +105,7 @@ export default async function ProfilePage({
     <div className="relative isolate max-w-4xl mx-auto px-5 py-12">
       {/* Faded pfp banner — sits just under the top bar and fades down the page */}
       {user.avatar && (
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-screen -z-10 h-72 overflow-hidden">
           <img
             src={user.avatar}
             alt=""
