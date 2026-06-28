@@ -107,7 +107,8 @@ export default function TrendingAlbums({
     <div>
       <div className="flex items-center justify-between mb-4">
         <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em]">{heading}</p>
-        {showSeeAll && (
+        {/* In slider mode the "See more" lives at the end of the scroller as a circle. */}
+        {showSeeAll && !slider && (
           <Link href={seeAllHref} className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">
             See more →
           </Link>
@@ -136,6 +137,19 @@ export default function TrendingAlbums({
                 <AlbumCard spotifyId={a.spotifyId} title={a.title} artist={a.artist} artwork={a.artwork} year={a.year ?? undefined} />
               </div>
             ))}
+            {/* Circular "See more" at the end of the row */}
+            {showSeeAll && (
+              <div className="snap-start shrink-0 w-[30%] sm:w-[23%] lg:w-[18%] flex items-start">
+                <Link
+                  href={seeAllHref}
+                  aria-label="See more"
+                  className="aspect-square w-full rounded-full border border-[#2e2e2e] bg-[#1a1a1a] flex flex-col items-center justify-center gap-1 text-[#a0a0a0] hover:border-[#c4a832] hover:text-[#c4a832] hover:bg-[#222222] transition-colors"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+                  <span className="text-[11px] sm:text-xs font-medium leading-tight">See more</span>
+                </Link>
+              </div>
+            )}
           </div>
           {/* Right arrow — hidden once you reach the end */}
           {canPage && !atEnd && (
