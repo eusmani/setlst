@@ -10,6 +10,7 @@ export default function AnniversaryBanner() {
   const [i, setI] = useState(0);
   const [artwork, setArtwork] = useState<string | null>(null);
   const [description, setDescription] = useState<string | null>(null);
+  const [showFull, setShowFull] = useState(false);
 
   const cur = items[i];
 
@@ -85,9 +86,45 @@ export default function AnniversaryBanner() {
 
       {/* Description at the bottom */}
       {description && (
-        <p className="text-sm text-[#bbbbbb] leading-relaxed mt-4 pt-4 border-t border-[#1f1f1f] line-clamp-4">
-          {description}
-        </p>
+        <div className="mt-4 pt-4 border-t border-[#1f1f1f]">
+          <p className="text-sm text-[#bbbbbb] leading-relaxed line-clamp-4">{description}</p>
+          {description.length > 220 && (
+            <button
+              onClick={() => setShowFull(true)}
+              className="mt-2 text-xs text-[#c4a832] hover:underline"
+            >
+              See more →
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Full-text modal */}
+      {showFull && description && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/70 px-4 py-8"
+          onClick={() => setShowFull(false)}
+        >
+          <div
+            className="w-full max-w-lg max-h-[80vh] overflow-y-auto bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 mb-1">
+              <div className="min-w-0">
+                <p className="on-this-day text-[10px] text-[#c4a832] uppercase tracking-[0.18em] mb-1">On this day</p>
+                <h3 className="text-lg text-[#f0f0f0] leading-tight">{cur.title}</h3>
+                <p className="text-sm text-[#a0a0a0]">{cur.artist} · {cur.year}</p>
+              </div>
+              <button onClick={() => setShowFull(false)} aria-label="Close" className="shrink-0 text-[#6b6b6b] hover:text-[#f0f0f0]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></svg>
+              </button>
+            </div>
+            <p className="text-sm text-[#cfcfcf] leading-relaxed whitespace-pre-wrap mt-3">{description}</p>
+            <Link href={albumHref} onClick={() => setShowFull(false)} className="inline-block mt-4 text-xs text-[#c4a832] hover:underline">
+              View album →
+            </Link>
+          </div>
+        </div>
       )}
 
       {/* Slideshow dots */}
