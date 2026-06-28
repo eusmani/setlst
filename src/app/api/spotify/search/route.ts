@@ -94,12 +94,25 @@ export async function GET(req: NextRequest) {
     // 1) Popular matched artists first, in popularity order.
     artistAlbums.forEach((a) => a && push(a));
 
-    // 2) The rest of the album search, ordered so albums by popular artists
-    //    (ranked) come before everything else; ties keep iTunes' relevance order.
+    // 2) The rest of the album search. Order by how closely the result matches
+    //    what was typed (artist/album name) FIRST, so e.g. "fakemink" surfaces the
+    //    artist Fakemink rather than a loosely-related popular artist. Popularity
+    //    and iTunes' own relevance only break ties within the same match tier.
+    const relevance = (a: ItunesAlbum) => {
+      const artist = (a.artistName ?? "").toLowerCase();
+      const album = (a.collectionName ?? "").toLowerCase();
+      if (artist === ql) return 0;                                       // exact artist
+      if (artist.startsWith(ql)) return 1;                               // artist starts with query
+      if (artist.split(/[\s,&/-]+/).some((w) => w.startsWith(ql))) return 2; // a word in the artist starts with query
+      if (artist.includes(ql)) return 3;                                 // artist contains query
+      if (album.startsWith(ql)) return 4;                                // album title starts with query
+      if (album.includes(ql)) return 5;                                  // album title contains query
+      return 9;                                                          // no direct match (loose iTunes hit)
+    };
     const rank = (a: ItunesAlbum) => POPULAR_RANK.get((a.artistName ?? "").toLowerCase()) ?? Infinity;
     rawAlbums
       .map((a, i) => ({ a, i }))
-      .sort((x, y) => rank(x.a) - rank(y.a) || x.i - y.i)
+      .sort((x, y) => relevance(x.a) - relevance(y.a) || rank(x.a) - rank(y.a) || x.i - y.i)
       .forEach(({ a }) => push(a));
 
     return NextResponse.json({ results: results.slice(0, 30) });
