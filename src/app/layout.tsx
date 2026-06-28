@@ -69,6 +69,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main className="flex-1">{children}</main>
           <footer className="mt-auto border-t border-[#1f1f1f] py-5 text-center text-xs text-[#6b6b6b]">
             <strong>SETLST</strong> · log the music you love
+            <span className="mx-2 text-[#2e2e2e]">·</span>
+            <a href="/privacy" className="hover:text-[#c4a832] transition-colors">Privacy</a>
           </footer>
         </Providers>
       </body>
