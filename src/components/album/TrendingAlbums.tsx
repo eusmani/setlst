@@ -137,17 +137,19 @@ export default function TrendingAlbums({
                 <AlbumCard spotifyId={a.spotifyId} title={a.title} artist={a.artist} artwork={a.artwork} year={a.year ?? undefined} />
               </div>
             ))}
-            {/* Small circular "See more" at the end of the row */}
+            {/* Small circular "See more", vertically centered on the album covers */}
             {showSeeAll && (
-              <div className="snap-start shrink-0 flex items-start pl-1 pr-2">
-                <Link
-                  href={seeAllHref}
-                  aria-label="See more"
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-[#2e2e2e] bg-[#1a1a1a] flex flex-col items-center justify-center gap-0.5 text-[#a0a0a0] hover:border-[#c4a832] hover:text-[#c4a832] hover:bg-[#222222] transition-colors"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
-                  <span className="text-[9px] font-medium leading-none">See more</span>
-                </Link>
+              <div className="snap-start shrink-0 w-[30%] sm:w-[23%] lg:w-[18%]">
+                <div className="aspect-square flex items-center justify-center">
+                  <Link
+                    href={seeAllHref}
+                    aria-label="See more"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-[#2e2e2e] bg-[#1a1a1a] flex flex-col items-center justify-center gap-0.5 text-[#a0a0a0] hover:border-[#c4a832] hover:text-[#c4a832] hover:bg-[#222222] transition-colors"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+                    <span className="text-[9px] font-medium leading-none">See more</span>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
