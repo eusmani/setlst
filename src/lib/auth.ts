@@ -90,14 +90,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
+        session.user.avatar = null;
         // Pull the current username + avatar from the DB (computed per request, not
-        // stored in the JWT cookie). Keeps the top-bar pfp current and avoids stale
-        // usernames (e.g. after a rename) that would 404 the profile link.
-        const u = await prisma.user.findUnique({ where: { id: token.id as string }, select: { username: true, avatar: true } });
-        if (u) {
-          session.user.username = u.username;
-          session.user.avatar = u.avatar ?? null;
-        }
+        // stored in the JWT cookie). Wrapped so a DB hiccup never breaks the session
+        // (which would log the user out and empty their activity).
+        try {
+          const u = await prisma.user.findUnique({ where: { id: token.id as string }, select: { username: true, avatar: true } });
+          if (u) {
+            session.user.username = u.username;
+            session.user.avatar = u.avatar ?? null;
+          }
+        } catch { /* keep token-based session */ }
       }
       return session;
     },
