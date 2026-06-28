@@ -102,7 +102,22 @@ export default async function ProfilePage({
   try { topAlbums = user.topAlbums ? JSON.parse(user.topAlbums) : []; } catch {}
 
   return (
-    <div className="max-w-4xl mx-auto px-5 py-12">
+    <div className="relative isolate max-w-4xl mx-auto px-5 py-12">
+      {/* Faded pfp banner — sits just under the top bar and fades down the page */}
+      {user.avatar && (
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 overflow-hidden">
+          <img
+            src={user.avatar}
+            alt=""
+            className="w-full h-full object-cover scale-110 blur-2xl opacity-30"
+            style={{
+              maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0) 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0) 100%)",
+            }}
+          />
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start gap-5 pb-8 mb-8 border-b border-[#1f1f1f]">
         <Avatar username={user.username} avatar={user.avatar} size={68} />
