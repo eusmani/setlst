@@ -102,7 +102,7 @@ export default function Navbar() {
   return (
     <>
     <nav className="sticky top-0 z-50 border-b border-[#1f1f1f] bg-[#111111]/96 backdrop-blur-sm">
-      <div className="max-w-4xl mx-auto px-5 h-14 flex items-center gap-6">
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 h-16 flex items-center gap-10">
 
         {/* Logo */}
         <Link href="/" className="app-logo flex items-center gap-2 font-serif text-3xl font-bold tracking-wide text-[#f0f0f0] hover:text-[#c4a832] transition-colors shrink-0">
@@ -111,7 +111,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden sm:flex items-center justify-around flex-1">
+        <div className="hidden sm:flex items-center justify-center gap-10 lg:gap-14 flex-1">
           {NAV.map(({ href, label, icon }) => {
             const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
@@ -135,7 +135,7 @@ export default function Navbar() {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-3 ml-auto">
           {/* Get the iOS app — desktop only (you're already in it on mobile) */}
           <Link
             href="/download"
