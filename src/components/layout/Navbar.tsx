@@ -19,15 +19,9 @@ const NAV = [
     href: "/search", label: "Albums",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        {/* Outer record */}
-        <circle cx="12" cy="12" r="10"/>
-        {/* Groove rings */}
-        <circle cx="12" cy="12" r="7" strokeWidth="0.8" strokeOpacity="0.5"/>
-        <circle cx="12" cy="12" r="4.5" strokeWidth="0.8" strokeOpacity="0.5"/>
-        {/* Label area */}
-        <circle cx="12" cy="12" r="2.5" strokeWidth="1.4"/>
-        {/* Center hole */}
-        <circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none"/>
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="2.5" strokeWidth="1.4" />
+        <circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none" />
       </svg>
     ),
   },
