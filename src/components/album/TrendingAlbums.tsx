@@ -100,8 +100,9 @@ export default function TrendingAlbums({
 
   const canPage = slider && items.length > 3;
 
+  // Arrows only on desktop/non-touch; mobile swipes the row with a finger.
   const arrowBtn =
-    "absolute top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-[#1a1a1a]/90 border border-[#2e2e2e] text-[#f0f0f0] hover:border-[#c4a832] hover:text-[#c4a832] shadow-lg transition-colors";
+    "absolute top-1/2 -translate-y-1/2 z-10 w-8 h-8 hidden sm:flex items-center justify-center rounded-full bg-[#1a1a1a]/90 border border-[#2e2e2e] text-[#f0f0f0] hover:border-[#c4a832] hover:text-[#c4a832] shadow-lg transition-colors";
 
   return (
     <div>

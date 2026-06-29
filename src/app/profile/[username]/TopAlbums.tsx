@@ -131,7 +131,7 @@ export default function TopAlbums({ initial, isOwner }: Props) {
         <div className="relative">
           {!atStart && (
             <button onClick={() => page(-1)} aria-label="Previous"
-              className="absolute top-[28%] -translate-y-1/2 left-0 -ml-1 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-[#1a1a1a]/90 border border-[#2e2e2e] text-[#f0f0f0] hover:border-[#c4a832] hover:text-[#c4a832] shadow-lg transition-colors">
+              className="absolute top-[28%] -translate-y-1/2 left-0 -ml-1 z-10 w-8 h-8 hidden sm:flex items-center justify-center rounded-full bg-[#1a1a1a]/90 border border-[#2e2e2e] text-[#f0f0f0] hover:border-[#c4a832] hover:text-[#c4a832] shadow-lg transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
           )}
@@ -157,7 +157,7 @@ export default function TopAlbums({ initial, isOwner }: Props) {
           </div>
           {!atEnd && (
             <button onClick={() => page(1)} aria-label="Next"
-              className="absolute top-[28%] -translate-y-1/2 right-0 -mr-1 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-[#1a1a1a]/90 border border-[#2e2e2e] text-[#f0f0f0] hover:border-[#c4a832] hover:text-[#c4a832] shadow-lg transition-colors">
+              className="absolute top-[28%] -translate-y-1/2 right-0 -mr-1 z-10 w-8 h-8 hidden sm:flex items-center justify-center rounded-full bg-[#1a1a1a]/90 border border-[#2e2e2e] text-[#f0f0f0] hover:border-[#c4a832] hover:text-[#c4a832] shadow-lg transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           )}
