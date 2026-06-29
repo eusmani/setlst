@@ -11,7 +11,7 @@ export default function DownloadPage() {
       <img src="/turntable-logo.png" alt="" className="w-16 h-16 mx-auto mb-4 object-contain" />
       <h1 className="font-serif text-3xl text-[#f0f0f0] mb-2">Get SETLST on your phone</h1>
       <p className="text-sm text-[#a0a0a0] mb-8">
-        Log, rate, and discuss albums on the go — same account, everywhere.
+        Log your albums on the go - Download today!
       </p>
 
       {/* App Store — listing pending review */}
