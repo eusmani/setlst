@@ -30,6 +30,6 @@ export async function GET() {
 export async function POST() {
   const session = await auth();
   if (!session) return NextResponse.json({ count: 0 }, { status: 401 });
-  const count = await prisma.threadShare.count({ where: { toUserId: session.user.id, read: false } });
+  const count = await prisma.directMessage.count({ where: { toId: session.user.id, readAt: null } });
   return NextResponse.json({ count });
 }

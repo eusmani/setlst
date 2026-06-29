@@ -31,6 +31,9 @@ model User {
   replyVotes     ReplyVote[]
   sharesSent     ThreadShare[] @relation("sharesSent")
   sharesReceived ThreadShare[] @relation("sharesReceived")
+  dmSent         DirectMessage[]   @relation("dmSent")
+  dmReceived     DirectMessage[]   @relation("dmReceived")
+  messageReactions MessageReaction[]
   comments     Comment[]
   commentLikes CommentLike[]
   followers    Follow[] @relation("following")
@@ -240,9 +243,42 @@ model Thread {
   replies ThreadReply[]
   votes   ThreadVote[]
   shares  ThreadShare[]
+  directMessages DirectMessage[]
 
   @@index([albumSpotifyId])
   @@index([userId])
+}
+
+// Direct (1:1) messages — the in-app DM inbox. A message is text and/or a shared
+// discussion (threadId).
+model DirectMessage {
+  id        String   @id @default(cuid())
+  body      String?
+  threadId  String?
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+
+  fromId String
+  from   User   @relation("dmSent", fields: [fromId], references: [id], onDelete: Cascade)
+  toId   String
+  to     User   @relation("dmReceived", fields: [toId], references: [id], onDelete: Cascade)
+  thread Thread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+
+  reactions MessageReaction[]
+
+  @@index([fromId])
+  @@index([toId])
+}
+
+model MessageReaction {
+  id        String @id @default(cuid())
+  emoji     String
+  userId    String
+  messageId String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
 }
 
 model ThreadVote {

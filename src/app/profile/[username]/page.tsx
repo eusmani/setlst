@@ -139,7 +139,16 @@ export default async function ProfilePage({
               {user.bio && <p className="text-sm text-[#a0a0a0] mt-1 max-w-sm">{user.bio}</p>}
             </div>
             {!isOwnProfile && session && (
-              <FollowButton username={user.username} initial={isFollowing} initialRequested={hasRequested} isPrivate={user.isPrivate} />
+              <div className="flex items-center gap-2">
+                <FollowButton username={user.username} initial={isFollowing} initialRequested={hasRequested} isPrivate={user.isPrivate} />
+                <Link
+                  href={`/inbox/${user.username}`}
+                  className="flex items-center gap-1.5 text-sm border border-[#2e2e2e] hover:border-[#c4a832] text-[#a0a0a0] hover:text-[#c4a832] px-3 py-1.5 rounded-full transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+                  Message
+                </Link>
+              </div>
             )}
             {isOwnProfile && (
               <EditProfile username={user.username} initialBio={user.bio} initialAvatar={user.avatar} initialPhone={user.phone} initialEmail={user.email} />

@@ -26,10 +26,13 @@ export async function POST(req: NextRequest) {
   const thread = await prisma.thread.findUnique({ where: { id: threadId }, select: { id: true } });
   if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
 
+  const recipients = (toUserIds as string[]).filter((id) => id && id !== session.user.id);
   await prisma.threadShare.createMany({
-    data: toUserIds
-      .filter((id: string) => id && id !== session.user.id)
-      .map((toUserId: string) => ({ threadId, fromUserId: session.user.id, toUserId })),
+    data: recipients.map((toUserId) => ({ threadId, fromUserId: session.user.id, toUserId })),
   });
-  return NextResponse.json({ ok: true, sent: toUserIds.length });
+  // Also drop the shared discussion into the recipients' DM inbox.
+  await prisma.directMessage.createMany({
+    data: recipients.map((toUserId) => ({ fromId: session.user.id, toId: toUserId, threadId })),
+  });
+  return NextResponse.json({ ok: true, sent: recipients.length });
 }

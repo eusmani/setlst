@@ -3,52 +3,62 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
 
-interface Share {
-  id: string;
-  createdAt: string;
-  fromUser: { username: string; avatar: string | null };
-  thread: { id: string; title: string; albumTitle: string; albumArtist: string; albumArtwork: string | null };
+interface Convo {
+  username: string;
+  avatar: string | null;
+  lastBody: string;
+  lastAt: string;
+  fromMe: boolean;
+  unread: number;
 }
 
 function fmt(d: string) {
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const date = new Date(d);
+  const now = new Date();
+  const sameDay = date.toDateString() === now.toDateString();
+  return sameDay
+    ? date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export default function InboxPage() {
-  const [shares, setShares] = useState<Share[] | null>(null);
+  const [convos, setConvos] = useState<Convo[] | null>(null);
 
   useEffect(() => {
-    fetch("/api/inbox").then((r) => r.json()).then((d) => setShares(Array.isArray(d) ? d : [])).catch(() => setShares([]));
+    fetch("/api/messages").then((r) => r.json()).then((d) => setConvos(Array.isArray(d) ? d : [])).catch(() => setConvos([]));
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-5 pb-12">
-      <h1 className="font-serif text-3xl text-[#f0f0f0] mb-1">Inbox</h1>
-      <p className="text-sm text-[#6b6b6b] mb-5">Discussions friends have shared with you.</p>
+    <div className="max-w-2xl mx-auto px-5 pt-5 pb-24 sm:pb-12">
+      <div className="flex items-center gap-2 mb-5">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+        </svg>
+        <h1 className="font-serif text-3xl text-[#f0f0f0]">Messages</h1>
+      </div>
 
-      {shares === null ? (
+      {convos === null ? (
         <p className="text-xs text-[#6b6b6b] py-6">Loading…</p>
-      ) : shares.length === 0 ? (
+      ) : convos.length === 0 ? (
         <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl">
-          <p className="text-sm">Nothing shared with you yet.</p>
+          <p className="text-sm mb-1">No messages yet.</p>
+          <p className="text-xs">Open someone&apos;s profile and tap Message to start a chat.</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {shares.map((s) => (
-            <Link key={s.id} href={`/thread/${s.thread.id}`}
-              className="flex items-center gap-3 p-3 bg-[#1a1a1a] border border-[#1f1f1f] hover:border-[#2e2e2e] rounded-xl transition-colors group">
-              {s.thread.albumArtwork ? (
-                <img src={s.thread.albumArtwork} alt="" className="w-11 h-11 rounded object-cover shrink-0" />
-              ) : (
-                <div className="w-11 h-11 rounded bg-[#222222] shrink-0" />
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-[#f0f0f0] truncate group-hover:text-[#c4a832] transition-colors">{s.thread.title}</p>
-                <p className="text-xs text-[#a0a0a0] truncate">{s.thread.albumTitle} · {s.thread.albumArtist}</p>
-                <div className="flex items-center gap-1.5 mt-1 text-[11px] text-[#6b6b6b]">
-                  <Avatar username={s.fromUser.username} avatar={s.fromUser.avatar} size={14} />
-                  <span>{s.fromUser.username} shared · {fmt(s.createdAt)}</span>
-                </div>
+        <div className="divide-y divide-[#1f1f1f] bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl overflow-hidden">
+          {convos.map((c) => (
+            <Link key={c.username} href={`/inbox/${c.username}`}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[#222222] transition-colors">
+              <Avatar username={c.username} avatar={c.avatar} size={48} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-[#f0f0f0] truncate">{c.username}</p>
+                <p className={`text-xs truncate ${c.unread ? "text-[#e8e8e8] font-medium" : "text-[#6b6b6b]"}`}>
+                  {c.fromMe && "You: "}{c.lastBody}
+                </p>
+              </div>
+              <div className="shrink-0 flex flex-col items-end gap-1">
+                <span className="text-[10px] text-[#6b6b6b]">{fmt(c.lastAt)}</span>
+                {c.unread > 0 && <span className="w-2.5 h-2.5 rounded-full bg-[#c4a832]" />}
               </div>
             </Link>
           ))}
