@@ -25,7 +25,7 @@ const POPULAR_UNDERGROUND: Artist[] = [
   "MIKE", "Earl Sweatshirt", "Navy Blue", "billy woods", "Mach-Hommy",
   "JPEGMAFIA", "Danny Brown", "Denzel Curry", "Westside Gunn",
   "Conway the Machine", "Benny the Butcher", "Boldy James", "Maxo",
-  "Pink Siifu", "Mavi", "Wiki", "Your Old Droog", "Knxwledge",
+  "Pink Siifu", "Wiki", "Your Old Droog", "Knxwledge",
   // alternative / indie rock + shoegaze
   "Parannoul", "Weatherday", "feeble little horse", "julie",
   "They Are Gutting a Body of Water", "Narrow Head", "Wednesday",
