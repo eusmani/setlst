@@ -132,14 +132,20 @@ function toRec(album: ItunesAlbum) {
 
 export async function GET(req: NextRequest) {
   const todayStr = new Date().toISOString().slice(0, 10);
-  // ?range=recent → already out (on/before today).  ?range=all → upcoming + recent.
-  // Default → upcoming-only (today forward).
+  // ?range=week   → only releases that dropped in the last 7 days (this week).
+  // ?range=recent → already out (on/before today, last 90 days).
+  // ?range=all    → upcoming + recent.   Default → upcoming-only (today forward).
   const range = req.nextUrl.searchParams.get("range");
+  const week = range === "week";
   const recent = range === "recent";
   const all = range === "all";
-  // Fetch lower bound: 90 days back when we need recent releases, else today.
+  // Fetch lower bound: 7 days back for "this week", 90 days for recent/all, else today.
   let cutoffStr = todayStr;
-  if (recent || all) {
+  if (week) {
+    const c = new Date();
+    c.setDate(c.getDate() - 7);
+    cutoffStr = c.toISOString().slice(0, 10);
+  } else if (recent || all) {
     const c = new Date();
     c.setDate(c.getDate() - 90);
     cutoffStr = c.toISOString().slice(0, 10);
@@ -164,11 +170,12 @@ export async function GET(req: NextRequest) {
     .filter((r) => r.releaseDate > todayStr)        // strictly after today
     .sort((a, b) => a.releaseDate.localeCompare(b.releaseDate)); // soonest first
   const past = recs
-    .filter((r) => r.releaseDate <= todayStr)        // already out
+    .filter((r) => r.releaseDate <= todayStr && r.releaseDate >= cutoffStr) // already out, within window
     .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate)); // most recent first
 
-  // all → upcoming first, then recent; recent → past only; default → upcoming only.
-  const releases = (all ? [...upcoming, ...past] : recent ? past : upcoming).slice(0, 80);
+  // week → this week's drops only; all → upcoming first then recent;
+  // recent → past only; default → upcoming only.
+  const releases = (week ? past : all ? [...upcoming, ...past] : recent ? past : upcoming).slice(0, 80);
 
   return NextResponse.json(releases);
 }
