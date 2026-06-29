@@ -19,12 +19,26 @@ function formatDate(d: string) {
 export default function ReleaseRadar() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
+  const [label, setLabel] = useState("This week");
 
   useEffect(() => {
-    // Only what dropped this week (last 7 days) — refreshes as the week rolls over.
-    fetch("/api/releases?range=week")
-      .then((r) => r.json())
-      .then((d) => { setReleases(Array.isArray(d) ? d : []); setLoading(false); });
+    // Prefer what dropped this week (last 7 days). Underground artists release
+    // infrequently, so when the week is empty fall back to the most recent drops.
+    (async () => {
+      try {
+        const week = await fetch("/api/releases?range=week").then((r) => r.json());
+        if (Array.isArray(week) && week.length > 0) {
+          setReleases(week);
+        } else {
+          const recent = await fetch("/api/releases?range=recent").then((r) => r.json());
+          setReleases(Array.isArray(recent) ? recent : []);
+          setLabel("Recent");
+        }
+      } catch {
+        setReleases([]);
+      }
+      setLoading(false);
+    })();
   }, []);
 
   return (
@@ -35,7 +49,7 @@ export default function ReleaseRadar() {
           <polyline points="12,6 12,12 16,14" />
         </svg>
         <p className="text-sm text-[#f0f0f0] uppercase tracking-widest">Release Radar</p>
-        <span className="ml-auto text-[10px] text-[#6b6b6b] uppercase tracking-wider">This week</span>
+        <span className="ml-auto text-[10px] text-[#6b6b6b] uppercase tracking-wider">{label}</span>
       </div>
 
       {loading ? (
