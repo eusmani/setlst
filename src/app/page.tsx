@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { getUserActivity, getFriendsActivity, getRecentActivity, type ActivityItem } from "@/lib/feed";
 import MobileActivitySection from "@/components/home/MobileActivitySection";
 import Link from "next/link";
@@ -20,14 +21,18 @@ export default async function HomePage() {
   let recentActivity: ActivityItem[] = [];
   let myActivity: ActivityItem[] = [];
   let friendsActivity: ActivityItem[] = [];
+  // Current username from the DB (the JWT token can be stale after a rename).
+  let username = session?.user?.username ?? "";
   if (session?.user?.id) {
     try {
-      const [mine, friends] = await Promise.all([
+      const [mine, friends, me] = await Promise.all([
         getUserActivity(session.user.id, 30),
         getFriendsActivity(session.user.id, 30),
+        prisma.user.findUnique({ where: { id: session.user.id }, select: { username: true } }),
       ]);
       myActivity = mine;
       friendsActivity = friends;
+      if (me) username = me.username;
     } catch {}
   } else {
     try { recentActivity = await getRecentActivity(20); } catch {}
@@ -68,7 +73,7 @@ export default async function HomePage() {
         <div className="relative">
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pt-8 sm:pt-12 pb-5 sm:pb-8">
             <h2 className="slide-down text-2xl sm:text-3xl font-bold text-[#f0f0f0]" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
-              Welcome back, <span className="text-[#c4a832]">{session.user.username}</span>!
+              Welcome back, <span className="text-[#c4a832]">{username}</span>!
             </h2>
             <p className="slide-down-delay hero-sub text-sm sm:text-base text-[#a0a0a0] mt-1.5">
               Check your friends&apos; picks and log in new albums.

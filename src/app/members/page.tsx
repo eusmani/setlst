@@ -30,7 +30,14 @@ function FriendButton({ username, isFriend, busy, onClick }: { username: string;
 
 export default function FriendsPage() {
   const { data: session, status } = useSession();
-  const me = session?.user?.username;
+  // Live username from /api/me — the session token can be stale after a rename.
+  const [meName, setMeName] = useState<string | null>(null);
+  const me = meName ?? session?.user?.username;
+
+  useEffect(() => {
+    if (!session) { setMeName(null); return; }
+    fetch("/api/me").then((r) => r.json()).then((d) => { if (d?.username) setMeName(d.username); }).catch(() => {});
+  }, [session]);
 
   const [tab, setTab] = useState<"friends" | "find">("friends");
   const [friends, setFriends] = useState<Member[]>([]);
