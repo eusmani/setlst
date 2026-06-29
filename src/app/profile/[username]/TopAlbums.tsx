@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 interface FavoriteAlbum {
@@ -32,6 +32,22 @@ export default function TopAlbums({ initial, isOwner }: Props) {
   const [saving, setSaving] = useState(false);
 
   const slots = Array.from({ length: 5 }, (_, i) => draft[i] ?? null);
+
+  // Read-only slider (arrows) so favorites can stay larger and still fit in one line.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(true);
+  function updateArrows() {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setAtStart(el.scrollLeft <= 4);
+    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4);
+  }
+  function page(dir: 1 | -1) {
+    const el = scrollerRef.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
+  }
+  useEffect(() => { updateArrows(); }, [albums, editing]);
 
   async function runSearch(q: string) {
     if (!q.trim()) { setResults([]); return; }
@@ -110,26 +126,45 @@ export default function TopAlbums({ initial, isOwner }: Props) {
         )}
       </div>
 
-      {/* Read-only display */}
-      {!editing && (
-        <div className="grid grid-cols-5 gap-2 sm:gap-3">
-          {albums.map((a) => (
-            <Link
-              key={a.spotifyId}
-              href={`/album/${a.spotifyId}?title=${encodeURIComponent(a.title)}&artist=${encodeURIComponent(a.artist)}${a.artwork ? `&artwork=${encodeURIComponent(a.artwork)}` : ""}`}
-              className="group"
-            >
-              <div className="aspect-square rounded-md overflow-hidden bg-[#1a1a1a] border border-[#1f1f1f] group-hover:border-[#c4a832] transition-colors">
-                {a.artwork ? (
-                  <img src={a.artwork} alt={a.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[#3a3a3a] text-xs">?</div>
-                )}
-              </div>
-              <p className="text-[10px] text-[#a0a0a0] truncate mt-1 group-hover:text-[#f0f0f0] transition-colors">{a.title}</p>
-            </Link>
-          ))}
+      {/* Read-only display — larger tiles in a horizontal slider with arrows */}
+      {!editing && albums.length > 0 && (
+        <div className="relative">
+          {!atStart && (
+            <button onClick={() => page(-1)} aria-label="Previous"
+              className="absolute top-[28%] -translate-y-1/2 left-0 -ml-1 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-[#1a1a1a]/90 border border-[#2e2e2e] text-[#f0f0f0] hover:border-[#c4a832] hover:text-[#c4a832] shadow-lg transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+          )}
+          <div ref={scrollerRef} onScroll={updateArrows}
+            className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {albums.map((a) => (
+              <Link
+                key={a.spotifyId}
+                href={`/album/${a.spotifyId}?title=${encodeURIComponent(a.title)}&artist=${encodeURIComponent(a.artist)}${a.artwork ? `&artwork=${encodeURIComponent(a.artwork)}` : ""}`}
+                className="group snap-start shrink-0 w-[30%] sm:w-[23%]"
+              >
+                <div className="aspect-square rounded-md overflow-hidden bg-[#1a1a1a] border border-[#1f1f1f] group-hover:border-[#c4a832] transition-colors">
+                  {a.artwork ? (
+                    <img src={a.artwork} alt={a.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#3a3a3a] text-xs">?</div>
+                  )}
+                </div>
+                <p className="text-xs text-[#f0f0f0] truncate mt-1.5 group-hover:text-[#c4a832] transition-colors">{a.title}</p>
+                <p className="text-[11px] text-[#6b6b6b] truncate">{a.artist}</p>
+              </Link>
+            ))}
+          </div>
+          {!atEnd && (
+            <button onClick={() => page(1)} aria-label="Next"
+              className="absolute top-[28%] -translate-y-1/2 right-0 -mr-1 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-[#1a1a1a]/90 border border-[#2e2e2e] text-[#f0f0f0] hover:border-[#c4a832] hover:text-[#c4a832] shadow-lg transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
+          )}
         </div>
+      )}
+      {!editing && albums.length === 0 && isOwner && (
+        <p className="text-sm text-[#6b6b6b]">No favorites yet — tap “Add favorites”.</p>
       )}
 
       {/* Editor */}
