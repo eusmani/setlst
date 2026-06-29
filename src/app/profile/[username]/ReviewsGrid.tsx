@@ -1,18 +1,37 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import ReviewCard, { ReviewData } from "@/components/review/ReviewCard";
 
 // Desktop: full review cards. Mobile: a grid of album-cover squares (max 6, then
-// "See more") — tapping one opens the full review in a centered modal.
-export default function ReviewsGrid({ reviews, isLoggedIn, username }: { reviews: ReviewData[]; isLoggedIn: boolean; username: string }) {
+// "See more") — tapping one opens the full review in a centered modal. On your own
+// profile the modal also offers Edit / Delete.
+export default function ReviewsGrid({
+  reviews, isLoggedIn, username, isOwner = false,
+}: { reviews: ReviewData[]; isLoggedIn: boolean; username: string; isOwner?: boolean }) {
+  const router = useRouter();
+  const [list, setList] = useState<ReviewData[]>(reviews);
   const [selected, setSelected] = useState<ReviewData | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function deleteReview(r: ReviewData) {
+    if (!confirm("Delete your review for this album?")) return;
+    setDeleting(true);
+    const res = await fetch(`/api/reviews?albumId=${encodeURIComponent(r.album.spotifyId)}`, { method: "DELETE" });
+    setDeleting(false);
+    if (res.ok) {
+      setList((xs) => xs.filter((x) => x.id !== r.id));
+      setSelected(null);
+      router.refresh();
+    }
+  }
 
   return (
     <>
       {/* Desktop — full cards */}
       <div className="hidden sm:block bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl px-4">
-        {reviews.map((r) => (
+        {list.map((r) => (
           <ReviewCard key={r.id} review={r} isLoggedIn={isLoggedIn} />
         ))}
       </div>
@@ -20,7 +39,7 @@ export default function ReviewsGrid({ reviews, isLoggedIn, username }: { reviews
       {/* Mobile — album-cover grid (max 6) */}
       <div className="sm:hidden">
         <div className="grid grid-cols-3 gap-2">
-          {reviews.slice(0, 6).map((r) => (
+          {list.slice(0, 6).map((r) => (
             <button
               key={r.id}
               onClick={() => setSelected(r)}
@@ -38,7 +57,7 @@ export default function ReviewsGrid({ reviews, isLoggedIn, username }: { reviews
             </button>
           ))}
         </div>
-        {reviews.length > 6 && (
+        {list.length > 6 && (
           <div className="mt-3 flex justify-center">
             <Link href={`/profile/${username}/albums-reviewed`}
               className="flex items-center gap-1.5 text-xs text-[#a0a0a0] hover:text-[#c4a832] border border-[#2e2e2e] hover:border-[#c4a832] rounded-full px-4 py-2 transition-colors">
@@ -66,6 +85,28 @@ export default function ReviewsGrid({ reviews, isLoggedIn, username }: { reviews
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></svg>
             </button>
+
+            {isOwner && (
+              <div className="flex items-center gap-4 pt-3 pr-9">
+                <Link
+                  href={`/album/${selected.album.spotifyId}?review=1`}
+                  onClick={() => setSelected(null)}
+                  className="flex items-center gap-1 text-xs text-[#c4a832] hover:underline"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                  Edit review
+                </Link>
+                <button
+                  onClick={() => deleteReview(selected)}
+                  disabled={deleting}
+                  className="flex items-center gap-1 text-xs text-red-400 hover:underline disabled:opacity-50"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                  {deleting ? "Deleting…" : "Delete"}
+                </button>
+              </div>
+            )}
+
             <ReviewCard review={selected} isLoggedIn={isLoggedIn} />
           </div>
         </div>

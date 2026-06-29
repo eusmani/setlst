@@ -223,6 +223,7 @@ export default async function ProfilePage({
       ) : (
         <ReviewsGrid
           isLoggedIn={!!session}
+          isOwner={isOwnProfile}
           username={user.username}
           reviews={visibleReviews.map((r) => ({
             id: r.id,
