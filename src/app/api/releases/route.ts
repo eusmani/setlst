@@ -38,9 +38,27 @@ const POPULAR_UNDERGROUND: Artist[] = [
   "Vein.fm", "Chat Pile", "Full of Hell", "Spiritbox", "Loathe",
   "SeeYouSpaceCowboy", "Blood Incantation", "Gatecreeper", "Undeath",
   "200 Stab Wounds", "The Armed", "Portrayal of Guilt",
+  // R&B / soul / neo-soul
+  "Ravyn Lenae", "Smino", "Amaarae", "Cleo Sol", "Sault", "Joyce Wrice",
+  "UMI", "Kelela", "serpentwithfeet", "Yves Tumor", "Arlo Parks", "Sampha",
+  "Yaya Bey", "Steve Lacy",
+  // country / americana / alt-country
+  "Sierra Ferrell", "Charley Crockett", "S.G. Goodman", "Colter Wall",
+  "Margo Price", "Waxahatchee", "Sturgill Simpson", "Tyler Childers",
+  // electronic / dance / ambient
+  "Overmono", "Two Shell", "Oneohtrix Point Never", "Floating Points",
+  "LSDXOXO", "Skee Mask", "Salamanda", "Four Tet", "Caribou", "Jamie xx",
+  // jazz / experimental
+  "BADBADNOTGOOD", "Nubya Garcia", "Makaya McCraven", "Sam Gendel",
+  "DOMi & JD BECK", "Standing on the Corner", "Shabaka",
+  // indie pop / folk / singer-songwriter
+  "Faye Webster", "Adrianne Lenker", "Big Thief", "Indigo De Souza",
+  "Samia", "Jessica Pratt", "Cassandra Jenkins", "Clairo", "Sufjan Stevens",
+  // global / afrobeats / latin
+  "Obongjayar", "Sampa the Great", "Little Simz", "Tems",
 ];
 
-// Radar roster — underground / non-mainstream artists only.
+// Radar roster — underground / non-mainstream artists across many genres.
 const ARTISTS: Artist[] = POPULAR_UNDERGROUND;
 
 interface ItunesAlbum {
