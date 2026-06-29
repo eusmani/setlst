@@ -138,7 +138,7 @@ export default function ChatView({ username }: { username: string }) {
                   {picker === m.id && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className={`absolute -top-10 ${m.fromMe ? "right-0" : "left-0"} z-10 flex items-center gap-1 bg-[#1a1a1a] border border-[#2e2e2e] rounded-full px-2 py-1 shadow-xl`}
+                      className={`absolute top-full mt-1 ${m.fromMe ? "right-0" : "left-0"} z-10 flex items-center gap-1.5 bg-[#1a1a1a] border border-[#2e2e2e] rounded-full px-2.5 py-1.5 shadow-xl`}
                     >
                       {EMOJIS.map((e) => (
                         <button key={e} onClick={() => react(m.id, e)} className="text-lg leading-none hover:scale-125 transition-transform">{e}</button>
