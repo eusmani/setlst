@@ -148,8 +148,8 @@ export default async function ProfilePage({
 
           <div className="flex items-center gap-6">
             {[
-              { val: user._count.reviews, label: "reviews", href: null },
-              { val: user._count.followers, label: "followers", href: null },
+              { val: user._count.reviews, label: "reviews", href: `${base}/reviews` },
+              { val: user._count.followers, label: "followers", href: `${base}/followers` },
               // Following = people followed + artists followed, merged into one list.
               { val: user._count.following + user.artistFollows.length, label: "following", href: `${base}/following` },
             ].map(({ val, label, href }) => {

@@ -15,7 +15,7 @@ function releaseType(title: string): "album" | "ep" | "single" {
 }
 
 
-const LISTS = ["reviews", "wishlist", "likes", "following"] as const;
+const LISTS = ["reviews", "wishlist", "likes", "following", "followers"] as const;
 type ListKind = (typeof LISTS)[number];
 
 export default async function ProfileListPage({
@@ -149,6 +149,34 @@ export default async function ProfileListPage({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[#f0f0f0] group-hover:text-[#c4a832] transition-colors truncate">{a.artist}</p>
                   <p className="text-xs text-[#6b6b6b]">Artist</p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      );
+  } else if (list === "followers") {
+    title = "Followers";
+    const followers = await prisma.follow.findMany({
+      where: { followingId: user.id },
+      include: { follower: { select: { username: true, avatar: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    body =
+      followers.length === 0 ? (
+        <Empty label="No followers yet." />
+      ) : (
+        <ul className="space-y-2">
+          {followers.map((f) => (
+            <li key={f.id}>
+              <Link
+                href={`/profile/${f.follower.username}`}
+                className="flex items-center gap-3 p-3 bg-[#1a1a1a] border border-[#1f1f1f] hover:border-[#2e2e2e] rounded-xl group transition-colors"
+              >
+                <Avatar username={f.follower.username} avatar={f.follower.avatar} size={40} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-[#f0f0f0] group-hover:text-[#c4a832] transition-colors truncate">{f.follower.username}</p>
+                  <p className="text-xs text-[#6b6b6b]">Member</p>
                 </div>
               </Link>
             </li>
