@@ -21,7 +21,10 @@
 
 * { box-sizing: border-box; }
 
-html { background: #111111; color: #f0f0f0; scroll-behavior: smooth; font-size: 17px; overflow-x: clip; }
+html { background: #111111; color: #f0f0f0; scroll-behavior: smooth; font-size: 17px; overflow-x: clip; overscroll-behavior: none; }
+/* Stop the iOS webview's elastic overscroll bounce, which otherwise drags the
+   fixed top bar up/down when you scroll past the top or bottom. */
+body { overscroll-behavior: none; }
 
 body {
   background: #111111;
