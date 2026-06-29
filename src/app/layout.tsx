@@ -62,8 +62,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <RegisterSW />
           <NativeBridge />
           <Onboarding />
-          <UpcomingBanner />
           <Navbar />
+          {/* Offsets the fixed navbar (h-16) so content isn't hidden beneath it. */}
+          <div className="h-16 shrink-0" aria-hidden />
+          <UpcomingBanner />
           <BottomNav />
           <VerifyBanner />
           <main className="flex-1">{children}</main>
