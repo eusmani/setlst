@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { getUserActivity, getFriendsActivity, getRecentActivity, getUserAddedAlbums, type AddedAlbum, type ActivityItem } from "@/lib/feed";
+import { getUserActivity, getFriendsActivity, getRecentActivity, type ActivityItem } from "@/lib/feed";
 import MobileActivitySection from "@/components/home/MobileActivitySection";
 import Link from "next/link";
 import HomeFeed from "./HomeFeed";
@@ -20,15 +20,12 @@ export default async function HomePage() {
   let recentActivity: ActivityItem[] = [];
   let myActivity: ActivityItem[] = [];
   let friendsActivity: ActivityItem[] = [];
-  let myRecentAlbums: AddedAlbum[] = [];
   if (session?.user?.id) {
     try {
-      const [added, mine, friends] = await Promise.all([
-        getUserAddedAlbums(session.user.id, 24),
+      const [mine, friends] = await Promise.all([
         getUserActivity(session.user.id, 30),
         getFriendsActivity(session.user.id, 30),
       ]);
-      myRecentAlbums = added;
       myActivity = mine;
       friendsActivity = friends;
     } catch {}
@@ -127,15 +124,11 @@ export default async function HomePage() {
           {/* Main column */}
           <section className="lg:col-span-2 space-y-5 sm:space-y-6 min-w-0">
             {session && (
-              <TrendingAlbums
-                albums={myRecentAlbums}
-                limit={12}
-                slider
-                heading="Your recent activity"
-                showSeeAll
-                seeAllHref="/activity"
-                emptyMessage="You haven't added any albums yet. Log or save one and it'll show up here."
-              />
+              <div>
+                <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your recent activity</h2>
+                {/* Reviews + discussion posts + replies — not just albums. */}
+                <HomeFeed items={myActivity} isLoggedIn={!!session} />
+              </div>
             )}
             {/* Popular This Week — desktop only; mobile keeps a simpler home */}
             <div className="hidden lg:block">
