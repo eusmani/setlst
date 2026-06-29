@@ -256,7 +256,8 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login" className="text-sm text-[#a0a0a0] hover:text-[#f0f0f0] px-3 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors">
+              {/* Desktop only — on mobile, Sign in is reached from the Join page. */}
+              <Link href="/login" className="hidden sm:inline-block text-sm text-[#a0a0a0] hover:text-[#f0f0f0] px-3 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors">
                 Sign in
               </Link>
               <Link href="/register" className="text-sm bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111]  px-3 py-1.5 rounded-md transition-colors">
