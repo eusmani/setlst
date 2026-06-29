@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
-import ReviewCard from "@/components/review/ReviewCard";
+import ReviewsGrid from "./ReviewsGrid";
 import FollowButton from "./FollowButton";
 import TopAlbums from "./TopAlbums";
 import Crates from "./Crates";
@@ -221,29 +221,24 @@ export default async function ProfilePage({
       {visibleReviews.length === 0 ? (
         <div className="text-center py-12 text-[#6b6b6b] text-sm">No reviews yet.</div>
       ) : (
-        <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl px-4">
-          {visibleReviews.map((r) => (
-            <ReviewCard
-              key={r.id}
-              isLoggedIn={!!session}
-              review={{
-                id: r.id,
-                rating: r.rating,
-                subject: r.subject ?? null,
-                body: r.body ?? null,
-                favoriteSong: r.favoriteSong ?? null,
-                leastFavoriteSong: r.leastFavoriteSong ?? null,
-                showSongs: r.showSongs,
-                createdAt: r.createdAt.toISOString(),
-                user: { id: user.id, username: user.username, avatar: user.avatar ?? null },
-                album: { spotifyId: r.album.spotifyId, title: r.album.title, artist: r.album.artist, artwork: r.album.artwork ?? null },
-                likeCount: r.likes.filter((l) => l.value === 1).length,
-                dislikeCount: r.likes.filter((l) => l.value === -1).length,
-                myVote: session ? (r.likes.find((l) => l.userId === session.user.id)?.value ?? 0) : 0,
-              }}
-            />
-          ))}
-        </div>
+        <ReviewsGrid
+          isLoggedIn={!!session}
+          reviews={visibleReviews.map((r) => ({
+            id: r.id,
+            rating: r.rating,
+            subject: r.subject ?? null,
+            body: r.body ?? null,
+            favoriteSong: r.favoriteSong ?? null,
+            leastFavoriteSong: r.leastFavoriteSong ?? null,
+            showSongs: r.showSongs,
+            createdAt: r.createdAt.toISOString(),
+            user: { id: user.id, username: user.username, avatar: user.avatar ?? null },
+            album: { spotifyId: r.album.spotifyId, title: r.album.title, artist: r.album.artist, artwork: r.album.artwork ?? null },
+            likeCount: r.likes.filter((l) => l.value === 1).length,
+            dislikeCount: r.likes.filter((l) => l.value === -1).length,
+            myVote: session ? (r.likes.find((l) => l.userId === session.user.id)?.value ?? 0) : 0,
+          }))}
+        />
       )}
 
       {/* Activity / history */}
