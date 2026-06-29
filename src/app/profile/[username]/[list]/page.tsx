@@ -44,7 +44,7 @@ export default async function ProfileListPage({
     if (!isOwner && !isFollower) {
       return (
         <div className="max-w-2xl mx-auto px-5 py-20 text-center">
-          <Link href={`/profile/${user.username}`} className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
+          <Link href={`/profile/${user.username}`} className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
             ← {user.username}
           </Link>
           <p className="text-sm text-[#f0f0f0] mt-6 mb-1">This account is private</p>
@@ -218,7 +218,7 @@ export default async function ProfileListPage({
 
   return (
     <div className="max-w-2xl mx-auto px-5 py-12">
-      <Link href={`/profile/${user.username}`} className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
+      <Link href={`/profile/${user.username}`} className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
         ← {user.username}
       </Link>
       <h1 className="font-serif text-2xl text-[#f0f0f0] mt-2 mb-6">{title}</h1>

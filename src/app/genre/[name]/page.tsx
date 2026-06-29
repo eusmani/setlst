@@ -9,7 +9,7 @@ export default async function GenrePage({ params }: { params: Promise<{ name: st
 
   return (
     <div className="max-w-4xl mx-auto px-5 py-12">
-      <Link href="/search" className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors mb-6 block">
+      <Link href="/search" className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors mb-6 block">
         ← Back to search
       </Link>
 

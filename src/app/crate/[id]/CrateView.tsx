@@ -99,7 +99,7 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
 
   return (
     <div className="max-w-2xl mx-auto px-5 pt-6 pb-12">
-      <Link href={`/profile/${crate.username}`} className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
+      <Link href={`/profile/${crate.username}`} className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
         ← {crate.username}&apos;s profile
       </Link>
 

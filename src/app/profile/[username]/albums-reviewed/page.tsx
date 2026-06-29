@@ -10,7 +10,7 @@ export default async function AlbumsReviewedPage({ params }: { params: Promise<{
     return (
       <div className="max-w-3xl mx-auto px-5 pt-12 text-center">
         <p className="text-[#6b6b6b] text-sm mb-3">User not found.</p>
-        <Link href="/" className="text-xs text-[#c4a832] hover:underline">← Home</Link>
+        <Link href="/" className="text-sm text-[#c4a832] hover:underline">← Home</Link>
       </div>
     );
   }
@@ -26,7 +26,7 @@ export default async function AlbumsReviewedPage({ params }: { params: Promise<{
 
   return (
     <div className="max-w-3xl mx-auto px-5 pt-5 pb-12">
-      <Link href={`/profile/${username}`} className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors">← {username}</Link>
+      <Link href={`/profile/${username}`} className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">← {username}</Link>
       <h1 className="font-serif text-3xl text-[#f0f0f0] mt-2 mb-1">Albums reviewed</h1>
       <p className="text-xs text-[#6b6b6b] mb-5">{reviews.length} {reviews.length === 1 ? "album" : "albums"} · most recent first</p>
 

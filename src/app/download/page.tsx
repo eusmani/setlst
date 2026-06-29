@@ -25,7 +25,7 @@ export default function DownloadPage() {
         <p className="text-xs text-[#6b6b6b]">Coming soon — review pending.</p>
       </div>
 
-      <Link href="/" className="inline-block mt-8 text-xs text-[#c4a832] hover:underline">← Back home</Link>
+      <Link href="/" className="inline-block mt-8 text-sm text-[#c4a832] hover:underline">← Back home</Link>
     </div>
   );
 }

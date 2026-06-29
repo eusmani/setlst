@@ -10,7 +10,7 @@ const UPDATED = "June 27, 2026";
 export default function PrivacyPage() {
   return (
     <div className="max-w-2xl mx-auto px-5 pt-6 pb-16">
-      <Link href="/" className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors">← Home</Link>
+      <Link href="/" className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">← Home</Link>
       <h1 className="font-serif text-3xl text-[#f0f0f0] mt-3 mb-1">Privacy Policy</h1>
       <p className="text-xs text-[#6b6b6b] mb-8">Last updated {UPDATED}</p>
 

@@ -212,7 +212,7 @@ export default async function AlbumPage({
     <>
       {artwork && <AlbumBackdrop artwork={artwork} />}
       <div className="max-w-4xl mx-auto px-5 py-12 relative z-10">
-      <Link href="/search" className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors mb-6 block">
+      <Link href="/search" className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors mb-6 block">
         ← Back to search
       </Link>
 

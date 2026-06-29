@@ -24,7 +24,7 @@ export default async function CratePage({ params }: { params: Promise<{ id: stri
     return (
       <div className="max-w-2xl mx-auto px-5 pt-12 text-center">
         <p className="text-[#6b6b6b] text-sm mb-3">Crate not found.</p>
-        <Link href="/" className="text-xs text-[#c4a832] hover:underline">← Home</Link>
+        <Link href="/" className="text-sm text-[#c4a832] hover:underline">← Home</Link>
       </div>
     );
   }

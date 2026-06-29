@@ -127,7 +127,7 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
   return (
     <div className="max-w-2xl mx-auto px-5 pt-6 pb-12">
       {/* Album the discussion is about */}
-      <Link href={`/album/${thread.album.spotifyId}`} className="inline-flex items-center gap-2 mb-4 text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">
+      <Link href={`/album/${thread.album.spotifyId}`} className="inline-flex items-center gap-2 mb-4 text-sm text-[#a0a0a0] hover:text-[#c4a832] transition-colors">
         {thread.album.artwork && <img src={thread.album.artwork} alt="" className="w-7 h-7 rounded object-cover" />}
         <span>← {thread.album.title} · {thread.album.artist}</span>
       </Link>

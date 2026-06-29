@@ -34,7 +34,7 @@ export default function DeleteAccountPage() {
 
   return (
     <div className="max-w-md mx-auto px-5 py-12">
-      <Link href="/settings" className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors mb-6 block">
+      <Link href="/settings" className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors mb-6 block">
         ← Back to settings
       </Link>
 
