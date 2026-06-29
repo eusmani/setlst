@@ -152,7 +152,15 @@ export default function Navbar() {
                 onClick={() => setUserOpen(!userOpen)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors"
               >
-                <div className="relative">
+                {/* Mobile: hamburger (3 lines) */}
+                <div className="relative sm:hidden text-[#f0f0f0] p-0.5">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+                  </svg>
+                  {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c4a832] border border-[#111111]" />}
+                </div>
+                {/* Desktop: avatar + name + chevron */}
+                <div className="relative hidden sm:block">
                   <Avatar username={displayName} avatar={pfp} size={36} />
                   {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c4a832] border border-[#111111]" />}
                 </div>
@@ -169,15 +177,27 @@ export default function Navbar() {
                       <p className="text-xs text-[#6b6b6b]">Signed in as</p>
                       <p className="text-sm  text-[#f0f0f0] truncate">{displayName}</p>
                     </div>
+                    {/* Desktop: Profile (on mobile, Profile lives in the bottom bar) */}
                     <Link
                       href={`/profile/${displayName}`}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
+                      className="hidden sm:flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
                       onClick={() => setUserOpen(false)}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                       </svg>
                       Profile
+                    </Link>
+                    {/* Mobile: News (replaces Profile, which moved to the bottom bar) */}
+                    <Link
+                      href="/diary"
+                      className="flex sm:hidden items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
+                      onClick={() => setUserOpen(false)}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                      </svg>
+                      News
                     </Link>
                     <Link
                       href="/inbox"

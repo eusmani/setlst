@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
-const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean }[] = [
+const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profile?: boolean }[] = [
   {
     href: "/members", label: "Friends",
     icon: (
@@ -44,11 +44,11 @@ const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean }[] = 
     ),
   },
   {
-    href: "/diary", label: "News",
+    href: "/profile", label: "Profile", profile: true,
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
       </svg>
     ),
   },
@@ -58,11 +58,19 @@ const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean }[] = 
 // where the top Navbar's links take over).
 export default function BottomNav() {
   const pathname = usePathname();
+  // Current username for the Profile tab link (kept out of the session for reliability).
+  const [username, setUsername] = useState<string | null>(null);
+  useEffect(() => {
+    fetch("/api/me").then((r) => r.json()).then((d) => { if (d?.username) setUsername(d.username); }).catch(() => {});
+  }, []);
+
   return (
     <nav className="sm:hidden fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50">
       <div className="flex items-stretch justify-around h-14 rounded-2xl border border-[#2e2e2e] bg-[#1a1a1a]/95 backdrop-blur-md shadow-2xl shadow-black/60 px-1">
-        {NAV.map(({ href, label, icon, plus }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        {NAV.map(({ href, label, icon, plus, profile }) => {
+          // Profile tab points at the current user (or login when signed out).
+          if (profile) href = username ? `/profile/${username}` : "/login";
+          const active = profile ? pathname.startsWith("/profile") : href === "/" ? pathname === "/" : pathname.startsWith(href);
 
           // The center "+" is a prominent yellow action button (write a review).
           if (plus) {
