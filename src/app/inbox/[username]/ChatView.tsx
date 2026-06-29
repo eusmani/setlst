@@ -17,6 +17,13 @@ interface Partner { username: string; avatar: string | null }
 
 const EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
+function fmtTime(d: string) {
+  const date = new Date(d);
+  const today = new Date().toDateString() === date.toDateString();
+  const t = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return today ? t : `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}, ${t}`;
+}
+
 export default function ChatView({ username }: { username: string }) {
   const router = useRouter();
   const [partner, setPartner] = useState<Partner | null>(null);
@@ -142,7 +149,7 @@ export default function ChatView({ username }: { username: string }) {
 
                 {/* Existing reactions */}
                 {m.reactions.length > 0 && (
-                  <div className={`flex gap-1 -mt-1 mb-1 ${m.fromMe ? "mr-1" : "ml-1"}`}>
+                  <div className={`flex gap-1 mt-1 ${m.fromMe ? "mr-1" : "ml-1"}`}>
                     {m.reactions.map((r, idx) => (
                       <button key={idx} onClick={(e) => { e.stopPropagation(); react(m.id, r.emoji); }}
                         className={`text-xs rounded-full px-1.5 py-0.5 border ${r.mine ? "border-[#c4a832] bg-[#2a2412]" : "border-[#2e2e2e] bg-[#1a1a1a]"}`}>
@@ -151,6 +158,9 @@ export default function ChatView({ username }: { username: string }) {
                     ))}
                   </div>
                 )}
+
+                {/* Sent time */}
+                <span className={`text-[10px] text-[#6b6b6b] mt-0.5 mb-1.5 ${m.fromMe ? "mr-1" : "ml-1"}`}>{fmtTime(m.createdAt)}</span>
               </div>
             ))
           )}
