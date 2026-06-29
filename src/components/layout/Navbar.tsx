@@ -97,11 +97,11 @@ export default function Navbar() {
     <>
     {/* Solid (opaque) on mobile so it stays put without content bleeding through as you scroll. */}
     <nav className="sticky top-0 z-50 border-b border-[#1f1f1f] bg-[#111111] sm:bg-[#111111]/96 sm:backdrop-blur-sm">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center gap-10">
+      <div className="max-w-6xl mx-auto pl-3 pr-5 sm:px-8 h-16 flex items-center gap-10">
 
         {/* Logo */}
-        <Link href="/" className="app-logo flex items-center gap-2 font-serif text-2xl font-bold tracking-wide text-[#f0f0f0] hover:text-[#c4a832] transition-colors shrink-0">
-          <img src="/turntable-logo.png" alt="" className="w-9 h-9 shrink-0 object-contain" />
+        <Link href="/" className="app-logo flex items-center gap-2 font-serif text-3xl font-bold tracking-wide text-[#f0f0f0] hover:text-[#c4a832] transition-colors shrink-0">
+          <img src="/turntable-logo.png" alt="" className="w-12 h-12 shrink-0 object-contain" />
           SETLST
         </Link>
 
