@@ -136,6 +136,16 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2 ml-auto">
+          {/* Get the iOS app — desktop only (you're already in it on mobile) */}
+          <Link
+            href="/download"
+            className="hidden sm:inline-flex items-center gap-1.5 text-sm border border-[#2e2e2e] hover:border-[#c4a832] text-[#a0a0a0] hover:text-[#c4a832] px-3 py-1.5 rounded-md transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="7" y="2" width="10" height="20" rx="2" /><line x1="11" y1="18" x2="13" y2="18" />
+            </svg>
+            Download app
+          </Link>
           {session ? (
             <div className="relative" ref={userMenuRef}>
               <button
