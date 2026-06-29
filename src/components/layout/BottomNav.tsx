@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import Avatar from "@/components/ui/Avatar";
 
 const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profile?: boolean }[] = [
   {
@@ -58,10 +59,11 @@ const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profi
 // where the top Navbar's links take over).
 export default function BottomNav() {
   const pathname = usePathname();
-  // Current username for the Profile tab link (kept out of the session for reliability).
-  const [username, setUsername] = useState<string | null>(null);
+  // Current user (username + pfp) for the Profile tab, kept out of the session.
+  const [me, setMe] = useState<{ username: string; avatar: string | null } | null>(null);
+  const username = me?.username ?? null;
   useEffect(() => {
-    fetch("/api/me").then((r) => r.json()).then((d) => { if (d?.username) setUsername(d.username); }).catch(() => {});
+    fetch("/api/me").then((r) => r.json()).then((d) => { if (d?.username) setMe(d); }).catch(() => {});
   }, []);
 
   return (
@@ -91,7 +93,13 @@ export default function BottomNav() {
                 active ? "text-[#c4a832]" : "text-[#6b6b6b] hover:text-[#a0a0a0]"
               }`}
             >
-              {icon}
+              {profile && username ? (
+                <span className={`rounded-full ${active ? "ring-2 ring-[#c4a832]" : ""}`}>
+                  <Avatar username={username} avatar={me?.avatar ?? null} size={22} />
+                </span>
+              ) : (
+                icon
+              )}
               <span>{label}</span>
             </Link>
           );
