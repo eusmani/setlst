@@ -24,6 +24,13 @@ function fmtTime(d: string) {
   return today ? t : `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}, ${t}`;
 }
 
+// First whole emoji/grapheme from typed input (handles multi-codepoint emoji).
+function firstGrapheme(s: string): string {
+  const Seg = (Intl as unknown as { Segmenter?: new (l?: string, o?: { granularity: string }) => { segment: (s: string) => Iterable<{ segment: string }> } }).Segmenter;
+  if (Seg) { for (const { segment } of new Seg(undefined, { granularity: "grapheme" }).segment(s)) return segment; }
+  return [...s][0] ?? s;
+}
+
 export default function ChatView({ username }: { username: string }) {
   const router = useRouter();
   const [partner, setPartner] = useState<Partner | null>(null);
@@ -34,6 +41,15 @@ export default function ChatView({ username }: { username: string }) {
   const [loaded, setLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const countRef = useRef(0);
+  // Hidden input that summons the OS emoji keyboard for "react with any emoji".
+  const emojiInputRef = useRef<HTMLInputElement>(null);
+  const customForRef = useRef<string | null>(null);
+
+  function openEmojiKeyboard(messageId: string) {
+    customForRef.current = messageId;
+    setPicker(null);
+    emojiInputRef.current?.focus();
+  }
 
   const load = useCallback(async () => {
     try {
@@ -143,6 +159,11 @@ export default function ChatView({ username }: { username: string }) {
                       {EMOJIS.map((e) => (
                         <button key={e} onClick={() => react(m.id, e)} className="text-lg leading-none hover:scale-125 transition-transform">{e}</button>
                       ))}
+                      {/* Any emoji → opens the device emoji keyboard */}
+                      <button onClick={() => openEmojiKeyboard(m.id)} aria-label="More emojis"
+                        className="w-6 h-6 flex items-center justify-center rounded-full bg-[#2a2a2a] text-[#a0a0a0] hover:text-[#f0f0f0]">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -183,6 +204,21 @@ export default function ChatView({ username }: { username: string }) {
           </button>
         </div>
       </div>
+
+      {/* Off-screen input that pops the OS emoji keyboard for picking any emoji */}
+      <input
+        ref={emojiInputRef}
+        aria-hidden
+        autoComplete="off"
+        onChange={(e) => {
+          const v = e.target.value;
+          e.target.value = "";
+          const id = customForRef.current;
+          customForRef.current = null;
+          if (v && id) { react(id, firstGrapheme(v)); emojiInputRef.current?.blur(); }
+        }}
+        className="fixed bottom-2 left-2 w-px h-px opacity-0"
+      />
     </div>
   );
 }
