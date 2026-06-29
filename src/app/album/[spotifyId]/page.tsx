@@ -234,31 +234,35 @@ export default async function AlbumPage({
               title={title}
             />
           </div>
-          <div className="mt-4">
-            <LogPanel
-              album={album}
-              trackNames={trackNames}
-              initialReview={myReview ? {
-                rating: myReview.rating,
-                subject: myReview.subject ?? null,
-                body: myReview.body ?? null,
-                favoriteSong: myReview.favoriteSong ?? null,
-                leastFavoriteSong: myReview.leastFavoriteSong ?? null,
-                showSongs: myReview.showSongs,
-              } : null}
-              isLoggedIn={!!session}
-              autoOpenReview={sp.review === "1"}
+          {/* Desktop: actions live under the cover. On mobile they move between
+              Contributors and the rating distribution (rendered further down). */}
+          <div className="hidden sm:block">
+            <div className="mt-4">
+              <LogPanel
+                album={album}
+                trackNames={trackNames}
+                initialReview={myReview ? {
+                  rating: myReview.rating,
+                  subject: myReview.subject ?? null,
+                  body: myReview.body ?? null,
+                  favoriteSong: myReview.favoriteSong ?? null,
+                  leastFavoriteSong: myReview.leastFavoriteSong ?? null,
+                  showSongs: myReview.showSongs,
+                } : null}
+                isLoggedIn={!!session}
+                autoOpenReview={sp.review === "1"}
+              />
+            </div>
+            <ListenListButton
+              spotifyId={spotifyId}
+              title={title}
+              artist={artist}
+              artwork={artwork ?? null}
+              year={year ?? null}
             />
-          </div>
-          <ListenListButton
-            spotifyId={spotifyId}
-            title={title}
-            artist={artist}
-            artwork={artwork ?? null}
-            year={year ?? null}
-          />
-          <div className="mt-2">
-            <AddToCrate album={album} isLoggedIn={!!session} />
+            <div className="mt-2">
+              <AddToCrate album={album} isLoggedIn={!!session} />
+            </div>
           </div>
         </div>
 
@@ -382,6 +386,32 @@ export default async function AlbumPage({
           )}
 
         </div>
+      </div>
+
+      {/* Mobile only — actions sit between Contributors and the rating distribution */}
+      <div className="sm:hidden mb-8 space-y-2">
+        <LogPanel
+          album={album}
+          trackNames={trackNames}
+          initialReview={myReview ? {
+            rating: myReview.rating,
+            subject: myReview.subject ?? null,
+            body: myReview.body ?? null,
+            favoriteSong: myReview.favoriteSong ?? null,
+            leastFavoriteSong: myReview.leastFavoriteSong ?? null,
+            showSongs: myReview.showSongs,
+          } : null}
+          isLoggedIn={!!session}
+          autoOpenReview={sp.review === "1"}
+        />
+        <ListenListButton
+          spotifyId={spotifyId}
+          title={title}
+          artist={artist}
+          artwork={artwork ?? null}
+          year={year ?? null}
+        />
+        <AddToCrate album={album} isLoggedIn={!!session} />
       </div>
 
       {/* Average rating distribution — between the credits and the tracklist */}
