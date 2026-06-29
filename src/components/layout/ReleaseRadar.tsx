@@ -96,12 +96,12 @@ export default function ReleaseRadar() {
 
       <div className="px-4 py-2.5 border-t border-[#1f1f1f]">
         <a
-          href="https://open.spotify.com/genre/new-releases"
+          href="https://open.spotify.com/playlist/37i9dQZF1DX4JAvHpjipBk"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[10px] text-[#6b6b6b] hover:text-[#c4a832] transition-colors"
         >
-          More new releases on Spotify →
+          New Music Friday on Spotify →
         </a>
       </div>
     </div>
