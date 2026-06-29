@@ -114,7 +114,11 @@ export default function TopAlbums({ initial, isOwner }: Props) {
       {!editing && (
         <div className="grid grid-cols-5 gap-2 sm:gap-3">
           {albums.map((a) => (
-            <Link key={a.spotifyId} href={`/album/${a.spotifyId}`} className="group">
+            <Link
+              key={a.spotifyId}
+              href={`/album/${a.spotifyId}?title=${encodeURIComponent(a.title)}&artist=${encodeURIComponent(a.artist)}${a.artwork ? `&artwork=${encodeURIComponent(a.artwork)}` : ""}`}
+              className="group"
+            >
               <div className="aspect-square rounded-md overflow-hidden bg-[#1a1a1a] border border-[#1f1f1f] group-hover:border-[#c4a832] transition-colors">
                 {a.artwork ? (
                   <img src={a.artwork} alt={a.title} className="w-full h-full object-cover" />
