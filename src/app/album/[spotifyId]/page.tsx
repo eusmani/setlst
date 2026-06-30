@@ -12,6 +12,7 @@ import AlbumBackdrop from "./AlbumBackdrop";
 import RatingBars from "./RatingBars";
 import ListenListButton from "./ListenListButton";
 import AddToCrate from "./AddToCrate";
+import SendAlbum from "./SendAlbum";
 import GenrePills from "./GenrePills";
 import SimilarAlbums from "./SimilarAlbums";
 import Discussion from "./Discussion";
@@ -263,6 +264,9 @@ export default async function AlbumPage({
             <div className="mt-2">
               <AddToCrate album={album} isLoggedIn={!!session} />
             </div>
+            <div className="mt-2">
+              <SendAlbum album={{ spotifyId, title, artist, artwork: artwork ?? null }} isLoggedIn={!!session} />
+            </div>
           </div>
         </div>
 
@@ -412,6 +416,7 @@ export default async function AlbumPage({
           year={year ?? null}
         />
         <AddToCrate album={album} isLoggedIn={!!session} />
+        <SendAlbum album={{ spotifyId, title, artist, artwork: artwork ?? null }} isLoggedIn={!!session} />
       </div>
 
       {/* Average rating distribution — between the credits and the tracklist */}

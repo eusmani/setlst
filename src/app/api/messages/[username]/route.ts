@@ -42,6 +42,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
       createdAt: m.createdAt.toISOString(),
       fromMe: m.fromId === me,
       thread: m.thread ? { id: m.thread.id, title: m.thread.title, album: `${m.thread.albumTitle} · ${m.thread.albumArtist}` } : null,
+      album: m.albumSpotifyId ? { spotifyId: m.albumSpotifyId, title: m.albumTitle, artist: m.albumArtist, artwork: m.albumArtwork } : null,
       reactions: m.reactions.map((r) => ({ emoji: r.emoji, mine: r.userId === me })),
     })),
   });

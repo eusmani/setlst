@@ -255,6 +255,11 @@ model DirectMessage {
   id        String   @id @default(cuid())
   body      String?
   threadId  String?
+  // Shared album (denormalized so the message renders an album card).
+  albumSpotifyId String?
+  albumTitle     String?
+  albumArtist    String?
+  albumArtwork   String?
   createdAt DateTime @default(now())
   readAt    DateTime?
 
