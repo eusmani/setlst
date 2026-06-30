@@ -37,10 +37,9 @@ export default function SendAlbum({ album, isLoggedIn }: { album: Album; isLogge
 
   return (
     <>
-      <button onClick={openModal}
-        className="w-full flex items-center justify-center gap-2 border border-[#2e2e2e] hover:border-[#c4a832] text-[#a0a0a0] hover:text-[#c4a832] text-sm rounded-lg py-2 transition-colors">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
-        Send to a friend
+      <button onClick={openModal} aria-label="Send to a friend"
+        className="p-1.5 -mr-1.5 rounded-full text-[#a0a0a0] hover:text-[#c4a832] hover:bg-[#1a1a1a] transition-colors">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
       </button>
 
       {open && (
