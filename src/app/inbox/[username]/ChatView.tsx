@@ -140,13 +140,14 @@ export default function ChatView({ username }: { username: string }) {
                       m.fromMe ? "bg-[#c4a832] text-[#141414] rounded-br-md" : "bg-[#262626] text-[#f0f0f0] rounded-bl-md"
                     }`}
                   >
-                    {m.thread ? (
+                    {m.thread && (
                       <Link href={`/thread/${m.thread.id}`} onClick={(e) => e.stopPropagation()} className="block">
                         <span className="block text-[10px] uppercase tracking-wide opacity-70">Shared a discussion</span>
                         <span className="block font-semibold">{m.thread.title}</span>
                         <span className="block text-xs opacity-80">{m.thread.album}</span>
                       </Link>
-                    ) : m.album ? (
+                    )}
+                    {m.album && (
                       <Link href={`/album/${m.album.spotifyId}?title=${encodeURIComponent(m.album.title)}&artist=${encodeURIComponent(m.album.artist)}${m.album.artwork ? `&artwork=${encodeURIComponent(m.album.artwork)}` : ""}`}
                         onClick={(e) => e.stopPropagation()} className="flex items-center gap-2.5 -mx-0.5">
                         {m.album.artwork && <img src={m.album.artwork} alt="" className="w-12 h-12 rounded object-cover shrink-0" />}
@@ -156,8 +157,9 @@ export default function ChatView({ username }: { username: string }) {
                           <span className="block text-xs opacity-80 truncate">{m.album.artist}</span>
                         </span>
                       </Link>
-                    ) : (
-                      m.body
+                    )}
+                    {m.body && (
+                      <span className={(m.thread || m.album) ? "block mt-2 pt-2 border-t border-black/10" : ""}>{m.body}</span>
                     )}
                   </div>
 

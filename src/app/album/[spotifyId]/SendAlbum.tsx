@@ -11,12 +11,13 @@ export default function SendAlbum({ album, isLoggedIn }: { album: Album; isLogge
   const [open, setOpen] = useState(false);
   const [friends, setFriends] = useState<Friend[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(0);
 
   function openModal() {
     if (!isLoggedIn) { router.push("/login"); return; }
-    setOpen(true); setSent(0); setSelected(new Set());
+    setOpen(true); setSent(0); setSelected(new Set()); setMessage("");
     if (friends === null) {
       fetch("/api/threads/share").then((r) => r.json()).then((d) => setFriends(Array.isArray(d) ? d : [])).catch(() => setFriends([]));
     }
@@ -29,7 +30,7 @@ export default function SendAlbum({ album, isLoggedIn }: { album: Album; isLogge
     setSending(true);
     const r = await fetch("/api/messages", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ toUsernames: [...selected], album }),
+      body: JSON.stringify({ toUsernames: [...selected], album, body: message.trim() || undefined }),
     });
     setSending(false);
     if (r.ok) { const d = await r.json(); setSent(d.sent ?? selected.size); setTimeout(() => setOpen(false), 1100); }
@@ -74,6 +75,13 @@ export default function SendAlbum({ album, isLoggedIn }: { album: Album; isLogge
                     );
                   })}
                 </div>
+                <input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Add a message… (optional)"
+                  maxLength={500}
+                  className="w-full bg-[#222222] border border-[#2e2e2e] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b] mb-3"
+                />
                 <button onClick={send} disabled={sending || selected.size === 0}
                   className="w-full bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-40 text-[#141414] text-sm font-medium py-2 rounded-lg transition-colors">
                   {sending ? "Sending…" : `Send${selected.size ? ` (${selected.size})` : ""}`}
