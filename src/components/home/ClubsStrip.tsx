@@ -29,7 +29,7 @@ export default function ClubsStrip() {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em]">SETLST Clubs · This Week</h2>
+        <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em]">Grails · This Week</h2>
         <Link href="/clubs" className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">See all →</Link>
       </div>
 

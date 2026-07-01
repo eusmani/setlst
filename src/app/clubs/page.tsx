@@ -24,14 +24,14 @@ export default async function ClubsPage() {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" /><circle cx="12" cy="12" r="3" />
         </svg>
-        <h1 className="font-serif text-3xl text-[#f0f0f0]">SETLST Clubs</h1>
+        <h1 className="font-serif text-3xl text-[#f0f0f0]">Grails</h1>
       </div>
       <p className="text-sm text-[#a0a0a0] mb-1">Four albums the whole community listens to together this week.</p>
       <p className="text-xs text-[#6b6b6b] uppercase tracking-[0.15em] mb-6">{weekLabel()}</p>
 
       {clubs.length === 0 ? (
         <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl">
-          <p className="text-sm">This week&apos;s clubs are loading — check back shortly.</p>
+          <p className="text-sm">This week&apos;s grails are loading — check back shortly.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

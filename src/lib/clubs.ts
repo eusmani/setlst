@@ -21,10 +21,10 @@ export interface ClubPick {
 }
 
 export const CLUB_CATEGORIES: ClubCategory[] = [
-  { key: "classic", label: "Classic Club", blurb: "A universally-loved landmark worth revisiting." },
-  { key: "overlooked", label: "Overlooked Club", blurb: "A cult favorite that deserves more ears." },
-  { key: "new", label: "New Release Club", blurb: "Something fresh out this week." },
-  { key: "throwback", label: "Throwback Club", blurb: "A nostalgic pick to take you back." },
+  { key: "classic", label: "Classics", blurb: "A universally-loved landmark worth revisiting." },
+  { key: "overlooked", label: "Overlooked Hits", blurb: "A cult favorite that deserves more ears." },
+  { key: "new", label: "Recents", blurb: "Something fresh out this week." },
+  { key: "throwback", label: "Throwbacks", blurb: "A nostalgic pick to take you back." },
 ];
 
 // Curated pools (title + artist). One is chosen per week by rotating index.
