@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import AlbumCard from "@/components/album/AlbumCard";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
+import ClubsStrip from "@/components/home/ClubsStrip";
 import Avatar from "@/components/ui/Avatar";
 import AddFriendButton from "@/components/social/AddFriendButton";
 import { GENRE_TAXONOMY } from "@/lib/genres";
@@ -301,6 +302,12 @@ export default function SearchPage() {
       )}
 
       {/* Default: trending from real user activity only — no dummy albums */}
+      {!searched && (
+        <div className="mb-8">
+          <ClubsStrip />
+        </div>
+      )}
+
       {!searched && (
         <TrendingAlbums
           limit={9}
