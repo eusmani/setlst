@@ -99,7 +99,7 @@ export default function LocalConcerts() {
 
       {status === "error" && (
         <div className="px-4 py-5 text-center">
-          <p className="text-xs text-[#6b6b6b] mb-2">Couldn't get location</p>
+          <p className="text-xs text-[#6b6b6b] mb-2">Couldn&apos;t get location</p>
           <button
             onClick={requestLocation}
             className="text-xs text-[#c4a832] hover:underline"

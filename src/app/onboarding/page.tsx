@@ -42,7 +42,7 @@ export default function OnboardingPage() {
             What do you listen to?
           </h1>
           <p className="text-sm text-[#6b6b6b]">
-            Pick up to 5 genres — we'll use these to personalise your recommendations.
+            Pick up to 5 genres — we&apos;ll use these to personalise your recommendations.
           </p>
         </div>
 
