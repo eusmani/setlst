@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import ActivityList from "@/components/activity/ActivityList";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
+import ClubsStrip from "@/components/home/ClubsStrip";
 import type { ActivityItem } from "@/lib/feed";
 
 type Tab = "friends" | "you" | "trending";
@@ -121,13 +122,7 @@ export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, 
             slider
             emptyMessage="Follow friends and their favorites will show up here."
           />
-          <TrendingAlbums
-            heading="New & hot — fresh releases"
-            endpoint="/api/hot-albums"
-            limit={12}
-            slider
-            emptyMessage="Couldn't load new releases right now."
-          />
+          <ClubsStrip />
         </div>
       )}
     </div>
