@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,10 @@ function albumHref(a: { spotifyId: string; title: string; artist: string; artwor
 
 export default async function TimelinePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
-  const user = await prisma.user.findUnique({ where: { username }, select: { id: true, username: true, createdAt: true } });
+  const [session, user] = await Promise.all([
+    auth(),
+    prisma.user.findUnique({ where: { username }, select: { id: true, username: true, createdAt: true } }),
+  ]);
   if (!user) {
     return (
       <div className="max-w-3xl mx-auto px-5 pt-12 text-center">
@@ -105,7 +109,7 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
   return (
     <div className="max-w-3xl mx-auto px-5 pt-5 pb-16">
       <Link href={`/profile/${username}`} className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">← {username}</Link>
-      <h1 className="font-serif text-3xl text-[#f0f0f0] mt-2 mb-1">Music Archive</h1>
+      <h1 className="font-serif text-3xl text-[#f0f0f0] mt-2 mb-1">{session?.user?.id === user.id ? "Your Diary" : `${username}'s Diary`}</h1>
       <p className="text-sm text-[#a0a0a0] mb-6">A living timeline of {username}&apos;s music taste — it grows with every album logged.</p>
 
       {years.length === 0 ? (

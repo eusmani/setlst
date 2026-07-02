@@ -191,7 +191,7 @@ export default async function ProfilePage({
             <path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" />
           </svg>
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-[#f0f0f0] font-medium">Music Archive</p>
+            <p className="text-sm text-[#f0f0f0] font-medium">{isOwnProfile ? "Your Diary" : `${user.username}'s Diary`}</p>
             <p className="text-xs text-[#6b6b6b]">A year-by-year timeline of {isOwnProfile ? "your" : `${user.username}'s`} taste</p>
           </div>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b6b6b] group-hover:text-[#c4a832] transition-colors shrink-0"><polyline points="9 6 15 12 9 18" /></svg>
