@@ -27,14 +27,17 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
     );
   }
 
-  const reviews = await prisma.review.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "asc" },
-    select: {
-      rating: true, createdAt: true,
-      album: { select: { spotifyId: true, title: true, artist: true, artwork: true, year: true, genres: true } },
-    },
-  });
+  const [reviews, concerts] = await Promise.all([
+    prisma.review.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "asc" },
+      select: {
+        rating: true, createdAt: true,
+        album: { select: { spotifyId: true, title: true, artist: true, artwork: true, year: true, genres: true } },
+      },
+    }),
+    prisma.concertAttendance.findMany({ where: { userId: user.id }, orderBy: { date: "desc" } }),
+  ]);
 
   // Track the first time this user reviewed each artist → "discovered" that year.
   const artistFirstSeen = new Map<string, number>();
@@ -52,13 +55,18 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
     monthly: number[];
     standout: { spotifyId: string; title: string; artist: string; artwork: string | null; rating: number } | null;
     discovered: Set<string>;
+    concerts: { name: string; venue: string | null; date: string }[];
   }
   const byYear = new Map<number, YearData>();
+  const ensureYear = (yr: number): YearData => {
+    let d = byYear.get(yr);
+    if (!d) { d = { year: yr, count: 0, ratingSum: 0, genres: new Map(), monthly: Array(12).fill(0), standout: null, discovered: new Set(), concerts: [] }; byYear.set(yr, d); }
+    return d;
+  };
 
   for (const r of reviews) {
     const yr = r.createdAt.getFullYear();
-    let d = byYear.get(yr);
-    if (!d) { d = { year: yr, count: 0, ratingSum: 0, genres: new Map(), monthly: Array(12).fill(0), standout: null, discovered: new Set() }; byYear.set(yr, d); }
+    const d = ensureYear(yr);
     d.count++;
     d.ratingSum += r.rating;
     d.monthly[r.createdAt.getMonth()]++;
@@ -70,6 +78,13 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
     if (artistFirstSeen.get(r.album.artist.toLowerCase()) === yr) d.discovered.add(r.album.artist);
   }
 
+  // Fold in attended concerts by the year of the show.
+  for (const c of concerts) {
+    const yr = parseInt(c.date.slice(0, 4));
+    if (!Number.isFinite(yr)) continue;
+    ensureYear(yr).concerts.push({ name: c.name, venue: c.venue, date: c.date });
+  }
+
   const years = [...byYear.values()].sort((a, b) => b.year - a.year);
 
   // All-time headline stats
@@ -78,7 +93,7 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
   const allGenres = new Map<string, number>();
   for (const d of byYear.values()) for (const [g, n] of d.genres) allGenres.set(g, (allGenres.get(g) ?? 0) + n);
   const topGenre = [...allGenres.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-  const memberYear = user.createdAt.getFullYear();
+  const totalConcerts = concerts.length;
 
   const Stat = ({ v, l }: { v: string | number; l: string }) => (
     <div className="text-center">
@@ -93,10 +108,10 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
       <h1 className="font-serif text-3xl text-[#f0f0f0] mt-2 mb-1">Music Archive</h1>
       <p className="text-sm text-[#a0a0a0] mb-6">A living timeline of {username}&apos;s music taste — it grows with every album logged.</p>
 
-      {totalAlbums === 0 ? (
+      {years.length === 0 ? (
         <div className="py-14 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl">
           <p className="text-sm mb-1">No history yet.</p>
-          <p className="text-xs">Log some albums and this archive will start filling in.</p>
+          <p className="text-xs">Log albums and mark concerts you attend — this archive fills in as you go.</p>
         </div>
       ) : (
         <>
@@ -104,8 +119,8 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
           <div className="grid grid-cols-4 gap-2 bg-[#1a1a1a] border border-[#1f1f1f] rounded-2xl p-4 mb-8">
             <Stat v={totalAlbums} l="Albums" />
             <Stat v={totalArtists} l="Artists" />
+            <Stat v={totalConcerts} l="Concerts" />
             <Stat v={topGenre} l="Top genre" />
-            <Stat v={`'${String(memberYear).slice(2)}`} l="Since" />
           </div>
 
           {/* Year-by-year timeline */}
@@ -121,7 +136,9 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
                   <div className="flex items-baseline justify-between mb-3">
                     <h2 className="font-serif text-2xl text-[#f0f0f0]">{d.year}</h2>
                     <span className="text-xs text-[#6b6b6b]">
-                      {d.count} album{d.count === 1 ? "" : "s"} · avg {(d.ratingSum / d.count).toFixed(1)}
+                      {d.count > 0 && `${d.count} album${d.count === 1 ? "" : "s"} · avg ${(d.ratingSum / d.count).toFixed(1)}`}
+                      {d.count > 0 && d.concerts.length > 0 && " · "}
+                      {d.concerts.length > 0 && `${d.concerts.length} concert${d.concerts.length === 1 ? "" : "s"}`}
                     </span>
                   </div>
 
@@ -162,20 +179,37 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
                       </div>
                     )}
 
-                    {/* Monthly activity bars */}
-                    <div>
-                      <p className="text-[10px] text-[#6b6b6b] uppercase tracking-wider mb-1.5">
-                        Monthly highlights · busiest {MONTHS[busiest]}
-                      </p>
-                      <div className="flex items-end gap-1 h-10">
-                        {d.monthly.map((n, i) => (
-                          <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                            <div className="w-full rounded-t bg-[#c4a832]/70" style={{ height: `${(n / maxMonth) * 100}%`, minHeight: n ? 3 : 0 }} />
-                            <span className="text-[7px] text-[#4a4a4a]">{MONTHS[i][0]}</span>
-                          </div>
-                        ))}
+                    {/* Concerts attended */}
+                    {d.concerts.length > 0 && (
+                      <div>
+                        <p className="text-[10px] text-[#6b6b6b] uppercase tracking-wider mb-1.5">Concerts</p>
+                        <div className="space-y-1">
+                          {d.concerts.map((c, i) => (
+                            <div key={i} className="flex items-center gap-2 text-sm text-[#c8c8c8]">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="1.8" className="shrink-0"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+                              <span className="truncate">{c.name}{c.venue ? ` · ${c.venue}` : ""}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Monthly activity bars */}
+                    {d.count > 0 && (
+                      <div>
+                        <p className="text-[10px] text-[#6b6b6b] uppercase tracking-wider mb-1.5">
+                          Monthly highlights · busiest {MONTHS[busiest]}
+                        </p>
+                        <div className="flex items-end gap-1 h-10">
+                          {d.monthly.map((n, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                              <div className="w-full rounded-t bg-[#c4a832]/70" style={{ height: `${(n / maxMonth) * 100}%`, minHeight: n ? 3 : 0 }} />
+                              <span className="text-[7px] text-[#4a4a4a]">{MONTHS[i][0]}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

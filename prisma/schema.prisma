@@ -34,6 +34,7 @@ model User {
   dmSent         DirectMessage[]   @relation("dmSent")
   dmReceived     DirectMessage[]   @relation("dmReceived")
   messageReactions MessageReaction[]
+  concerts       ConcertAttendance[]
   comments     Comment[]
   commentLikes CommentLike[]
   followers    Follow[] @relation("following")
@@ -284,6 +285,25 @@ model MessageReaction {
   message   DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
+}
+
+// Concerts a user has attended (or is going to) — the live-music layer of their
+// music archive. Event details are denormalized from the concert source.
+model ConcertAttendance {
+  id         String   @id @default(cuid())
+  externalId String   // source event id (e.g. SeatGeek), for de-duping
+  name       String
+  venue      String?
+  city       String?
+  date       String   // YYYY-MM-DD
+  image      String?
+  createdAt  DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, externalId])
+  @@index([userId])
 }
 
 model ThreadVote {

@@ -25,6 +25,28 @@ export default function LocalConcerts() {
   const [concerts, setConcerts] = useState<Concert[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [locationLabel, setLocationLabel] = useState("");
+  const [attended, setAttended] = useState<Set<string>>(new Set());
+
+  // Load which concerts the user has already added to their archive.
+  useEffect(() => {
+    fetch("/api/concerts/attend")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d: { externalId: string }[]) => { if (Array.isArray(d)) setAttended(new Set(d.map((x) => x.externalId))); })
+      .catch(() => {});
+  }, []);
+
+  async function toggleAttend(c: Concert) {
+    // Optimistic toggle.
+    setAttended((s) => { const n = new Set(s); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; });
+    try {
+      await fetch("/api/concerts/attend", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ externalId: c.id, name: c.name, venue: c.venue, city: c.city, date: c.date, image: c.image }),
+      });
+    } catch { /* revert on failure */
+      setAttended((s) => { const n = new Set(s); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; });
+    }
+  }
 
   async function fetchConcerts(lat: number, lon: number, city: string) {
     setStatus("loading");
@@ -117,52 +139,47 @@ export default function LocalConcerts() {
 
       {status === "done" && concerts.length > 0 && (
         <div className="divide-y divide-[#1f1f1f]">
-          {concerts.map((c) => (
-            <a
-              key={c.id}
-              href={c.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex gap-3 px-4 py-2.5 hover:bg-[#222222] transition-colors group"
-            >
-              {c.image ? (
-                <img
-                  src={c.image}
-                  alt={c.name}
-                  width={48}
-                  height={48}
-                  className="rounded w-12 h-12 object-cover shrink-0"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded bg-[#222222] shrink-0 flex items-center justify-center">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="1.5">
-                    <path d="M9 18V5l12-2v13" />
-                    <circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-                  </svg>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#f0f0f0] truncate leading-snug group-hover:text-[#c4a832] transition-colors">
-                  {c.name}
-                </p>
-                <p className="text-xs text-[#a0a0a0] truncate">{c.venue}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <p className="text-[11px] text-[#c4a832]">{formatDate(c.date)}</p>
-                  {c.price && (
-                    <>
-                      <span className="text-[#2e2e2e] text-[11px]">·</span>
-                      <p className="text-[11px] text-[#6b6b6b]">{c.price}</p>
-                    </>
+          {concerts.map((c) => {
+            const going = attended.has(c.id);
+            return (
+              <div key={c.id} className="flex gap-3 px-4 py-2.5 hover:bg-[#222222] transition-colors group">
+                <a href={c.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                  {c.image ? (
+                    <img src={c.image} alt={c.name} width={48} height={48} className="rounded w-12 h-12 object-cover" />
+                  ) : (
+                    <div className="w-12 h-12 rounded bg-[#222222] flex items-center justify-center">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="1.5">
+                        <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+                      </svg>
+                    </div>
                   )}
-                  {c.source && (
-                    <span className="ml-auto text-[9px] uppercase tracking-wide text-[#6b6b6b] border border-[#2e2e2e] rounded px-1 py-px shrink-0">
-                      SeatGeek
-                    </span>
-                  )}
+                </a>
+                <div className="flex-1 min-w-0">
+                  <a href={c.url} target="_blank" rel="noopener noreferrer" className="block">
+                    <p className="text-sm text-[#f0f0f0] truncate leading-snug group-hover:text-[#c4a832] transition-colors">{c.name}</p>
+                    <p className="text-xs text-[#a0a0a0] truncate">{c.venue}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <p className="text-[11px] text-[#c4a832]">{formatDate(c.date)}</p>
+                      {c.price && (<><span className="text-[#2e2e2e] text-[11px]">·</span><p className="text-[11px] text-[#6b6b6b]">{c.price}</p></>)}
+                    </div>
+                  </a>
+                  {/* Add this show to your music archive */}
+                  <button
+                    onClick={() => toggleAttend(c)}
+                    className={`mt-1.5 inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 border transition-colors ${
+                      going ? "border-[#c4a832] bg-[#2a2412] text-[#c4a832]" : "border-[#2e2e2e] text-[#6b6b6b] hover:text-[#c4a832] hover:border-[#c4a832]"
+                    }`}
+                  >
+                    {going ? (
+                      <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>In your concerts</>
+                    ) : (
+                      <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>I&apos;m going</>
+                    )}
+                  </button>
                 </div>
               </div>
-            </a>
-          ))}
+            );
+          })}
         </div>
       )}
 
