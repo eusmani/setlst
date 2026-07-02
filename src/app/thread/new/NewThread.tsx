@@ -81,6 +81,34 @@ export default function NewThread({ album }: { album: Album }) {
 
       {/* Fullscreen compose area */}
       <div className="flex-1 flex flex-col px-4 py-3 min-h-0 overflow-y-auto">
+        {/* Add-photo bubble — sits above the title and text */}
+        <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFiles} className="hidden" />
+        <div className="flex items-center gap-2 mb-3">
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={checking || images.length >= 4}
+            className="inline-flex items-center gap-1.5 text-sm text-[#a0a0a0] hover:text-[#c4a832] bg-[#1a1a1a] border border-[#2e2e2e] hover:border-[#c4a832] rounded-full px-3.5 py-1.5 disabled:opacity-40 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+            {checking ? "Checking…" : "Add photo"}
+          </button>
+          <span className="text-[10px] text-[#6b6b6b]">SFW only · up to 4</span>
+        </div>
+
+        {/* Photo previews */}
+        {images.length > 0 && (
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            {images.map((src, i) => (
+              <div key={i} className="relative aspect-square">
+                <img src={src} alt="" className="w-full h-full object-cover rounded-lg" />
+                <button onClick={() => setImages((xs) => xs.filter((_, idx) => idx !== i))}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-black/70 border border-[#2e2e2e] text-[#d0d0d0] flex items-center justify-center text-xs">×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        {photoErr && <p className="text-xs text-red-400 mb-2">{photoErr}</p>}
+
         <input
           value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} autoFocus
           placeholder="Title"
@@ -91,34 +119,6 @@ export default function NewThread({ album }: { album: Album }) {
           placeholder="Share your thoughts on the album, the artist, the production, the lyrics…"
           className="min-h-[140px] flex-1 w-full bg-transparent text-sm text-[#e8e8e8] focus:outline-none placeholder-[#6b6b6b] resize-none leading-relaxed"
         />
-
-        {/* Photo previews */}
-        {images.length > 0 && (
-          <div className="grid grid-cols-4 gap-2 mt-3">
-            {images.map((src, i) => (
-              <div key={i} className="relative aspect-square">
-                <img src={src} alt="" className="w-full h-full object-cover rounded-lg" />
-                <button onClick={() => setImages((xs) => xs.filter((_, idx) => idx !== i))}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-black/70 border border-[#2e2e2e] text-[#d0d0d0] flex items-center justify-center text-xs">×</button>
-              </div>
-            ))}
-          </div>
-        )}
-        {photoErr && <p className="text-xs text-red-400 mt-2">{photoErr}</p>}
-      </div>
-
-      {/* Attach bar */}
-      <div className="shrink-0 border-t border-[#1f1f1f] px-4 py-2.5 flex items-center gap-3 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
-        <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFiles} className="hidden" />
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={checking || images.length >= 4}
-          className="flex items-center gap-1.5 text-sm text-[#a0a0a0] hover:text-[#c4a832] disabled:opacity-40 transition-colors"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
-          {checking ? "Checking…" : "Add photo"}
-        </button>
-        <span className="text-[10px] text-[#6b6b6b] ml-auto">SFW only · up to 4</span>
       </div>
     </div>
   );
