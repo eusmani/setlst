@@ -133,9 +133,8 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
         <span>← {thread.album.title} · {thread.album.artist}</span>
       </Link>
 
-      {/* Original post */}
-      <h1 className="font-serif text-2xl sm:text-3xl text-[#f0f0f0] leading-tight mb-3">{thread.title}</h1>
-      <div className="flex items-center gap-2 text-xs text-[#a0a0a0] mb-4">
+      {/* Original post — Reddit-style: author, then photos, then title + text */}
+      <div className="flex items-center gap-2 text-xs text-[#a0a0a0] mb-3">
         <Avatar username={thread.user.username} avatar={thread.user.avatar} size={22} />
         <Link href={`/profile/${thread.user.username}`} className="hover:text-[#c4a832] transition-colors">{thread.user.username}</Link>
         <span className="text-[#6b6b6b]">· {fmt(thread.createdAt)}</span>
@@ -143,7 +142,6 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
           <button onClick={deleteThread} className="ml-auto text-[#6b6b6b] hover:text-red-400 transition-colors">Delete</button>
         )}
       </div>
-      <p className="text-sm text-[#e8e8e8] whitespace-pre-wrap leading-relaxed mb-4">{thread.body}</p>
 
       {/* Attached photos */}
       {thread.images.length > 0 && (
@@ -155,6 +153,9 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
           ))}
         </div>
       )}
+
+      <h1 className="font-serif text-2xl sm:text-3xl text-[#f0f0f0] leading-tight mb-3">{thread.title}</h1>
+      <p className="text-sm text-[#e8e8e8] whitespace-pre-wrap leading-relaxed mb-4">{thread.body}</p>
 
       {/* Like / dislike / share */}
       <div className="flex items-center gap-2 mb-8">
