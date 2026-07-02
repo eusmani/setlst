@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { albumSpotifyId, albumTitle, albumArtist, albumArtwork, title, body } = await req.json();
+  const { albumSpotifyId, albumTitle, albumArtist, albumArtwork, title, body, images } = await req.json();
   const t = String(title ?? "").trim();
   const b = String(body ?? "").trim();
   if (!albumSpotifyId || !albumTitle || !albumArtist || !t || !b) {
@@ -65,10 +65,19 @@ export async function POST(req: NextRequest) {
   if (t.length > 140) return NextResponse.json({ error: "Title too long" }, { status: 400 });
   if (b.length > 5000) return NextResponse.json({ error: "Post too long" }, { status: 400 });
 
+  // Attached photos — up to 4 resized JPEG/PNG/WebP data URLs (SFW-checked client-side).
+  let imagesJson: string | null = null;
+  if (Array.isArray(images) && images.length > 0) {
+    const valid = images
+      .filter((s) => typeof s === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(s) && s.length < 3_000_000)
+      .slice(0, 4);
+    if (valid.length) imagesJson = JSON.stringify(valid);
+  }
+
   const thread = await prisma.thread.create({
     data: {
       albumSpotifyId, albumTitle, albumArtist, albumArtwork: albumArtwork ?? null,
-      title: t, body: b, userId: session.user.id,
+      title: t, body: b, images: imagesJson, userId: session.user.id,
     },
     include: { user: { select: userSelect }, _count: { select: { replies: true } } },
   });

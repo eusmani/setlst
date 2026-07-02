@@ -237,6 +237,7 @@ model Thread {
   albumTitle     String
   albumArtist    String
   albumArtwork   String?
+  images         String? // JSON array of attached image data URLs (SFW-moderated)
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

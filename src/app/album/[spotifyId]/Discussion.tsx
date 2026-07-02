@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
+import { resizeToDataUrl, moderateImage } from "@/lib/photo";
 
 interface Album {
   spotifyId: string;
@@ -23,7 +24,31 @@ export default function Discussion({ album, isLoggedIn }: { album: Album; isLogg
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [checking, setChecking] = useState(false);
+  const [photoErr, setPhotoErr] = useState("");
   const [saving, setSaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
+    setPhotoErr("");
+    setChecking(true);
+    for (const file of files) {
+      if (images.length >= 4) { setPhotoErr("Up to 4 photos."); break; }
+      try {
+        const dataUrl = await resizeToDataUrl(file);
+        const { safe } = await moderateImage(dataUrl); // SFW gate
+        if (!safe) { setPhotoErr("That image looks explicit and can't be attached. SETLST is SFW only."); continue; }
+        setImages((xs) => (xs.length < 4 ? [...xs, dataUrl] : xs));
+      } catch {
+        setPhotoErr("Couldn't verify that image — please try another.");
+      }
+    }
+    setChecking(false);
+  }
 
   const composeHref =
     `/thread/new?album=${encodeURIComponent(album.spotifyId)}` +
@@ -45,14 +70,14 @@ export default function Discussion({ album, isLoggedIn }: { album: Album; isLogg
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         albumSpotifyId: album.spotifyId, albumTitle: album.title, albumArtist: album.artist,
-        albumArtwork: album.artwork ?? null, title, body,
+        albumArtwork: album.artwork ?? null, title, body, images,
       }),
     });
     setSaving(false);
     if (r.ok) {
       const t = await r.json();
       setThreads((ts) => [t, ...(ts ?? [])]);
-      setTitle(""); setBody(""); setComposing(false);
+      setTitle(""); setBody(""); setImages([]); setComposing(false);
     }
   }
 
@@ -86,12 +111,38 @@ export default function Discussion({ album, isLoggedIn }: { album: Album; isLogg
             placeholder="Talk about the artist, the production, the lyrics — anything."
             className="w-full bg-[#222222] border border-[#2e2e2e] rounded-lg px-3 py-2 text-sm text-[#f0f0f0] focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b] resize-y"
           />
-          <button
-            onClick={create} disabled={saving || !title.trim() || !body.trim()}
-            className="bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-50 text-[#111111] text-sm px-4 py-2 rounded-lg transition-colors"
-          >
-            {saving ? "Posting…" : "Post discussion"}
-          </button>
+
+          {/* Photo previews */}
+          {images.length > 0 && (
+            <div className="grid grid-cols-5 gap-2">
+              {images.map((src, i) => (
+                <div key={i} className="relative aspect-square">
+                  <img src={src} alt="" className="w-full h-full object-cover rounded-lg" />
+                  <button onClick={() => setImages((xs) => xs.filter((_, idx) => idx !== i))}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-black/70 border border-[#2e2e2e] text-[#d0d0d0] flex items-center justify-center text-xs">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {photoErr && <p className="text-xs text-red-400">{photoErr}</p>}
+
+          <div className="flex items-center gap-3">
+            <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFiles} className="hidden" />
+            <button
+              onClick={create} disabled={saving || checking || !title.trim() || !body.trim()}
+              className="bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-50 text-[#111111] text-sm px-4 py-2 rounded-lg transition-colors"
+            >
+              {saving ? "Posting…" : "Post discussion"}
+            </button>
+            <button
+              onClick={() => fileRef.current?.click()} disabled={checking || images.length >= 4}
+              className="flex items-center gap-1.5 text-xs text-[#a0a0a0] hover:text-[#c4a832] disabled:opacity-40 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+              {checking ? "Checking…" : "Add photo"}
+            </button>
+            <span className="text-[10px] text-[#6b6b6b] ml-auto">SFW only · up to 4</span>
+          </div>
         </div>
       )}
 

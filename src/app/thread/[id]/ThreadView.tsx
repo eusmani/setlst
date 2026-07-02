@@ -10,6 +10,7 @@ interface ThreadData {
   id: string;
   title: string;
   body: string;
+  images: string[];
   createdAt: string;
   album: { spotifyId: string; title: string; artist: string; artwork: string | null };
   user: UserLite;
@@ -143,6 +144,17 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
         )}
       </div>
       <p className="text-sm text-[#e8e8e8] whitespace-pre-wrap leading-relaxed mb-4">{thread.body}</p>
+
+      {/* Attached photos */}
+      {thread.images.length > 0 && (
+        <div className={`grid gap-2 mb-4 ${thread.images.length === 1 ? "grid-cols-1 max-w-sm" : "grid-cols-2 sm:grid-cols-3"}`}>
+          {thread.images.map((src, i) => (
+            <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block">
+              <img src={src} alt="" className="w-full rounded-lg border border-[#1f1f1f] object-cover max-h-[420px]" />
+            </a>
+          ))}
+        </div>
+      )}
 
       {/* Like / dislike / share */}
       <div className="flex items-center gap-2 mb-8">

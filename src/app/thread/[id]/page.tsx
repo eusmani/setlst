@@ -43,6 +43,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     id: thread.id,
     title: thread.title,
     body: thread.body,
+    images: (() => { try { const g = JSON.parse(thread.images ?? "[]"); return Array.isArray(g) ? g : []; } catch { return []; } })(),
     createdAt: thread.createdAt.toISOString(),
     album: { spotifyId: thread.albumSpotifyId, title: thread.albumTitle, artist: thread.albumArtist, artwork: thread.albumArtwork },
     user: thread.user,
