@@ -86,13 +86,13 @@ export default async function HomePage() {
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
         {/* Mobile: Your / Friends' activity (preview 3, expandable) + discovery widgets */}
         <div className="lg:hidden space-y-6">
-          <ClubsStrip />
           <TrendingAlbums
             limit={12}
             slider
             heading="Popular This Week"
             emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
           />
+          <ClubsStrip />
           {session ? (
             <>
               <MobileActivitySection
@@ -130,7 +130,6 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Main column */}
           <section className="lg:col-span-2 space-y-5 sm:space-y-6 min-w-0">
-            <ClubsStrip />
             {session && (
               <div>
                 <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your recent activity</h2>
@@ -147,6 +146,7 @@ export default async function HomePage() {
                 emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
               />
             </div>
+            <ClubsStrip />
             <div>
               <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
               {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. */}
