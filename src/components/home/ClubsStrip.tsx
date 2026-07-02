@@ -11,9 +11,10 @@ interface ClubPick {
   artwork: string | null;
 }
 
+// Grails deep-link into the album's discussion section to spark conversation.
 function albumHref(a: ClubPick) {
   return `/album/${a.spotifyId}?title=${encodeURIComponent(a.title)}&artist=${encodeURIComponent(a.artist)}` +
-    (a.artwork ? `&artwork=${encodeURIComponent(a.artwork)}` : "");
+    (a.artwork ? `&artwork=${encodeURIComponent(a.artwork)}` : "") + "#discussion";
 }
 
 // Home-screen preview of this week's SETLST Clubs.

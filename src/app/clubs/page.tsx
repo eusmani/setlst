@@ -3,9 +3,12 @@ import { getWeeklyClubs, type ClubPick } from "@/lib/clubs";
 
 export const dynamic = "force-dynamic";
 
-function albumHref(a: ClubPick, review = false) {
+// Grails lead into the album's discussion (to spark conversation), or straight to
+// the review composer.
+function albumHref(a: ClubPick, mode: "discuss" | "review" = "discuss") {
   return `/album/${a.spotifyId}?title=${encodeURIComponent(a.title)}&artist=${encodeURIComponent(a.artist)}` +
-    (a.artwork ? `&artwork=${encodeURIComponent(a.artwork)}` : "") + (review ? "&review=1" : "");
+    (a.artwork ? `&artwork=${encodeURIComponent(a.artwork)}` : "") +
+    (mode === "review" ? "&review=1" : "#discussion");
 }
 
 function weekLabel() {
@@ -26,7 +29,7 @@ export default async function ClubsPage() {
         </svg>
         <h1 className="font-serif text-3xl text-[#f0f0f0]">Grails</h1>
       </div>
-      <p className="text-sm text-[#a0a0a0] mb-1">Four albums the whole community listens to together this week.</p>
+      <p className="text-sm text-[#a0a0a0] mb-1">Four albums the community is spinning this week — jump into the discussion.</p>
       <p className="text-xs text-[#6b6b6b] uppercase tracking-[0.15em] mb-6">{weekLabel()}</p>
 
       {clubs.length === 0 ? (
@@ -52,13 +55,13 @@ export default async function ClubsPage() {
                 </Link>
                 <p className="text-xs text-[#6b6b6b] mt-1 line-clamp-2">{c.blurb}</p>
                 <div className="flex items-center gap-2 mt-auto pt-3">
-                  <Link href={albumHref(c, true)}
+                  <Link href={albumHref(c, "discuss")}
                     className="flex-1 text-center text-xs bg-[#c4a832] hover:bg-[#d4ba44] text-[#141414] font-medium py-1.5 rounded-lg transition-colors">
-                    Review
-                  </Link>
-                  <Link href={albumHref(c)}
-                    className="flex-1 text-center text-xs border border-[#2e2e2e] hover:border-[#c4a832] text-[#a0a0a0] hover:text-[#c4a832] py-1.5 rounded-lg transition-colors">
                     Discuss
+                  </Link>
+                  <Link href={albumHref(c, "review")}
+                    className="flex-1 text-center text-xs border border-[#2e2e2e] hover:border-[#c4a832] text-[#a0a0a0] hover:text-[#c4a832] py-1.5 rounded-lg transition-colors">
+                    Review
                   </Link>
                 </div>
               </div>

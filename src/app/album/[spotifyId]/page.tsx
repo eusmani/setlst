@@ -428,7 +428,7 @@ export default async function AlbumPage({
         isLoggedIn={!!session}
       />
 
-      <div className="mt-6">
+      <div id="discussion" className="mt-6 scroll-mt-20">
         <Discussion album={album} isLoggedIn={!!session} />
       </div>
 
