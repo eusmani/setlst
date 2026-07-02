@@ -181,6 +181,23 @@ export default async function ProfilePage({
         </div>
       </div>
 
+      {/* Music Archive — living timeline of this user's taste */}
+      {!contentLocked && (
+        <Link
+          href={`/profile/${user.username}/timeline`}
+          className="flex items-center gap-3 mb-8 p-4 bg-gradient-to-r from-[#c4a832]/12 to-[#1a1a1a] border border-[#2e2e2e] hover:border-[#c4a832] rounded-2xl transition-colors group"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+            <path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" />
+          </svg>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-[#f0f0f0] font-medium">Music Archive</p>
+            <p className="text-xs text-[#6b6b6b]">A year-by-year timeline of {isOwnProfile ? "your" : `${user.username}'s`} taste</p>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b6b6b] group-hover:text-[#c4a832] transition-colors shrink-0"><polyline points="9 6 15 12 9 18" /></svg>
+        </Link>
+      )}
+
       {/* Pending follow requests (own private profile) */}
       {isOwnProfile && followRequests.length > 0 && (
         <FollowRequests
