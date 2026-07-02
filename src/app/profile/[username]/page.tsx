@@ -185,7 +185,7 @@ export default async function ProfilePage({
       {!contentLocked && (
         <Link
           href={`/profile/${user.username}/timeline`}
-          className="flex items-center gap-3 mb-8 p-4 bg-gradient-to-r from-[#c4a832]/12 to-[#1a1a1a] border border-[#2e2e2e] hover:border-[#c4a832] rounded-2xl transition-colors group"
+          className="sm:hidden flex items-center gap-3 mb-8 p-4 bg-gradient-to-r from-[#c4a832]/12 to-[#1a1a1a] border border-[#2e2e2e] hover:border-[#c4a832] rounded-2xl transition-colors group"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
             <path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" />
