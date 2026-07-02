@@ -92,7 +92,7 @@ export default function NewThread({ album }: { album: Album }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
             {checking ? "Checking…" : "Add photo"}
           </button>
-          <span className="text-[10px] text-[#6b6b6b]">SFW only · up to 4</span>
+          <span className="text-[10px] text-[#6b6b6b]">Up to 4</span>
         </div>
 
         {/* Photo previews */}
