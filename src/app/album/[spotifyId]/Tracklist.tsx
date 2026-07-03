@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface Track {
   name: string;
@@ -24,19 +24,33 @@ export default function Tracklist({ tracks, artist }: { tracks: Track[]; artist:
   const [playing, setPlaying] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Fully stop and release the current preview.
+  function stop() {
+    const a = audioRef.current;
+    if (a) {
+      a.pause();
+      a.currentTime = 0;
+      a.src = "";
+      audioRef.current = null;
+    }
+  }
+
+  // Stop playback when the album page unmounts (e.g. pressing back) so audio
+  // doesn't keep playing, and the next album starts a preview from the beginning.
+  useEffect(() => stop, []);
+
   function toggle(idx: number, previewUrl: string) {
     if (playing === idx) {
-      audioRef.current?.pause();
+      stop();
       setPlaying(null);
       return;
     }
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
+    stop();
     const audio = new Audio(previewUrl);
     audio.volume = 0.7;
-    audio.play();
-    audio.onended = () => setPlaying(null);
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+    audio.onended = () => { setPlaying(null); audioRef.current = null; };
     audioRef.current = audio;
     setPlaying(idx);
   }
