@@ -22,18 +22,29 @@ export default function ReleaseRadar() {
   const [label, setLabel] = useState("This week");
 
   useEffect(() => {
-    // Prefer what dropped this week (last 7 days). Underground artists release
-    // infrequently, so when the week is empty fall back to the most recent drops.
+    // Always surface 6 up-and-coming artists: this week's drops first (last 7 days),
+    // then backfill from the most recent releases so the radar is never sparse.
+    // De-duped by artist so it's 6 different names.
     (async () => {
       try {
-        const week = await fetch("/api/releases?range=week").then((r) => r.json());
-        if (Array.isArray(week) && week.length > 0) {
-          setReleases(week);
-        } else {
-          const recent = await fetch("/api/releases?range=recent").then((r) => r.json());
-          setReleases(Array.isArray(recent) ? recent : []);
-          setLabel("Recent");
+        const [week, recent] = await Promise.all([
+          fetch("/api/releases?range=week").then((r) => r.json()),
+          fetch("/api/releases?range=recent").then((r) => r.json()),
+        ]);
+        const seen = new Set<string>();
+        const pick: Release[] = [];
+        for (const list of [Array.isArray(week) ? week : [], Array.isArray(recent) ? recent : []]) {
+          for (const r of list as Release[]) {
+            const key = r.artist.toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
+            pick.push(r);
+            if (pick.length >= 6) break;
+          }
+          if (pick.length >= 6) break;
         }
+        setReleases(pick);
+        setLabel((Array.isArray(week) && week.length >= 6) ? "This week" : "New");
       } catch {
         setReleases([]);
       }
@@ -58,7 +69,7 @@ export default function ReleaseRadar() {
         <div className="px-4 py-6 text-center text-xs text-[#6b6b6b]">No releases this week — check back soon</div>
       ) : (
         <div className="divide-y divide-[#1f1f1f] max-h-[520px] overflow-y-auto">
-          {releases.slice(0, 50).map((r) => (
+          {releases.slice(0, 6).map((r) => (
             <div key={r.id} className="flex gap-3 px-4 py-2.5">
               {r.artwork ? (
                 <img
