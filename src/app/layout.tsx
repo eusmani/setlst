@@ -8,6 +8,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import VerifyBanner from "@/components/layout/VerifyBanner";
 import RegisterSW from "@/components/layout/RegisterSW";
 import UpcomingBanner from "@/components/layout/UpcomingBanner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import Onboarding from "@/components/layout/Onboarding";
 import NativeBridge from "@/components/layout/NativeBridge";
 
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <span className="mx-2 text-[#2e2e2e]">·</span>
             <a href="/privacy" className="hover:text-[#c4a832] transition-colors">Privacy</a>
           </footer>
+          <SpeedInsights />
         </Providers>
       </body>
     </html>
