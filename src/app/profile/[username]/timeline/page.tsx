@@ -16,6 +16,15 @@ function albumHref(a: { spotifyId: string; title: string; artist: string; artwor
     (a.artwork ? `&artwork=${encodeURIComponent(a.artwork)}` : "");
 }
 
+function Stat({ v, l }: { v: string | number; l: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-2xl text-[#f0f0f0] font-bold tabular-nums">{v}</p>
+      <p className="text-[10px] text-[#6b6b6b] uppercase tracking-wider mt-0.5">{l}</p>
+    </div>
+  );
+}
+
 export default async function TimelinePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
   const [session, user] = await Promise.all([
@@ -98,13 +107,6 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
   for (const d of byYear.values()) for (const [g, n] of d.genres) allGenres.set(g, (allGenres.get(g) ?? 0) + n);
   const topGenre = [...allGenres.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
   const totalConcerts = concerts.length;
-
-  const Stat = ({ v, l }: { v: string | number; l: string }) => (
-    <div className="text-center">
-      <p className="text-2xl text-[#f0f0f0] font-bold tabular-nums">{v}</p>
-      <p className="text-[10px] text-[#6b6b6b] uppercase tracking-wider mt-0.5">{l}</p>
-    </div>
-  );
 
   return (
     <div className="max-w-3xl mx-auto px-5 pt-5 pb-16">
