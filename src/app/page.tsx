@@ -130,13 +130,6 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Main column */}
           <section className="lg:col-span-2 space-y-5 sm:space-y-6 min-w-0">
-            {session && (
-              <div>
-                <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your recent activity</h2>
-                {/* Reviews + discussion posts + replies — not just albums. */}
-                <HomeFeed items={myActivity} isLoggedIn={!!session} />
-              </div>
-            )}
             {/* Popular This Week — desktop only; mobile keeps a simpler home */}
             <div className="hidden lg:block">
               <TrendingAlbums
@@ -147,6 +140,13 @@ export default async function HomePage() {
               />
             </div>
             <ClubsStrip />
+            {session && (
+              <div>
+                <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your recent activity</h2>
+                {/* Reviews + discussion posts + replies — not just albums. */}
+                <HomeFeed items={myActivity} isLoggedIn={!!session} />
+              </div>
+            )}
             <div>
               <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
               {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. */}
