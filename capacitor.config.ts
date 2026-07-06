@@ -14,7 +14,7 @@ const config: CapacitorConfig = {
   // match the app instead of showing white borders.
   backgroundColor: "#111111",
   server: {
-    url: "https://reruns.vercel.app",
+    url: "https://setlst.dev",
   },
   ios: {
     contentInset: "always",
