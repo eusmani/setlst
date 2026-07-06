@@ -9,7 +9,6 @@ import VerifyBanner from "@/components/layout/VerifyBanner";
 import RegisterSW from "@/components/layout/RegisterSW";
 import UpcomingBanner from "@/components/layout/UpcomingBanner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import Onboarding from "@/components/layout/Onboarding";
 import NativeBridge from "@/components/layout/NativeBridge";
 
 const wallpoet = Wallpoet({ variable: "--font-wallpoet", subsets: ["latin"], weight: "400" });
@@ -62,7 +61,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Providers>
           <RegisterSW />
           <NativeBridge />
-          <Onboarding />
           <Navbar />
           {/* Offsets the fixed navbar (h-16) so content isn't hidden beneath it. */}
           <div className="h-16 shrink-0" aria-hidden />
