@@ -29,17 +29,35 @@ async function itunesNewest(): Promise<Out[]> {
   }
 }
 
-// This week's newest releases from Spotify (search tag:new → ~last 2 weeks),
-// newest first. Falls back to the iTunes chart so it's never empty.
+// Start of the current week (Monday, YYYY-MM-DD) — rolls forward automatically.
+function weekStart(): string {
+  const now = new Date();
+  const m = new Date(now);
+  m.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  m.setHours(0, 0, 0, 0);
+  return m.toISOString().slice(0, 10);
+}
+
+// This week's releases — everything out on/after Monday, newest first. Merges
+// Spotify (tag:new) and the iTunes chart so the radar is full of fresh drops.
 export async function GET() {
+  const monday = weekStart();
+  let merged: Out[] = [];
   try {
-    const albums = await recentPopularAlbums(24);
-    const out: Out[] = albums.map((a) => ({
+    const spotify = (await recentPopularAlbums(40, "date")).map((a) => ({
       id: a.spotifyId, title: a.title, artist: a.artist, artwork: a.artwork,
       releaseDate: a.releaseDate ?? "", spotifyUrl: a.spotifyUrl,
     }));
-    return NextResponse.json(out.length > 0 ? out : await itunesNewest());
+    merged = [...spotify, ...(await itunesNewest())];
   } catch {
-    return NextResponse.json(await itunesNewest());
+    merged = await itunesNewest();
   }
+
+  const seen = new Set<string>();
+  const thisWeek = merged
+    .filter((a) => a.releaseDate >= monday)                       // out this week
+    .filter((a) => (seen.has(a.id) ? false : (seen.add(a.id), true)))
+    .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));   // newest first
+
+  return NextResponse.json(thisWeek);
 }

@@ -34,7 +34,7 @@ export default function ReleaseRadar() {
           if (seen.has(key)) continue;
           seen.add(key);
           pick.push(r);
-          if (pick.length >= 6) break;
+          if (pick.length >= 15) break;
         }
         setReleases(pick);
         setLabel("This week");
@@ -62,7 +62,7 @@ export default function ReleaseRadar() {
         <div className="px-4 py-6 text-center text-xs text-[#6b6b6b]">No releases this week — check back soon</div>
       ) : (
         <div className="divide-y divide-[#1f1f1f] max-h-[520px] overflow-y-auto">
-          {releases.slice(0, 6).map((r) => (
+          {releases.slice(0, 15).map((r) => (
             <div key={r.id} className="flex gap-3 px-4 py-2.5">
               {r.artwork ? (
                 <img
