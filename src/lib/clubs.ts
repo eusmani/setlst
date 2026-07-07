@@ -9,6 +9,7 @@
 //   Throwbacks     → hugely popular in the past, faded since.
 
 import { prisma } from "./prisma";
+import { recentPopularAlbums } from "./spotify";
 
 export interface ClubCategory {
   key: "classic" | "overlooked" | "new" | "throwback";
@@ -178,12 +179,20 @@ export async function getWeeklyClubs(): Promise<ClubPick[]> {
 
   const classicR = topIn((a) => a.year! < 1990);
   const throwbackR = topIn((a) => a.year! >= 1990 && a.year! <= thisYear - 6);
-  const recentR = topIn((a) => a.year! >= thisYear - 1); // recent + community buzz
+
+  // Recents = a recent, POPULAR, NEW album from Spotify (ranked by Spotify
+  // popularity, rotated weekly). Falls back to the iTunes chart if Spotify is down.
+  const recentPick = (async (): Promise<PickCore | null> => {
+    const list = await recentPopularAlbums(12);
+    if (list.length === 0) return newReleasePick(wk);
+    const a = list[wk % Math.min(list.length, 6)];
+    return { spotifyId: a.spotifyId, title: a.title, artist: a.artist, artwork: a.artwork, year: a.year };
+  })();
 
   const [classic, overlooked, recent, throwback] = await Promise.all([
     classicR ? fromReviewed(classicR) : (async () => { const [t, ar] = fromPool(CLASSICS, wk); return resolveAlbum(t, ar); })(),
     (async () => { const [t, ar] = fromPool(OVERLOOKED, wk); return resolveAlbum(t, ar); })(),
-    recentR ? fromReviewed(recentR) : newReleasePick(wk),
+    recentPick,
     throwbackR ? fromReviewed(throwbackR) : (async () => { const [t, ar] = fromPool(THROWBACKS, wk); return resolveAlbum(t, ar); })(),
   ]);
 

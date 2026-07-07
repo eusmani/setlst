@@ -52,6 +52,46 @@ export async function searchAlbums(q: string): Promise<SpotifyAlbum[]> {
   return [];
 }
 
+export interface RecentAlbum { spotifyId: string; title: string; artist: string; artwork: string | null; year: number | null }
+
+// Recent, popular new albums from Spotify (client-credentials). Uses search
+// `tag:new` (albums from ~the last 2 weeks), then ranks by Spotify's popularity
+// score so the biggest fresh releases come first.
+export async function recentPopularAlbums(limit = 20): Promise<RecentAlbum[]> {
+  try {
+    const t = await token();
+    const search = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent("tag:new")}&type=album&limit=40&market=US`,
+      { headers: { Authorization: `Bearer ${t}` }, next: { revalidate: 3600 } }
+    );
+    if (!search.ok) return [];
+    const items: SpotifyAlbum[] = (await search.json()).albums?.items ?? [];
+    const ids = [...new Set(items.map((a) => a.id))].slice(0, 20);
+    if (ids.length === 0) return [];
+
+    // Batch-fetch album details to get popularity (0–100) for ranking.
+    const det = await fetch(`https://api.spotify.com/v1/albums?ids=${ids.join(",")}&market=US`, {
+      headers: { Authorization: `Bearer ${t}` }, next: { revalidate: 3600 },
+    });
+    interface Full { id: string; name: string; popularity?: number; images?: { url: string }[]; release_date?: string; artists?: { name: string }[]; album_type?: string }
+    const full: Full[] = det.ok ? ((await det.json()).albums ?? []) : [];
+
+    return full
+      .filter((a) => a && a.album_type === "album") // real albums, not singles
+      .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+      .slice(0, limit)
+      .map((a) => ({
+        spotifyId: a.id,
+        title: a.name,
+        artist: a.artists?.[0]?.name ?? "",
+        artwork: a.images?.[0]?.url ?? null,
+        year: a.release_date ? parseInt(a.release_date) : null,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export async function getAlbum(id: string): Promise<SpotifyAlbum | null> {
   const t = await token();
   const r = await fetch(`https://api.spotify.com/v1/albums/${id}`, {
