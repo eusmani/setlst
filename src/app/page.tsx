@@ -94,28 +94,31 @@ export default async function HomePage() {
             heading="Popular This Week"
             emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
           />
-          <ClubsStrip />
+          {/* Friends' Activity — above Grails */}
           {session ? (
-            <>
-              <MobileActivitySection
-                heading="Your Activity"
-                items={myActivity}
-                href="/activity?tab=you"
-                empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }}
-              />
-              <MobileActivitySection
-                heading="Friends' Activity"
-                items={friendsActivity}
-                href="/activity?tab=friends"
-                empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }}
-              />
-            </>
+            <MobileActivitySection
+              heading="Friends' Activity"
+              items={friendsActivity}
+              href="/activity?tab=friends"
+              empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }}
+            />
           ) : (
             <MobileActivitySection
               heading="Recent Activity"
               items={recentActivity}
               href="/activity"
               empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }}
+            />
+          )}
+
+          <ClubsStrip />
+
+          {session && (
+            <MobileActivitySection
+              heading="Your Activity"
+              items={myActivity}
+              href="/activity?tab=you"
+              empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }}
             />
           )}
 
@@ -141,6 +144,12 @@ export default async function HomePage() {
                 emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
               />
             </div>
+            {/* Friends' Activity — above Grails */}
+            <div>
+              <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
+              {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. */}
+              <HomeFeed items={session ? friendsActivity : recentActivity} isLoggedIn={!!session} />
+            </div>
             <ClubsStrip />
             {session && (
               <div>
@@ -149,11 +158,6 @@ export default async function HomePage() {
                 <HomeFeed items={myActivity} isLoggedIn={!!session} />
               </div>
             )}
-            <div>
-              <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
-              {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. */}
-              <HomeFeed items={session ? friendsActivity : recentActivity} isLoggedIn={!!session} />
-            </div>
             <div className="hidden lg:block"><AnniversaryBanner /></div>
           </section>
 
