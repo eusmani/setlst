@@ -144,6 +144,37 @@ function fromPool(pool: [string, string][], wk: number): [string, string] {
   return pool[wk % pool.length];
 }
 
+// A mainstream, recent album from the iTunes Top Albums chart (chart/popularity
+// order), released in the last year. Rotated weekly among the top few.
+async function mainstreamRecent(wk: number): Promise<PickCore | null> {
+  try {
+    const r = await fetch("https://itunes.apple.com/us/rss/topalbums/limit=50/json", { next: { revalidate: 3600 } });
+    if (!r.ok) return null;
+    interface E { "im:name"?: { label?: string }; "im:artist"?: { label?: string }; "im:image"?: { label?: string }[]; "im:releaseDate"?: { attributes?: { label?: string } }; id?: { attributes?: { "im:id"?: string } } }
+    const entries: E[] = (await r.json()).feed?.entry ?? [];
+    const now = Date.now();
+    const pool = entries
+      .map((e) => {
+        const rd = e["im:releaseDate"]?.attributes?.label;
+        return {
+          spotifyId: e.id?.attributes?.["im:id"] ?? "",
+          title: e["im:name"]?.label ?? "",
+          artist: e["im:artist"]?.label ?? "",
+          artwork: (e["im:image"]?.slice(-1)[0]?.label ?? "").replace("170x170bb", "600x600bb") || null,
+          releasedAt: rd ? new Date(rd).getTime() : 0,
+          year: rd ? new Date(rd).getFullYear() : null,
+        };
+      })
+      // Real chart entries released within the last year (chart order = popularity).
+      .filter((a) => a.spotifyId && a.title && a.artist && a.artwork && a.releasedAt && now - a.releasedAt < 365 * 86400000);
+    if (pool.length === 0) return null;
+    const a = pool[wk % Math.min(pool.length, 6)];
+    return { spotifyId: a.spotifyId, title: a.title, artist: a.artist, artwork: a.artwork, year: a.year };
+  } catch {
+    return null;
+  }
+}
+
 interface ReviewedAlbum { spotifyId: string; title: string; artist: string; artwork: string | null; year: number | null; count: number }
 
 // Albums the community is reviewing on SETLST, with review counts + year.
@@ -180,13 +211,16 @@ export async function getWeeklyClubs(): Promise<ClubPick[]> {
   const classicR = topIn((a) => a.year! < 1990);
   const throwbackR = topIn((a) => a.year! >= 1990 && a.year! <= thisYear - 6);
 
-  // Recents = a recent, POPULAR, NEW album from Spotify (ranked by Spotify
-  // popularity, rotated weekly). Falls back to the iTunes chart if Spotify is down.
+  // Recents = a recent, POPULAR, NEW album from a MAINSTREAM artist. Sourced from
+  // the iTunes Top Albums chart (a real popularity chart) in chart order, filtered
+  // to the last year — reliably mainstream. Rotated weekly. Spotify's tag:new is
+  // too obscure/flaky for a curated pick, so it's only a last resort.
   const recentPick = (async (): Promise<PickCore | null> => {
-    const list = await recentPopularAlbums(12);
-    if (list.length === 0) return newReleasePick(wk);
-    const a = list[wk % Math.min(list.length, 6)];
-    return { spotifyId: a.spotifyId, title: a.title, artist: a.artist, artwork: a.artwork, year: a.year };
+    const a = await mainstreamRecent(wk);
+    if (a) return a;
+    const sp = (await recentPopularAlbums(15, "popularity")).filter((x) => x.popularity >= 40)[0];
+    if (sp) return { spotifyId: sp.spotifyId, title: sp.title, artist: sp.artist, artwork: sp.artwork, year: sp.year };
+    return newReleasePick(wk);
   })();
 
   const [classic, overlooked, recent, throwback] = await Promise.all([

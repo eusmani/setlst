@@ -52,12 +52,12 @@ export async function searchAlbums(q: string): Promise<SpotifyAlbum[]> {
   return [];
 }
 
-export interface RecentAlbum { spotifyId: string; title: string; artist: string; artwork: string | null; year: number | null; releaseDate: string | null; spotifyUrl: string }
+export interface RecentAlbum { spotifyId: string; title: string; artist: string; artwork: string | null; year: number | null; releaseDate: string | null; spotifyUrl: string; popularity: number }
 
-// Recent, popular new albums from Spotify (client-credentials). Uses search
-// `tag:new` (albums from ~the last 2 weeks), then ranks by Spotify's popularity
-// score so the biggest fresh releases come first.
-export async function recentPopularAlbums(limit = 20): Promise<RecentAlbum[]> {
+// Recent new albums from Spotify (client-credentials, search `tag:new` ≈ last 2
+// weeks). sort="popularity" surfaces the biggest/mainstream new drops; sort="date"
+// surfaces the very newest.
+export async function recentPopularAlbums(limit = 20, sort: "popularity" | "date" = "date"): Promise<RecentAlbum[]> {
   try {
     const t = await token();
     const search = await fetch(
@@ -78,8 +78,11 @@ export async function recentPopularAlbums(limit = 20): Promise<RecentAlbum[]> {
 
     return full
       .filter((a) => a && a.album_type === "album") // real albums, not singles
-      // Newest first, then popularity — so "this week" leads with the freshest drops.
-      .sort((a, b) => (b.release_date ?? "").localeCompare(a.release_date ?? "") || (b.popularity ?? 0) - (a.popularity ?? 0))
+      .sort((a, b) =>
+        sort === "popularity"
+          ? (b.popularity ?? 0) - (a.popularity ?? 0) || (b.release_date ?? "").localeCompare(a.release_date ?? "")
+          : (b.release_date ?? "").localeCompare(a.release_date ?? "") || (b.popularity ?? 0) - (a.popularity ?? 0)
+      )
       .slice(0, limit)
       .map((a) => ({
         spotifyId: a.id,
@@ -89,6 +92,7 @@ export async function recentPopularAlbums(limit = 20): Promise<RecentAlbum[]> {
         year: a.release_date ? parseInt(a.release_date) : null,
         releaseDate: a.release_date ?? null,
         spotifyUrl: a.external_urls?.spotify ?? `https://open.spotify.com/album/${a.id}`,
+        popularity: a.popularity ?? 0,
       }));
   } catch {
     return [];
