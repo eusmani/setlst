@@ -29,19 +29,21 @@ async function itunesNewest(): Promise<Out[]> {
   }
 }
 
-// Start of the current week (Monday, YYYY-MM-DD) — rolls forward automatically.
-function weekStart(): string {
+// The most recent New-Music Friday (YYYY-MM-DD) — today if it's Friday, else the
+// previous Friday. Rolls forward every Friday automatically.
+function lastFriday(): string {
   const now = new Date();
-  const m = new Date(now);
-  m.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-  m.setHours(0, 0, 0, 0);
-  return m.toISOString().slice(0, 10);
+  const diff = (now.getDay() - 5 + 7) % 7; // days since Friday (0 if today is Fri)
+  const f = new Date(now);
+  f.setDate(now.getDate() - diff);
+  f.setHours(0, 0, 0, 0);
+  return f.toISOString().slice(0, 10);
 }
 
-// This week's releases — everything out on/after Monday, newest first. Merges
-// Spotify (tag:new) and the iTunes chart so the radar is full of fresh drops.
+// This week's releases — everything out since the most recent Friday, newest
+// first. Merges Spotify (tag:new) and the iTunes chart so the radar stays full.
 export async function GET() {
-  const monday = weekStart();
+  const monday = lastFriday();
   let merged: Out[] = [];
   try {
     const spotify = (await recentPopularAlbums(40, "date")).map((a) => ({
