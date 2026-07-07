@@ -21,6 +21,13 @@ model User {
   topAlbums     String?
   createdAt     DateTime @default(now())
 
+  // Spotify account link (authorization-code flow) — powers listening-based
+  // concert + album recommendations.
+  spotifyAccessToken  String?
+  spotifyRefreshToken String?
+  spotifyTokenExpires DateTime?
+  spotifyConnectedAt  DateTime?
+
   reviews      Review[]
   likes        Like[]
   savedAlbums  SavedAlbum[]

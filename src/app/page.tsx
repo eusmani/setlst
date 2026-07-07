@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserActivity, getFriendsActivity, getRecentActivity, type ActivityItem } from "@/lib/feed";
 import MobileActivitySection from "@/components/home/MobileActivitySection";
 import ClubsStrip from "@/components/home/ClubsStrip";
+import SpotifyForYou from "@/components/home/SpotifyForYou";
 import Link from "next/link";
 import HomeFeed from "./HomeFeed";
 import AlbumMosaic from "@/components/layout/AlbumMosaic";
@@ -86,6 +87,7 @@ export default async function HomePage() {
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
         {/* Mobile: Your / Friends' activity (preview 3, expandable) + discovery widgets */}
         <div className="lg:hidden space-y-6">
+          {session && <SpotifyForYou />}
           <TrendingAlbums
             limit={12}
             slider

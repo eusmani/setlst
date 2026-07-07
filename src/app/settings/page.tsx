@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import SpotifyConnect from "./SpotifyConnect";
 
 type Theme = "mono" | "amber";
 
@@ -222,6 +223,7 @@ export default function SettingsPage() {
       </>)}
 
       {tab === "account" && (<>
+      <SpotifyConnect />
       {/* Privacy */}
       <div className={card}>
         <h2 className="text-xs text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Privacy</h2>
