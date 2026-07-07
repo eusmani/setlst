@@ -138,26 +138,28 @@ export default function LocalConcerts() {
       )}
 
       {status === "done" && concerts.length > 0 && (
-        <div className="divide-y divide-[#1f1f1f]">
+        <div className="p-3 space-y-3">
           {concerts.map((c) => {
             const going = attended.has(c.id);
             return (
-              <div key={c.id} className="flex gap-3 px-4 py-2.5 hover:bg-[#222222] transition-colors group">
-                <a href={c.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+              <div key={c.id} className="rounded-xl overflow-hidden border border-[#1f1f1f] bg-[#141414] group">
+                {/* Show banner — the actual event's landscape artwork */}
+                <a href={c.url} target="_blank" rel="noopener noreferrer" className="block relative">
                   {c.image ? (
-                    <img src={c.image} alt={c.name} width={48} height={48} referrerPolicy="no-referrer" loading="lazy" className="rounded w-12 h-12 object-cover bg-[#222222]" />
+                    <img src={c.image} alt={c.name} referrerPolicy="no-referrer" loading="lazy" className="w-full h-28 object-cover bg-[#222222]" />
                   ) : (
-                    <div className="w-12 h-12 rounded bg-[#222222] flex items-center justify-center">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="1.5">
-                        <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-                      </svg>
+                    <div className="w-full h-28 bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] flex items-center justify-center">
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4a4a4a" strokeWidth="1.5"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
                     </div>
                   )}
+                  {/* Gradient + show name overlaid on the banner */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                  <p className="absolute bottom-2 left-3 right-3 text-sm text-white font-semibold truncate drop-shadow group-hover:text-[#c4a832] transition-colors">{c.name}</p>
                 </a>
-                <div className="flex-1 min-w-0">
+
+                <div className="px-3 py-2.5">
                   <a href={c.url} target="_blank" rel="noopener noreferrer" className="block">
-                    <p className="text-sm text-[#f0f0f0] truncate leading-snug group-hover:text-[#c4a832] transition-colors">{c.name}</p>
-                    <p className="text-xs text-[#a0a0a0] truncate">{c.venue}</p>
+                    <p className="text-xs text-[#a0a0a0] truncate">{c.venue}{c.city ? ` · ${c.city}` : ""}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <p className="text-[11px] text-[#c4a832]">{formatDate(c.date)}</p>
                       {c.price && (<><span className="text-[#2e2e2e] text-[11px]">·</span><p className="text-[11px] text-[#6b6b6b]">{c.price}</p></>)}
@@ -166,7 +168,7 @@ export default function LocalConcerts() {
                   {/* Add this show to your music archive */}
                   <button
                     onClick={() => toggleAttend(c)}
-                    className={`mt-1.5 inline-flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 border transition-colors ${
+                    className={`mt-2 inline-flex items-center gap-1 text-[10px] rounded-full px-2.5 py-1 border transition-colors ${
                       going ? "border-[#c4a832] bg-[#2a2412] text-[#c4a832]" : "border-[#2e2e2e] text-[#6b6b6b] hover:text-[#c4a832] hover:border-[#c4a832]"
                     }`}
                   >
