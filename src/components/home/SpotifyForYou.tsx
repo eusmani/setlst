@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import AlbumCard from "@/components/album/AlbumCard";
 
 interface Album { spotifyId: string; title: string; artist: string; artwork: string | null; year: number | null }
-interface Concert { id: string; name: string; date: string; venue: string; city: string; url: string; artist: string }
+interface Concert { id: string; name: string; date: string; venue: string; city: string; url: string; artist: string; image: string | null }
 
 function fmtDate(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -83,9 +83,13 @@ export default function SpotifyForYou() {
           <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl divide-y divide-[#1f1f1f] overflow-hidden">
             {concerts.slice(0, 8).map((c) => (
               <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#222222] transition-colors">
-                <div className="w-9 h-9 rounded-full bg-[#222222] flex items-center justify-center shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="1.6"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
-                </div>
+                {c.image ? (
+                  <img src={c.image} alt="" width={36} height={36} referrerPolicy="no-referrer" loading="lazy" className="w-9 h-9 rounded-full object-cover bg-[#222222] shrink-0" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-[#222222] flex items-center justify-center shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="1.6"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-[#f0f0f0] truncate">{c.artist}</p>
                   <p className="text-xs text-[#a0a0a0] truncate">{c.venue}{c.city ? ` · ${c.city}` : ""}</p>

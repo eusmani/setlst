@@ -145,7 +145,7 @@ export default function LocalConcerts() {
               <div key={c.id} className="flex gap-3 px-4 py-2.5 hover:bg-[#222222] transition-colors group">
                 <a href={c.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
                   {c.image ? (
-                    <img src={c.image} alt={c.name} width={48} height={48} className="rounded w-12 h-12 object-cover" />
+                    <img src={c.image} alt={c.name} width={48} height={48} referrerPolicy="no-referrer" loading="lazy" className="rounded w-12 h-12 object-cover bg-[#222222]" />
                   ) : (
                     <div className="w-12 h-12 rounded bg-[#222222] flex items-center justify-center">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="1.5">

@@ -18,8 +18,10 @@ export async function GET(req: NextRequest) {
   const lon = req.nextUrl.searchParams.get("lon");
   const geo = lat && lon ? `&lat=${lat}&lon=${lon}&range=150mi` : "";
 
+  interface SGPerf { name?: string; image?: string | null; images?: { huge?: string; large?: string; medium?: string } }
   interface SGEvent { id: number; title: string; datetime_local: string; url: string;
-    venue?: { name?: string; city?: string }; performers?: { name?: string; image?: string }[]; }
+    venue?: { name?: string; city?: string }; performers?: SGPerf[]; }
+  const perfImg = (p?: SGPerf) => p?.image ?? p?.images?.huge ?? p?.images?.large ?? p?.images?.medium ?? null;
 
   // Query SeatGeek per top artist (cap to keep it fast), collect upcoming shows.
   const lists = await Promise.all(
@@ -40,7 +42,7 @@ export async function GET(req: NextRequest) {
             venue: e.venue?.name ?? "",
             city: e.venue?.city ?? "",
             url: e.url,
-            image: e.performers?.[0]?.image ?? null,
+            image: (e.performers ?? []).map(perfImg).find((u): u is string => !!u) ?? null,
             artist: a.name,
           }));
       } catch {

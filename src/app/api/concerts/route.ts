@@ -16,7 +16,7 @@ interface Concert {
 interface SgPerformer {
   primary?: boolean;
   image?: string | null;
-  images?: { huge?: string; large?: string };
+  images?: { huge?: string; large?: string; medium?: string; small?: string; default?: string };
 }
 interface SgEvent {
   id: number;
@@ -26,14 +26,24 @@ interface SgEvent {
   datetime_local?: string;
   venue?: { name?: string; city?: string };
   performers?: SgPerformer[];
+  performers_images?: Record<string, string>;
   stats?: { lowest_price?: number | null };
 }
 
-// Use the primary performer's artwork; fall back to the first performer.
-function pickImage(performers?: SgPerformer[]): string | null {
-  if (!performers?.length) return null;
-  const p = performers.find((x) => x.primary) ?? performers[0];
-  return p.image ?? p.images?.huge ?? p.images?.large ?? null;
+function performerImage(p?: SgPerformer): string | null {
+  if (!p) return null;
+  return p.image ?? p.images?.huge ?? p.images?.large ?? p.images?.medium ?? p.images?.small ?? p.images?.default ?? null;
+}
+
+// Primary performer's artwork; fall back to ANY performer that has an image.
+function pickImage(e: SgEvent): string | null {
+  const perfs = e.performers ?? [];
+  const primary = perfs.find((x) => x.primary);
+  return (
+    performerImage(primary) ??
+    perfs.map(performerImage).find((u): u is string => !!u) ??
+    null
+  );
 }
 
 async function fetchSeatGeek(lat: number, lon: number): Promise<Concert[]> {
@@ -70,7 +80,7 @@ async function fetchSeatGeek(lat: number, lon: number): Promise<Concert[]> {
         venue: e.venue?.name ?? "",
         city: e.venue?.city ?? "",
         url: e.url ?? "https://seatgeek.com",
-        image: pickImage(e.performers),
+        image: pickImage(e),
         price: e.stats?.lowest_price != null ? `$${Math.round(e.stats.lowest_price)}` : null,
         source: "SeatGeek",
       };
