@@ -22,29 +22,22 @@ export default function ReleaseRadar() {
   const [label, setLabel] = useState("This week");
 
   useEffect(() => {
-    // Always surface 6 up-and-coming artists: this week's drops first (last 7 days),
-    // then backfill from the most recent releases so the radar is never sparse.
-    // De-duped by artist so it's 6 different names.
+    // This week's NEWEST releases straight from Spotify (tag:new → last ~2 weeks),
+    // newest first, de-duped by artist. Refreshes as new albums drop each week.
     (async () => {
       try {
-        const [week, recent] = await Promise.all([
-          fetch("/api/releases?range=week").then((r) => r.json()),
-          fetch("/api/releases?range=recent").then((r) => r.json()),
-        ]);
+        const list = await fetch("/api/new-releases").then((r) => r.json());
         const seen = new Set<string>();
         const pick: Release[] = [];
-        for (const list of [Array.isArray(week) ? week : [], Array.isArray(recent) ? recent : []]) {
-          for (const r of list as Release[]) {
-            const key = r.artist.toLowerCase();
-            if (seen.has(key)) continue;
-            seen.add(key);
-            pick.push(r);
-            if (pick.length >= 6) break;
-          }
+        for (const r of (Array.isArray(list) ? list : []) as Release[]) {
+          const key = r.artist.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          pick.push(r);
           if (pick.length >= 6) break;
         }
         setReleases(pick);
-        setLabel((Array.isArray(week) && week.length >= 6) ? "This week" : "New");
+        setLabel("This week");
       } catch {
         setReleases([]);
       }
