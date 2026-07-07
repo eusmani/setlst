@@ -260,7 +260,8 @@ export default function Navbar() {
               <Link href="/login" className="hidden sm:inline-block text-sm text-[#a0a0a0] hover:text-[#f0f0f0] px-3 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors">
                 Sign in
               </Link>
-              <Link href="/register" className="text-sm bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111]  px-3 py-1.5 rounded-md transition-colors">
+              {/* Desktop only — mobile signed-out users sign up from the home hero / prompts */}
+              <Link href="/register" className="hidden sm:inline-block text-sm bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111]  px-3 py-1.5 rounded-md transition-colors">
                 Join
               </Link>
             </div>
