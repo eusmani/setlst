@@ -65,7 +65,7 @@ export default function BottomNav() {
   }, []);
 
   return (
-    <nav className="sm:hidden fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50">
+    <nav className="bottom-nav sm:hidden fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50">
       <div className="flex items-stretch justify-around h-14 rounded-2xl border border-[#2e2e2e] bg-[#1a1a1a]/95 backdrop-blur-md shadow-2xl shadow-black/60 px-1">
         {NAV.map(({ href, label, icon, plus, profile }) => {
           // Profile tab points at the current user (or login when signed out).

@@ -105,6 +105,12 @@ html.theme-mono .on-this-day { color: #e6e6e6 !important; }
 /* username sits on the (now white) navbar → dark */
 html.theme-mono .nav-username { color: #141414 !important; }
 
+/* The bottom mobile tab bar stays a dark bar in light mode (its bg opacity
+   variant isn't remapped), so its labels/icons use the eggshell color. */
+html.theme-mono .bottom-nav .text-\[\#6b6b6b\] { color: #b8ac8e !important; }
+html.theme-mono .bottom-nav .text-\[\#c4a832\] { color: #f4ecd6 !important; }
+html.theme-mono .bottom-nav .hover\:text-\[\#a0a0a0\]:hover { color: #f4ecd6 !important; }
+
 /* Logo chip geometry is identical in both themes so it doesn't shift when switching;
    only the colors change per theme. */
 .app-logo {
