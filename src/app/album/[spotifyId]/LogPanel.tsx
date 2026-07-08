@@ -75,7 +75,7 @@ export default function LogPanel({ album, trackNames, initialReview, isLoggedIn,
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="4" x2="20" y2="20" /><line x1="20" y1="4" x2="4" y2="20" /></svg>
               </button>
             </div>
-            <ReviewForm album={album} trackNames={trackNames} existing={myReview} onSaved={onSaved} />
+            <ReviewForm album={album} trackNames={trackNames} existing={myReview} onSaved={onSaved} onClose={() => setEditing(false)} />
           </div>
         </div>
       )}

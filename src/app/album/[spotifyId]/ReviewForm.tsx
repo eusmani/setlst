@@ -15,6 +15,7 @@ interface Props {
   trackNames: string[];
   existing?: ReviewDraft | null;
   onSaved: (r: ReviewDraft) => void;
+  onClose?: () => void;
 }
 
 // Parenthetical prompts — a different one per album (chosen from the album id,
@@ -36,7 +37,7 @@ function promptFor(id: string) {
   return REVIEW_PROMPTS[Math.abs(h) % REVIEW_PROMPTS.length];
 }
 
-export default function ReviewForm({ album, trackNames, existing, onSaved }: Props) {
+export default function ReviewForm({ album, trackNames, existing, onSaved, onClose }: Props) {
   const reviewPrompt = promptFor(album.spotifyId);
   // Singles have a single track — no point picking a favorite / least favorite song.
   const isSingle = /[-–—]\s*single\s*$/i.test(album.title.trim());
@@ -50,7 +51,7 @@ export default function ReviewForm({ album, trackNames, existing, onSaved }: Pro
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const [draftRestored, setDraftRestored] = useState(false);
-  const [draftSaved, setDraftSaved] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   // One draft per album, kept locally. Only for new reviews (not when editing).
   const draftKey = `setlst-review-draft-${album.spotifyId}`;
@@ -76,18 +77,16 @@ export default function ReviewForm({ album, trackNames, existing, onSaved }: Pro
   function saveDraft() {
     try {
       localStorage.setItem(draftKey, JSON.stringify({ rating, subject, body, favoriteSong, leastFavoriteSong, showSongs }));
-      setDraftSaved(true);
-      setTimeout(() => setDraftSaved(false), 2000);
     } catch { /* quota / unavailable */ }
   }
 
-  function discardDraft() {
-    clearDraft();
-    setRating(0); setSubject(""); setBody(""); setFavoriteSong(""); setLeastFavoriteSong(""); setShowSongs(true);
-    setDraftRestored(false);
-  }
-
   const hasContent = rating > 0 || !!subject.trim() || !!body.trim() || !!favoriteSong || !!leastFavoriteSong;
+
+  // Cancel → ask about the draft only if there's something to save.
+  function onCancel() {
+    if (hasContent && !existing) setConfirmCancel(true);
+    else onClose?.();
+  }
 
   if (!session) {
     return (
@@ -191,18 +190,26 @@ export default function ReviewForm({ album, trackNames, existing, onSaved }: Pro
         >
           {saving ? "Saving…" : existing ? "Update" : "Save review"}
         </button>
-        {/* Draft — only for a new review (not when editing an existing one) */}
-        {!existing && (
-          <button type="button" onClick={saveDraft} disabled={!hasContent}
-            className="text-sm text-[#a0a0a0] hover:text-[#c4a832] disabled:opacity-40 transition-colors">
-            {draftSaved ? "Draft saved ✓" : "Save draft"}
-          </button>
-        )}
-        {draftRestored && (
-          <button type="button" onClick={discardDraft} className="ml-auto text-[11px] text-[#6b6b6b] hover:text-red-400 transition-colors">Discard draft</button>
+        {onClose && (
+          <button type="button" onClick={onCancel} className="text-sm text-[#a0a0a0] hover:text-[#f0f0f0] transition-colors">Cancel</button>
         )}
       </div>
       {draftRestored && <p className="text-[11px] text-[#c4a832]">Draft restored</p>}
+
+      {/* Save-draft prompt on Cancel */}
+      {confirmCancel && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6" onClick={() => setConfirmCancel(false)}>
+          <div className="w-full max-w-xs bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm text-[#f0f0f0] font-medium mb-1">Save this draft?</p>
+            <p className="text-xs text-[#6b6b6b] mb-4">You can come back and finish your review later. Only one draft is kept per album.</p>
+            <div className="space-y-2">
+              <button type="button" onClick={() => { saveDraft(); onClose?.(); }} className="w-full bg-[#c4a832] hover:bg-[#d4ba44] text-[#141414] text-sm font-medium py-2 rounded-lg transition-colors">Save draft</button>
+              <button type="button" onClick={() => { clearDraft(); onClose?.(); }} className="w-full border border-[#2e2e2e] text-red-400 hover:border-red-400/50 text-sm py-2 rounded-lg transition-colors">Discard</button>
+              <button type="button" onClick={() => setConfirmCancel(false)} className="w-full text-[#a0a0a0] hover:text-[#f0f0f0] text-sm py-1.5 transition-colors">Keep editing</button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

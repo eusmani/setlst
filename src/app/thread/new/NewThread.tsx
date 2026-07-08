@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { resizeToDataUrl, moderateImage } from "@/lib/photo";
 
@@ -53,6 +52,15 @@ export default function NewThread({ album }: { album: Album }) {
   }
 
   const hasContent = !!title.trim() || !!body.trim() || images.length > 0;
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
+  function leave() { router.push(`/album/${album.spotifyId}`); }
+
+  // Cancel → ask about the draft only if there's something to save.
+  function onCancel() {
+    if (hasContent) setConfirmCancel(true);
+    else { clearDraft(); leave(); }
+  }
 
   async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -98,26 +106,17 @@ export default function NewThread({ album }: { album: Album }) {
     <div className="fixed inset-0 z-[60] bg-[#111111] flex flex-col pt-[env(safe-area-inset-top)]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-[#1f1f1f] shrink-0">
-        <Link href={`/album/${album.spotifyId}`} className="text-sm text-[#a0a0a0] hover:text-[#f0f0f0] transition-colors">
+        <button onClick={onCancel} className="text-sm text-[#a0a0a0] hover:text-[#f0f0f0] transition-colors">
           Cancel
-        </Link>
+        </button>
         <span className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em]">New discussion</span>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={saveDraft}
-            disabled={!hasContent || saving}
-            className="text-sm text-[#a0a0a0] hover:text-[#f0f0f0] disabled:opacity-40 transition-colors"
-          >
-            Save draft
-          </button>
-          <button
-            onClick={post}
-            disabled={saving || checking || !title.trim() || !body.trim()}
-            className="text-sm font-semibold text-[#c4a832] disabled:opacity-40 transition-opacity"
-          >
-            {saving ? "Posting…" : "Post"}
-          </button>
-        </div>
+        <button
+          onClick={post}
+          disabled={saving || checking || !title.trim() || !body.trim()}
+          className="text-sm font-semibold text-[#c4a832] disabled:opacity-40 transition-opacity"
+        >
+          {saving ? "Posting…" : "Post"}
+        </button>
       </div>
 
       {/* Album context */}
@@ -175,6 +174,21 @@ export default function NewThread({ album }: { album: Album }) {
           className="min-h-[140px] flex-1 w-full bg-transparent text-sm text-[#e8e8e8] focus:outline-none placeholder-[#6b6b6b] resize-none leading-relaxed"
         />
       </div>
+
+      {/* Save-draft prompt on Cancel */}
+      {confirmCancel && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6" onClick={() => setConfirmCancel(false)}>
+          <div className="w-full max-w-xs bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm text-[#f0f0f0] font-medium mb-1">Save this draft?</p>
+            <p className="text-xs text-[#6b6b6b] mb-4">You can come back and finish it later. Only one draft is kept per album.</p>
+            <div className="space-y-2">
+              <button onClick={saveDraft} className="w-full bg-[#c4a832] hover:bg-[#d4ba44] text-[#141414] text-sm font-medium py-2 rounded-lg transition-colors">Save draft</button>
+              <button onClick={() => { discardDraft(); leave(); }} className="w-full border border-[#2e2e2e] text-red-400 hover:border-red-400/50 text-sm py-2 rounded-lg transition-colors">Discard</button>
+              <button onClick={() => setConfirmCancel(false)} className="w-full text-[#a0a0a0] hover:text-[#f0f0f0] text-sm py-1.5 transition-colors">Keep editing</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
