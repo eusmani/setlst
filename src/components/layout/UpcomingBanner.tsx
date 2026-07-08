@@ -40,9 +40,9 @@ export default function UpcomingBanner() {
       .catch(() => {});
   }, []);
 
-  // Hidden in the Albums section (search + album pages).
-  const onAlbums = pathname === "/search" || pathname.startsWith("/album");
-  if (onAlbums || !release || dismissed) return null;
+  // Only on the home screen — it must disappear when you open any other screen
+  // so it never overlaps other tabs' UI.
+  if (pathname !== "/" || !release || dismissed) return null;
 
   return (
     <div
