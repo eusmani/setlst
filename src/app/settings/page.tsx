@@ -224,7 +224,8 @@ export default function SettingsPage() {
       </>)}
 
       {tab === "account" && (<>
-      <SetlstPlus />
+      {/* SETLST Pro is a mobile-only feature (Apple IAP) */}
+      <div className="sm:hidden"><SetlstPlus /></div>
       <SpotifyConnect />
       {/* Privacy */}
       <div className={card}>

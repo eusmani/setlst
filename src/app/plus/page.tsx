@@ -12,7 +12,13 @@ export default function PlusPage() {
         <h1 className="font-serif text-3xl text-[#f0f0f0]">SETLST Pro</h1>
         <p className="text-sm text-[#a0a0a0] mt-1">Support SETLST and unlock the extras.</p>
       </div>
-      <SetlstPlus />
+      {/* Mobile only — SETLST Pro is purchased through the iOS app (Apple IAP). */}
+      <div className="sm:hidden">
+        <SetlstPlus />
+      </div>
+      <p className="hidden sm:block text-center text-sm text-[#a0a0a0] mt-4">
+        SETLST Pro is available in the mobile app. Open SETLST on your iPhone to subscribe.
+      </p>
     </div>
   );
 }
