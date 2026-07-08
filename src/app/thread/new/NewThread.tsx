@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { resizeToDataUrl, moderateImage } from "@/lib/photo";
@@ -15,7 +15,44 @@ export default function NewThread({ album }: { album: Album }) {
   const [checking, setChecking] = useState(false);
   const [photoErr, setPhotoErr] = useState("");
   const [saving, setSaving] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // One draft per album, kept locally so users can come back to it later.
+  const draftKey = `setlst-thread-draft-${album.spotifyId}`;
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d.title) setTitle(d.title);
+      if (d.body) setBody(d.body);
+      if (Array.isArray(d.images)) setImages(d.images);
+      if (d.title || d.body || d.images?.length) setDraftRestored(true);
+    } catch { /* ignore */ }
+  }, [draftKey]);
+
+  function saveDraft() {
+    try {
+      let s = JSON.stringify({ title, body, images });
+      // localStorage is ~5MB — if photos push it over, save the text without them.
+      if (s.length > 1_500_000) s = JSON.stringify({ title, body, images: [] });
+      localStorage.setItem(draftKey, s);
+    } catch { /* quota / unavailable */ }
+    router.push(`/album/${album.spotifyId}`); // come back to it later
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
+  }
+
+  function discardDraft() {
+    clearDraft();
+    setTitle(""); setBody(""); setImages([]); setDraftRestored(false);
+  }
+
+  const hasContent = !!title.trim() || !!body.trim() || images.length > 0;
 
   async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -50,6 +87,7 @@ export default function NewThread({ album }: { album: Album }) {
     });
     if (r.ok) {
       const t = await r.json();
+      clearDraft(); // posted → drop the draft
       router.push(`/thread/${t.id}`);
     } else {
       setSaving(false);
@@ -64,13 +102,22 @@ export default function NewThread({ album }: { album: Album }) {
           Cancel
         </Link>
         <span className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em]">New discussion</span>
-        <button
-          onClick={post}
-          disabled={saving || checking || !title.trim() || !body.trim()}
-          className="text-sm font-semibold text-[#c4a832] disabled:opacity-40 transition-opacity"
-        >
-          {saving ? "Posting…" : "Post"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={saveDraft}
+            disabled={!hasContent || saving}
+            className="text-sm text-[#a0a0a0] hover:text-[#f0f0f0] disabled:opacity-40 transition-colors"
+          >
+            Save draft
+          </button>
+          <button
+            onClick={post}
+            disabled={saving || checking || !title.trim() || !body.trim()}
+            className="text-sm font-semibold text-[#c4a832] disabled:opacity-40 transition-opacity"
+          >
+            {saving ? "Posting…" : "Post"}
+          </button>
+        </div>
       </div>
 
       {/* Album context */}
@@ -78,6 +125,14 @@ export default function NewThread({ album }: { album: Album }) {
         {album.artwork && <img src={album.artwork} alt="" className="w-7 h-7 rounded object-cover" />}
         <span className="text-xs text-[#a0a0a0] truncate">{album.title} · {album.artist}</span>
       </div>
+
+      {/* Restored-draft notice */}
+      {draftRestored && (
+        <div className="flex items-center gap-2 px-4 py-1.5 border-b border-[#1f1f1f] bg-[#c4a832]/10 shrink-0">
+          <span className="text-[11px] text-[#c4a832]">Draft restored</span>
+          <button onClick={discardDraft} className="ml-auto text-[11px] text-[#6b6b6b] hover:text-red-400 transition-colors">Discard draft</button>
+        </div>
+      )}
 
       {/* Fullscreen compose area */}
       <div className="flex-1 flex flex-col px-4 py-3 min-h-0 overflow-y-auto">
