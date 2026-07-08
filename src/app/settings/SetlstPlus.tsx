@@ -46,7 +46,7 @@ export default function SetlstPlus() {
   return (
     <div className="rounded-xl p-5 mb-5 border border-[#c4a832]/40 bg-gradient-to-br from-[#c4a832]/12 to-[#1a1a1a]">
       <div className="flex items-center gap-2 mb-1">
-        <img src="/turntable-disc.png" alt="" className="w-6 h-6 object-contain shrink-0" />
+        <img src="/turntable-logo.png" alt="" className="w-6 h-6 object-contain shrink-0" />
         <h2 className="text-sm text-[#f0f0f0] font-semibold">SETLST Pro</h2>
         {status.premium && <span className="text-[10px] uppercase tracking-wide bg-[#c4a832] text-black rounded-full px-2 py-0.5 font-bold">Active</span>}
       </div>
