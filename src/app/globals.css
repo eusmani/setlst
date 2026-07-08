@@ -47,29 +47,29 @@ body {
    Components are authored in the dark amber palette. .theme-amber keeps that look.
    .theme-mono (default) is an inverted black-&-white (light) theme. */
 
-/* base surface — clean white (minimal black & white) */
-html.theme-mono, html.theme-mono body { background: #ffffff !important; color: #141414 !important; }
+/* base surface — soft eggshell off-white (even, minimal) */
+html.theme-mono, html.theme-mono body { background: #f7f3ea !important; color: #1c1a14 !important; }
 
-/* backgrounds: dark → even grayscale steps */
-html.theme-mono .bg-\[\#111111\] { background-color: #ffffff !important; }
-html.theme-mono .bg-\[\#141414\] { background-color: #ffffff !important; }
-html.theme-mono .bg-\[\#1a1a1a\] { background-color: #f6f6f6 !important; }
-html.theme-mono .bg-\[\#222222\] { background-color: #efefef !important; }
-html.theme-mono .bg-\[\#262626\] { background-color: #ededed !important; }
-html.theme-mono .bg-\[\#2a2a2a\] { background-color: #ededed !important; }
-html.theme-mono .bg-\[\#2a2412\] { background-color: #eeeeee !important; }
-html.theme-mono .bg-\[\#2e2e2e\] { background-color: #e4e4e4 !important; }
-html.theme-mono .bg-\[\#3a3a3a\] { background-color: #d8d8d8 !important; }
-html.theme-mono .hover\:bg-\[\#222222\]:hover { background-color: #f0f0f0 !important; }
-html.theme-mono .hover\:bg-\[\#1a1a1a\]:hover { background-color: #f6f6f6 !important; }
+/* backgrounds: dark → even eggshell steps */
+html.theme-mono .bg-\[\#111111\] { background-color: #f7f3ea !important; }
+html.theme-mono .bg-\[\#141414\] { background-color: #f7f3ea !important; }
+html.theme-mono .bg-\[\#1a1a1a\] { background-color: #f0ebde !important; }
+html.theme-mono .bg-\[\#222222\] { background-color: #e9e3d3 !important; }
+html.theme-mono .bg-\[\#262626\] { background-color: #e6dfcd !important; }
+html.theme-mono .bg-\[\#2a2a2a\] { background-color: #e6dfcd !important; }
+html.theme-mono .bg-\[\#2a2412\] { background-color: #e7e0ce !important; }
+html.theme-mono .bg-\[\#2e2e2e\] { background-color: #ddd5c0 !important; }
+html.theme-mono .bg-\[\#3a3a3a\] { background-color: #d1c8b0 !important; }
+html.theme-mono .hover\:bg-\[\#222222\]:hover { background-color: #ede7d8 !important; }
+html.theme-mono .hover\:bg-\[\#1a1a1a\]:hover { background-color: #f0ebde !important; }
 
-/* borders: dark → even light gray */
-html.theme-mono .border-\[\#111111\] { border-color: #ececec !important; }
-html.theme-mono .border-\[\#1a1a1a\] { border-color: #ececec !important; }
-html.theme-mono .border-\[\#1f1f1f\] { border-color: #e6e6e6 !important; }
-html.theme-mono .border-\[\#2e2e2e\] { border-color: #dadada !important; }
-html.theme-mono .border-\[\#555555\] { border-color: #cccccc !important; }
-html.theme-mono .hover\:border-\[\#2e2e2e\]:hover { border-color: #bbbbbb !important; }
+/* borders: dark → even warm light */
+html.theme-mono .border-\[\#111111\] { border-color: #e8e1d1 !important; }
+html.theme-mono .border-\[\#1a1a1a\] { border-color: #e8e1d1 !important; }
+html.theme-mono .border-\[\#1f1f1f\] { border-color: #e2dac8 !important; }
+html.theme-mono .border-\[\#2e2e2e\] { border-color: #d7cdb7 !important; }
+html.theme-mono .border-\[\#555555\] { border-color: #c5b99e !important; }
+html.theme-mono .hover\:border-\[\#2e2e2e\]:hover { border-color: #b7a98a !important; }
 
 /* text: light → dark grayscale (even ramp) */
 html.theme-mono .text-\[\#f0f0f0\] { color: #141414 !important; }
@@ -120,10 +120,10 @@ html.theme-mono .app-logo:hover { color: #000000 !important; }
 html.theme-mono .app-logo img { filter: invert(1); }
 
 /* chrome */
-html.theme-mono ::selection { background: rgba(20,20,20,0.10); color: #141414; }
-html.theme-mono ::-webkit-scrollbar-track { background: #f2f2f2; }
-html.theme-mono ::-webkit-scrollbar-thumb { background: #cccccc; }
-html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #141414; }
+html.theme-mono ::selection { background: rgba(28,26,20,0.10); color: #1c1a14; }
+html.theme-mono ::-webkit-scrollbar-track { background: #efe9db; }
+html.theme-mono ::-webkit-scrollbar-thumb { background: #cbc0a6; }
+html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c1a14; }
 
 /* Welcome message slide-down */
 @keyframes slideDown {
