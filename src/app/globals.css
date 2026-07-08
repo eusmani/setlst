@@ -111,12 +111,13 @@ html.theme-mono .nav-username { color: #141414 !important; }
   background: transparent;
 }
 
-/* Logo chip stays dark so the white turntable mark + wordmark read clearly */
+/* Light theme: plain black logo, no chip. Invert the white turntable art to black. */
 html.theme-mono .app-logo {
-  color: #ffffff !important;
-  background: #141414;
+  color: #111111 !important;
+  background: transparent !important;
 }
-html.theme-mono .app-logo:hover { color: #ffffff !important; }
+html.theme-mono .app-logo:hover { color: #000000 !important; }
+html.theme-mono .app-logo img { filter: invert(1); }
 
 /* chrome */
 html.theme-mono ::selection { background: rgba(20,20,20,0.10); color: #141414; }
