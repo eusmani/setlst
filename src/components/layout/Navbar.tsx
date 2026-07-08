@@ -96,7 +96,7 @@ export default function Navbar() {
   return (
     <>
     {/* Fixed so it never shifts during momentum/rubber-band scroll in the iOS webview. */}
-    <nav className="fixed top-0 inset-x-0 z-50 border-b border-[#1f1f1f] bg-[#111111] sm:bg-[#111111]/96 sm:backdrop-blur-sm">
+    <nav className="top-nav fixed top-0 inset-x-0 z-50 border-b border-[#1f1f1f] bg-[#111111] sm:bg-[#111111]/96 sm:backdrop-blur-sm">
       <div className="max-w-6xl mx-auto pl-3 pr-5 sm:px-8 h-16 flex items-center gap-10">
 
         {/* Logo */}

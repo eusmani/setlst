@@ -177,3 +177,36 @@ html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c1a12; }
 html.theme-mono [class*="text-xl"][class*="uppercase"][class*="tracking-["] {
   color: #000000 !important;
 }
+
+/* ---- Desktop only: invert the top navbar in light mode ----
+   Mobile keeps the eggshell bar with black text. On desktop the whole bar and its
+   dropdown render in the original dark palette so it reads as a distinct dark header. */
+@media (min-width: 640px) {
+  html.theme-mono nav.top-nav { background-color: rgba(17,17,17,0.96) !important; border-bottom-color: #1f1f1f !important; }
+
+  html.theme-mono .top-nav .bg-\[\#111111\] { background-color: #111111 !important; }
+  html.theme-mono .top-nav .bg-\[\#1a1a1a\] { background-color: #1a1a1a !important; }
+  html.theme-mono .top-nav .bg-\[\#222222\] { background-color: #222222 !important; }
+  html.theme-mono .top-nav .hover\:bg-\[\#1a1a1a\]:hover { background-color: #1a1a1a !important; }
+  html.theme-mono .top-nav .hover\:bg-\[\#222222\]:hover { background-color: #222222 !important; }
+  html.theme-mono .top-nav .bg-\[\#c4a832\] { background-color: #c4a832 !important; color: #111111 !important; }
+  html.theme-mono .top-nav .hover\:bg-\[\#d4ba44\]:hover { background-color: #d4ba44 !important; }
+
+  html.theme-mono .top-nav .border-\[\#111111\] { border-color: #111111 !important; }
+  html.theme-mono .top-nav .border-\[\#1f1f1f\] { border-color: #1f1f1f !important; }
+  html.theme-mono .top-nav .border-\[\#2e2e2e\] { border-color: #2e2e2e !important; }
+  html.theme-mono .top-nav .hover\:border-\[\#c4a832\]:hover { border-color: #c4a832 !important; }
+
+  html.theme-mono .top-nav .text-\[\#f0f0f0\] { color: #f0f0f0 !important; }
+  html.theme-mono .top-nav .text-\[\#a0a0a0\] { color: #a0a0a0 !important; }
+  html.theme-mono .top-nav .text-\[\#6b6b6b\] { color: #6b6b6b !important; }
+  html.theme-mono .top-nav .text-\[\#c4a832\] { color: #c4a832 !important; }
+  html.theme-mono .top-nav .text-\[\#111111\] { color: #111111 !important; }
+  html.theme-mono .top-nav .hover\:text-\[\#f0f0f0\]:hover { color: #f0f0f0 !important; }
+  html.theme-mono .top-nav .hover\:text-\[\#c4a832\]:hover { color: #c4a832 !important; }
+  html.theme-mono .top-nav .nav-username { color: #f0f0f0 !important; }
+
+  html.theme-mono .top-nav .app-logo { color: #f0f0f0 !important; background: transparent !important; }
+  html.theme-mono .top-nav .app-logo:hover { color: #c4a832 !important; }
+  html.theme-mono .top-nav .app-logo img { filter: none !important; }
+}
