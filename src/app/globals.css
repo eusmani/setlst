@@ -97,8 +97,9 @@ html.theme-mono .focus\:border-\[\#c4a832\]:focus { border-color: #111111 !impor
 html.theme-mono .bg-\[\#c4a832\] { background-color: #111111 !important; color: #ffffff !important; }
 html.theme-mono .hover\:bg-\[\#d4ba44\]:hover { background-color: #333333 !important; }
 
-/* elements sitting over dark album imagery stay light */
-html.theme-mono .hero-sub { color: #e6e6e6 !important; }
+/* hero subtitle is pitch black like the rest of the copy */
+html.theme-mono .hero-sub { color: #000000 !important; }
+/* "On this day" sits over the dark album-art gradient → stays light */
 html.theme-mono .on-this-day { color: #e6e6e6 !important; }
 
 /* username sits on the (now white) navbar → dark */
