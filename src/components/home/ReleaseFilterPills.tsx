@@ -7,17 +7,31 @@ interface Release { id: string; title: string; artist: string; artwork: string |
 type Filter = "recent" | "week" | "upcoming";
 const PILLS: { key: Filter; label: string; endpoint: string }[] = [
   { key: "recent", label: "Recent", endpoint: "/api/releases?range=recent" },
-  { key: "week", label: "This week", endpoint: "/api/new-releases" },
+  { key: "week", label: "This week", endpoint: "/api/releases?range=week" },
   { key: "upcoming", label: "Upcoming", endpoint: "/api/releases" },
 ];
 
 // Home strip: filter albums by Recent / This week / Upcoming via bubble pills.
+// Draws from the underground roster (/api/releases) and excludes any artist that
+// appears in Release Radar (/api/new-releases) so the two sections never overlap.
 export default function ReleaseFilterPills() {
   const [filter, setFilter] = useState<Filter>("week");
   const [cache, setCache] = useState<Record<Filter, Release[] | undefined>>({ recent: undefined, week: undefined, upcoming: undefined });
+  const [radarArtists, setRadarArtists] = useState<Set<string>>(new Set());
 
   const active = PILLS.find((p) => p.key === filter)!;
-  const albums = cache[filter];
+
+  // Artists shown in Release Radar — excluded here so the pills are always different.
+  useEffect(() => {
+    fetch("/api/new-releases")
+      .then((r) => r.json())
+      .then((list) => {
+        const s = new Set<string>();
+        for (const r of (Array.isArray(list) ? list : [])) if (r?.artist) s.add(String(r.artist).toLowerCase());
+        setRadarArtists(s);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (cache[filter] !== undefined) return; // already loaded
@@ -26,6 +40,18 @@ export default function ReleaseFilterPills() {
       .then((d) => setCache((c) => ({ ...c, [filter]: Array.isArray(d) ? d : [] })))
       .catch(() => setCache((c) => ({ ...c, [filter]: [] })));
   }, [filter, active.endpoint, cache]);
+
+  const raw = cache[filter];
+  // Drop anything Release Radar is already showing, and de-dupe by artist.
+  const albums = raw === undefined ? undefined : (() => {
+    const seen = new Set<string>();
+    return raw.filter((a) => {
+      const key = (a.artist || "").toLowerCase();
+      if (!key || radarArtists.has(key) || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  })();
 
   return (
     <div className="lg:hidden">
