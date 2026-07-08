@@ -4,6 +4,7 @@ import { getUserActivity, getFriendsActivity, getRecentActivity, type ActivityIt
 import MobileActivitySection from "@/components/home/MobileActivitySection";
 import ClubsStrip from "@/components/home/ClubsStrip";
 import SpotifyForYou from "@/components/home/SpotifyForYou";
+import ReleaseFilterPills from "@/components/home/ReleaseFilterPills";
 import Link from "next/link";
 import HomeFeed from "./HomeFeed";
 import AlbumMosaic from "@/components/layout/AlbumMosaic";
@@ -88,6 +89,7 @@ export default async function HomePage() {
         {/* Mobile: Your / Friends' activity (preview 3, expandable) + discovery widgets */}
         <div className="lg:hidden space-y-6">
           {session && <SpotifyForYou />}
+          <ReleaseFilterPills />
           <TrendingAlbums
             limit={12}
             slider
