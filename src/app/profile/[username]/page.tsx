@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isPremium } from "@/lib/premium";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
@@ -46,6 +47,8 @@ export default async function ProfilePage({
   if (!user) notFound();
 
   const isOwnProfile = session?.user?.id === user.id;
+  // Your Diary is a SETLST Pro exclusive — only shown on your own profile when you're a member.
+  const viewerPremium = isOwnProfile ? await isPremium(session?.user?.id) : false;
   const isFollowing = session && !isOwnProfile
     ? !!(await prisma.follow.findUnique({
         where: { followerId_followingId: { followerId: session.user.id, followingId: user.id } },
@@ -187,8 +190,8 @@ export default async function ProfilePage({
         </div>
       </div>
 
-      {/* Music Archive — living timeline of this user's taste */}
-      {!contentLocked && (
+      {/* Your Diary — SETLST Pro exclusive; only on your own profile when you're a member */}
+      {isOwnProfile && viewerPremium && (
         <Link
           href={`/profile/${user.username}/timeline`}
           className="sm:hidden flex items-center gap-3 mb-8 p-4 bg-gradient-to-r from-[#c4a832]/12 to-[#1a1a1a] border border-[#2e2e2e] hover:border-[#c4a832] rounded-2xl transition-colors group"
@@ -197,9 +200,10 @@ export default async function ProfilePage({
             <path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" />
           </svg>
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-[#f0f0f0] font-medium">{isOwnProfile ? "Your Diary" : `${user.username}'s Diary`}</p>
-            <p className="text-xs text-[#6b6b6b]">A year-by-year timeline of {isOwnProfile ? "your" : `${user.username}'s`} taste</p>
+            <p className="text-sm text-[#f0f0f0] font-medium">Your Diary</p>
+            <p className="text-xs text-[#6b6b6b]">A year-by-year timeline of your taste</p>
           </div>
+          <span className="text-[9px] uppercase tracking-wide bg-[#c4a832] text-black rounded-full px-1.5 py-0.5 font-bold shrink-0">Pro</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b6b6b] group-hover:text-[#c4a832] transition-colors shrink-0"><polyline points="9 6 15 12 9 18" /></svg>
         </Link>
       )}

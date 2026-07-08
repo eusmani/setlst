@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { isPremium } from "@/lib/premium";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,20 @@ export default async function TimelinePage({ params }: { params: Promise<{ usern
       <div className="max-w-3xl mx-auto px-5 pt-12 text-center">
         <p className="text-[#6b6b6b] text-sm mb-3">User not found.</p>
         <Link href="/" className="text-sm text-[#c4a832] hover:underline">← Home</Link>
+      </div>
+    );
+  }
+
+  // Your Diary is a SETLST Pro exclusive — only the owner, and only while a Pro member.
+  const isOwner = session?.user?.id === user.id;
+  const ownerPremium = isOwner ? await isPremium(session?.user?.id) : false;
+  if (!isOwner || !ownerPremium) {
+    return (
+      <div className="max-w-md mx-auto px-5 pt-16 text-center">
+        <img src="/turntable-logo.png" alt="" className="pro-turntable w-16 h-16 mx-auto mb-4 object-contain" />
+        <h1 className="font-serif text-2xl text-[#f0f0f0] mb-2">Your Diary is a SETLST Pro feature</h1>
+        <p className="text-sm text-[#a0a0a0] mb-5">A year-by-year timeline of your taste — discoveries, ratings, and shows. Join SETLST Pro to unlock it.</p>
+        <Link href="/plus" className="inline-block bg-[#c4a832] hover:bg-[#d4ba44] text-[#141414] text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Join SETLST Pro</Link>
       </div>
     );
   }

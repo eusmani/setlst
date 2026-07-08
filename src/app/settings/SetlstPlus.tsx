@@ -6,6 +6,7 @@ import { purchasePlus, restorePurchases } from "@/lib/purchases";
 interface Status { premium: boolean; plan: string | null; until: string | null; appUserId: string | null }
 
 const PERKS = [
+  "Your Diary — a year-by-year timeline of your taste",
   "Ad-free experience",
   "Review analytics",
   "Monthly recaps",
