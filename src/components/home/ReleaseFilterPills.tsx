@@ -28,7 +28,7 @@ export default function ReleaseFilterPills() {
   }, [filter, active.endpoint, cache]);
 
   return (
-    <div>
+    <div className="lg:hidden">
       <div className="flex items-center gap-2 mb-3">
         {PILLS.map((p) => (
           <button
