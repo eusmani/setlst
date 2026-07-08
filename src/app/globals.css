@@ -48,7 +48,7 @@ body {
    .theme-mono (default) is an inverted black-&-white (light) theme. */
 
 /* base surface — warm eggshell / cream (even, minimal) */
-html.theme-mono, html.theme-mono body { background: #f4ecd6 !important; color: #1c1a12 !important; }
+html.theme-mono, html.theme-mono body { background: #f4ecd6 !important; color: #000000 !important; }
 
 /* backgrounds: dark → even eggshell steps */
 html.theme-mono .bg-\[\#111111\] { background-color: #f4ecd6 !important; }
@@ -71,24 +71,25 @@ html.theme-mono .border-\[\#2e2e2e\] { border-color: #d0c19c !important; }
 html.theme-mono .border-\[\#555555\] { border-color: #bfae86 !important; }
 html.theme-mono .hover\:border-\[\#2e2e2e\]:hover { border-color: #b09c72 !important; }
 
-/* text: light → dark grayscale (even ramp) */
-html.theme-mono .text-\[\#f0f0f0\] { color: #141414 !important; }
-html.theme-mono .text-\[\#ededed\] { color: #1c1c1c !important; }
-html.theme-mono .text-\[\#e8e8e8\] { color: #262626 !important; }
-html.theme-mono .text-\[\#d8d8d8\] { color: #2c2c2c !important; }
-html.theme-mono .text-\[\#d0d0d0\] { color: #333333 !important; }
-html.theme-mono .text-\[\#cfcfcf\] { color: #333333 !important; }
-html.theme-mono .text-\[\#c8c8c8\] { color: #383838 !important; }
-html.theme-mono .text-\[\#bbbbbb\] { color: #3a3a3a !important; }
-html.theme-mono .text-\[\#b3b3b3\] { color: #444444 !important; }
-html.theme-mono .text-\[\#a0a0a0\] { color: #565656 !important; }
-html.theme-mono .text-\[\#888888\] { color: #6a6a6a !important; }
-html.theme-mono .text-\[\#6b6b6b\] { color: #777777 !important; }
-html.theme-mono .text-\[\#555555\] { color: #8a8a8a !important; }
+/* text: everything on the eggshell is pitch black for maximum contrast */
+html.theme-mono .text-\[\#f0f0f0\] { color: #000000 !important; }
+html.theme-mono .text-\[\#ededed\] { color: #000000 !important; }
+html.theme-mono .text-\[\#e8e8e8\] { color: #000000 !important; }
+html.theme-mono .text-\[\#d8d8d8\] { color: #000000 !important; }
+html.theme-mono .text-\[\#d0d0d0\] { color: #000000 !important; }
+html.theme-mono .text-\[\#cfcfcf\] { color: #000000 !important; }
+html.theme-mono .text-\[\#c8c8c8\] { color: #000000 !important; }
+html.theme-mono .text-\[\#bbbbbb\] { color: #000000 !important; }
+html.theme-mono .text-\[\#b3b3b3\] { color: #000000 !important; }
+html.theme-mono .text-\[\#a0a0a0\] { color: #000000 !important; }
+html.theme-mono .text-\[\#888888\] { color: #000000 !important; }
+html.theme-mono .text-\[\#6b6b6b\] { color: #000000 !important; }
+html.theme-mono .text-\[\#555555\] { color: #000000 !important; }
+html.theme-mono .text-\[\#141414\] { color: #000000 !important; }
 html.theme-mono .hover\:text-\[\#f0f0f0\]:hover { color: #000000 !important; }
 
-/* accent (amber → pure black & white) */
-html.theme-mono .text-\[\#c4a832\] { color: #111111 !important; }
+/* accent (amber → pitch black on light) */
+html.theme-mono .text-\[\#c4a832\] { color: #000000 !important; }
 html.theme-mono .hover\:text-\[\#c4a832\]:hover { color: #000000 !important; }
 html.theme-mono .border-\[\#c4a832\] { border-color: #111111 !important; }
 html.theme-mono .hover\:border-\[\#c4a832\]:hover { border-color: #999999 !important; }
@@ -113,7 +114,7 @@ html.theme-mono .nav-username { color: #141414 !important; }
 
 /* Light theme: plain black logo, no chip. Invert the white turntable art to black. */
 html.theme-mono .app-logo {
-  color: #111111 !important;
+  color: #000000 !important;
   background: transparent !important;
 }
 html.theme-mono .app-logo:hover { color: #000000 !important; }
@@ -167,5 +168,5 @@ html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c1a12; }
   color: #f0f0f0;
 }
 html.theme-mono [class*="text-xl"][class*="uppercase"][class*="tracking-["] {
-  color: #141414 !important;
+  color: #000000 !important;
 }
