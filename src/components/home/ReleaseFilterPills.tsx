@@ -34,7 +34,7 @@ export default function ReleaseFilterPills() {
           <button
             key={p.key}
             onClick={() => setFilter(p.key)}
-            className={`text-xs px-3.5 py-1.5 rounded-full border transition-colors ${
+            className={`text-sm px-4 py-2 rounded-full border transition-colors ${
               filter === p.key
                 ? "bg-[#c4a832] border-[#c4a832] text-[#141414] font-medium"
                 : "border-[#2e2e2e] text-[#a0a0a0] hover:text-[#f0f0f0] hover:border-[#c4a832]"
