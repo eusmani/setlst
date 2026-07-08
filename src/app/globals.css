@@ -47,52 +47,61 @@ body {
    Components are authored in the dark amber palette. .theme-amber keeps that look.
    .theme-mono (default) is an inverted black-&-white (light) theme. */
 
-/* base surfaces (eggshell off-white) */
-html.theme-mono, html.theme-mono body { background: #f3ecdb !important; color: #1c160c !important; }
+/* base surface — clean white (minimal black & white) */
+html.theme-mono, html.theme-mono body { background: #ffffff !important; color: #141414 !important; }
 
-/* backgrounds: dark → eggshell tones */
-html.theme-mono .bg-\[\#111111\] { background-color: #f3ecdb !important; }
-html.theme-mono .bg-\[\#1a1a1a\] { background-color: #ece3cd !important; }
-html.theme-mono .bg-\[\#222222\] { background-color: #e3d9bf !important; }
-html.theme-mono .bg-\[\#2e2e2e\] { background-color: #d6caa9 !important; }
-html.theme-mono .bg-\[\#3a3a3a\] { background-color: #c9bc97 !important; }
-html.theme-mono .hover\:bg-\[\#222222\]:hover { background-color: #e6dcc3 !important; }
-html.theme-mono .hover\:bg-\[\#1a1a1a\]:hover { background-color: #ece3cd !important; }
+/* backgrounds: dark → even grayscale steps */
+html.theme-mono .bg-\[\#111111\] { background-color: #ffffff !important; }
+html.theme-mono .bg-\[\#141414\] { background-color: #ffffff !important; }
+html.theme-mono .bg-\[\#1a1a1a\] { background-color: #f6f6f6 !important; }
+html.theme-mono .bg-\[\#222222\] { background-color: #efefef !important; }
+html.theme-mono .bg-\[\#262626\] { background-color: #ededed !important; }
+html.theme-mono .bg-\[\#2a2a2a\] { background-color: #ededed !important; }
+html.theme-mono .bg-\[\#2a2412\] { background-color: #eeeeee !important; }
+html.theme-mono .bg-\[\#2e2e2e\] { background-color: #e4e4e4 !important; }
+html.theme-mono .bg-\[\#3a3a3a\] { background-color: #d8d8d8 !important; }
+html.theme-mono .hover\:bg-\[\#222222\]:hover { background-color: #f0f0f0 !important; }
+html.theme-mono .hover\:bg-\[\#1a1a1a\]:hover { background-color: #f6f6f6 !important; }
 
-/* borders: dark → warm light */
-html.theme-mono .border-\[\#1a1a1a\] { border-color: #e2d8c0 !important; }
-html.theme-mono .border-\[\#1f1f1f\] { border-color: #ddd2b8 !important; }
-html.theme-mono .border-\[\#2e2e2e\] { border-color: #cfc3a3 !important; }
-html.theme-mono .hover\:border-\[\#2e2e2e\]:hover { border-color: #bcad86 !important; }
+/* borders: dark → even light gray */
+html.theme-mono .border-\[\#111111\] { border-color: #ececec !important; }
+html.theme-mono .border-\[\#1a1a1a\] { border-color: #ececec !important; }
+html.theme-mono .border-\[\#1f1f1f\] { border-color: #e6e6e6 !important; }
+html.theme-mono .border-\[\#2e2e2e\] { border-color: #dadada !important; }
+html.theme-mono .border-\[\#555555\] { border-color: #cccccc !important; }
+html.theme-mono .hover\:border-\[\#2e2e2e\]:hover { border-color: #bbbbbb !important; }
 
-/* text: light → dark */
+/* text: light → dark grayscale (even ramp) */
 html.theme-mono .text-\[\#f0f0f0\] { color: #141414 !important; }
-html.theme-mono .text-\[\#d8d8d8\] { color: #2a2a2a !important; }
-html.theme-mono .text-\[\#bbbbbb\] { color: #333333 !important; }
-html.theme-mono .text-\[\#a0a0a0\] { color: #555555 !important; }
-html.theme-mono .text-\[\#888888\] { color: #666666 !important; }
-html.theme-mono .text-\[\#6b6b6b\] { color: #767676 !important; }
-html.theme-mono .text-\[\#555555\] { color: #888888 !important; }
-html.theme-mono .text-\[\#ededed\] { color: #222222 !important; }
+html.theme-mono .text-\[\#ededed\] { color: #1c1c1c !important; }
+html.theme-mono .text-\[\#e8e8e8\] { color: #262626 !important; }
+html.theme-mono .text-\[\#d8d8d8\] { color: #2c2c2c !important; }
+html.theme-mono .text-\[\#d0d0d0\] { color: #333333 !important; }
+html.theme-mono .text-\[\#cfcfcf\] { color: #333333 !important; }
+html.theme-mono .text-\[\#c8c8c8\] { color: #383838 !important; }
+html.theme-mono .text-\[\#bbbbbb\] { color: #3a3a3a !important; }
+html.theme-mono .text-\[\#b3b3b3\] { color: #444444 !important; }
+html.theme-mono .text-\[\#a0a0a0\] { color: #565656 !important; }
+html.theme-mono .text-\[\#888888\] { color: #6a6a6a !important; }
+html.theme-mono .text-\[\#6b6b6b\] { color: #777777 !important; }
+html.theme-mono .text-\[\#555555\] { color: #8a8a8a !important; }
 html.theme-mono .hover\:text-\[\#f0f0f0\]:hover { color: #000000 !important; }
 
-/* accent (amber → black) */
+/* accent (amber → pure black & white) */
 html.theme-mono .text-\[\#c4a832\] { color: #111111 !important; }
 html.theme-mono .hover\:text-\[\#c4a832\]:hover { color: #000000 !important; }
 html.theme-mono .border-\[\#c4a832\] { border-color: #111111 !important; }
-html.theme-mono .hover\:border-\[\#c4a832\]:hover { border-color: #888888 !important; }
+html.theme-mono .hover\:border-\[\#c4a832\]:hover { border-color: #999999 !important; }
 html.theme-mono .focus\:border-\[\#c4a832\]:focus { border-color: #111111 !important; }
 html.theme-mono .bg-\[\#c4a832\] { background-color: #111111 !important; color: #ffffff !important; }
 html.theme-mono .hover\:bg-\[\#d4ba44\]:hover { background-color: #333333 !important; }
 
-/* hero subtitle stays eggshell over the dark album mosaic (light theme) */
-html.theme-mono .hero-sub { color: #f3ecdb !important; }
+/* elements sitting over dark album imagery stay light */
+html.theme-mono .hero-sub { color: #e6e6e6 !important; }
+html.theme-mono .on-this-day { color: #e6e6e6 !important; }
 
-/* username sits on the dark navbar; keep it eggshell in light theme */
-html.theme-mono .nav-username { color: #f3ecdb !important; }
-
-/* "On this day" label sits over the dark album-art gradient; keep it eggshell in light theme */
-html.theme-mono .on-this-day { color: #f3ecdb !important; }
+/* username sits on the (now white) navbar → dark */
+html.theme-mono .nav-username { color: #141414 !important; }
 
 /* Logo chip geometry is identical in both themes so it doesn't shift when switching;
    only the colors change per theme. */
@@ -102,18 +111,18 @@ html.theme-mono .on-this-day { color: #f3ecdb !important; }
   background: transparent;
 }
 
-/* SETLST logo in eggshell on a dark chip (light theme) */
+/* Logo chip stays dark so the white turntable mark + wordmark read clearly */
 html.theme-mono .app-logo {
-  color: #f3ecdb !important;
-  background: #1c160c;
+  color: #ffffff !important;
+  background: #141414;
 }
 html.theme-mono .app-logo:hover { color: #ffffff !important; }
 
 /* chrome */
-html.theme-mono ::selection { background: #1c160c18; color: #1c160c; }
-html.theme-mono ::-webkit-scrollbar-track { background: #e6dcc3; }
-html.theme-mono ::-webkit-scrollbar-thumb { background: #cfc3a3; }
-html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c160c; }
+html.theme-mono ::selection { background: rgba(20,20,20,0.10); color: #141414; }
+html.theme-mono ::-webkit-scrollbar-track { background: #f2f2f2; }
+html.theme-mono ::-webkit-scrollbar-thumb { background: #cccccc; }
+html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #141414; }
 
 /* Welcome message slide-down */
 @keyframes slideDown {
