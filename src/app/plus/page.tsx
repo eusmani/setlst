@@ -10,7 +10,7 @@ export default function PlusPage() {
       <div className="mt-3 mb-2 text-center">
         <img src="/turntable-logo.png" alt="SETLST" className="pro-turntable w-28 h-28 mx-auto mb-3 object-contain" />
         <h1 className="font-serif text-3xl text-[#f0f0f0]">SETLST Pro</h1>
-        <p className="text-sm text-[#a0a0a0] mt-1">Support SETLST and unlock the extras.</p>
+        <p className="text-sm text-[#a0a0a0] mt-1">Want the full experience? Join now.</p>
       </div>
       {/* Mobile only — SETLST Pro is purchased through the iOS app (Apple IAP). */}
       <div className="sm:hidden">

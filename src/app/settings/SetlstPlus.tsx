@@ -63,8 +63,7 @@ export default function SetlstPlus() {
         </>
       ) : (
         <>
-          <p className="text-xs text-[#a0a0a0] mb-3">Support SETLST and unlock extras.</p>
-          <ul className="space-y-1.5 mb-4">
+          <ul className="space-y-1.5 mb-4 mt-3">
             {PERKS.map((p) => (
               <li key={p} className="flex items-center gap-2 text-sm text-[#d8d8d8]">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="2.5" className="shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
@@ -75,7 +74,7 @@ export default function SetlstPlus() {
           <div className="flex items-center gap-3">
             <button onClick={subscribe} disabled={busy}
               className="bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-50 text-[#141414] text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
-              {busy ? "…" : "Subscribe"}
+              {busy ? "…" : "Join SETLST Pro"}
             </button>
             <button onClick={restore} disabled={busy} className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">Restore purchases</button>
           </div>
