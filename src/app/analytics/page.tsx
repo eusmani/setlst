@@ -31,8 +31,8 @@ export default async function AnalyticsPage() {
         <div className="mt-8 text-center bg-gradient-to-br from-[#c4a832]/12 to-[#1a1a1a] border border-[#c4a832]/40 rounded-2xl p-8">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="#c4a832" className="mx-auto mb-3"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" stroke="#c4a832" strokeWidth="2" fill="none" /></svg>
           <h1 className="font-serif text-2xl text-[#f0f0f0] mb-1">Review Analytics</h1>
-          <p className="text-sm text-[#a0a0a0] mb-5">Rating trends, your reviewing habits, and monthly recaps — part of SETLST Plus.</p>
-          <Link href="/plus" className="inline-block bg-[#c4a832] hover:bg-[#d4ba44] text-[#141414] text-sm font-semibold px-5 py-2 rounded-lg transition-colors">Unlock with Plus</Link>
+          <p className="text-sm text-[#a0a0a0] mb-5">Rating trends, your reviewing habits, and monthly recaps — part of SETLST Pro.</p>
+          <Link href="/plus" className="inline-block bg-[#c4a832] hover:bg-[#d4ba44] text-[#141414] text-sm font-semibold px-5 py-2 rounded-lg transition-colors">Unlock with Pro</Link>
         </div>
       </div>
     );

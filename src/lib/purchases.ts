@@ -36,7 +36,7 @@ export async function purchasePlus(appUserId: string): Promise<{ ok: boolean; me
     if (!pkg) return { ok: false, message: "No subscription is available right now." };
     await P.purchasePackage({ aPackage: pkg });
     // RevenueCat's webhook flips the account to Plus server-side shortly after.
-    return { ok: true, message: "You’re now SETLST Plus! 🎉" };
+    return { ok: true, message: "You’re now SETLST Pro! 🎉" };
   } catch {
     return { ok: false, message: "Purchase cancelled or failed." };
   }
