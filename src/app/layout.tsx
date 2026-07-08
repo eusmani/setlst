@@ -62,8 +62,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <RegisterSW />
           <NativeBridge />
           <Navbar />
-          {/* Offsets the fixed navbar (h-16) so content isn't hidden beneath it. */}
-          <div className="h-16 shrink-0" aria-hidden />
+          {/* Desktop only: offsets the fixed navbar (h-16). On mobile the navbar is
+              in normal flow (scrolls away with the page), so no spacer is needed. */}
+          <div className="hidden sm:block h-16 shrink-0" aria-hidden />
           <UpcomingBanner />
           <BottomNav />
           <VerifyBanner />
