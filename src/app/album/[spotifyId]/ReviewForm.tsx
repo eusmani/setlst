@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { RatingInput } from "@/components/ui/RatingMeter";
@@ -49,6 +49,45 @@ export default function ReviewForm({ album, trackNames, existing, onSaved }: Pro
   const [showSongs, setShowSongs] = useState(existing?.showSongs ?? true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  // One draft per album, kept locally. Only for new reviews (not when editing).
+  const draftKey = `setlst-review-draft-${album.spotifyId}`;
+
+  useEffect(() => {
+    if (existing) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (typeof d.rating === "number") setRating(d.rating);
+      if (d.subject) setSubject(d.subject);
+      if (d.body) setBody(d.body);
+      if (d.favoriteSong) setFavoriteSong(d.favoriteSong);
+      if (d.leastFavoriteSong) setLeastFavoriteSong(d.leastFavoriteSong);
+      if (typeof d.showSongs === "boolean") setShowSongs(d.showSongs);
+      if (d.rating || d.subject || d.body || d.favoriteSong || d.leastFavoriteSong) setDraftRestored(true);
+    } catch { /* ignore */ }
+  }, [draftKey, existing]);
+
+  function clearDraft() { try { localStorage.removeItem(draftKey); } catch { /* ignore */ } }
+
+  function saveDraft() {
+    try {
+      localStorage.setItem(draftKey, JSON.stringify({ rating, subject, body, favoriteSong, leastFavoriteSong, showSongs }));
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 2000);
+    } catch { /* quota / unavailable */ }
+  }
+
+  function discardDraft() {
+    clearDraft();
+    setRating(0); setSubject(""); setBody(""); setFavoriteSong(""); setLeastFavoriteSong(""); setShowSongs(true);
+    setDraftRestored(false);
+  }
+
+  const hasContent = rating > 0 || !!subject.trim() || !!body.trim() || !!favoriteSong || !!leastFavoriteSong;
 
   if (!session) {
     return (
@@ -77,7 +116,7 @@ export default function ReviewForm({ album, trackNames, existing, onSaved }: Pro
     });
     setSaving(false);
     if (!res.ok) setErr((await res.json()).error ?? "Failed");
-    else onSaved(payload);
+    else { clearDraft(); onSaved(payload); }
   }
 
   const selectCls =
@@ -144,13 +183,26 @@ export default function ReviewForm({ album, trackNames, existing, onSaved }: Pro
       )}
 
       {err && <p className="text-red-400 text-xs">{err}</p>}
-      <button
-        type="submit"
-        disabled={saving || !rating}
-        className="bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-40 text-[#111111] px-5 py-2.5 rounded-lg text-sm  transition-colors"
-      >
-        {saving ? "Saving…" : existing ? "Update" : "Save review"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={saving || !rating}
+          className="bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-40 text-[#111111] px-5 py-2.5 rounded-lg text-sm  transition-colors"
+        >
+          {saving ? "Saving…" : existing ? "Update" : "Save review"}
+        </button>
+        {/* Draft — only for a new review (not when editing an existing one) */}
+        {!existing && (
+          <button type="button" onClick={saveDraft} disabled={!hasContent}
+            className="text-sm text-[#a0a0a0] hover:text-[#c4a832] disabled:opacity-40 transition-colors">
+            {draftSaved ? "Draft saved ✓" : "Save draft"}
+          </button>
+        )}
+        {draftRestored && (
+          <button type="button" onClick={discardDraft} className="ml-auto text-[11px] text-[#6b6b6b] hover:text-red-400 transition-colors">Discard draft</button>
+        )}
+      </div>
+      {draftRestored && <p className="text-[11px] text-[#c4a832]">Draft restored</p>}
     </form>
   );
 }
