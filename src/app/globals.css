@@ -47,29 +47,29 @@ body {
    Components are authored in the dark amber palette. .theme-amber keeps that look.
    .theme-mono (default) is an inverted black-&-white (light) theme. */
 
-/* base surface — soft eggshell off-white (even, minimal) */
-html.theme-mono, html.theme-mono body { background: #f7f3ea !important; color: #1c1a14 !important; }
+/* base surface — warm eggshell / cream (even, minimal) */
+html.theme-mono, html.theme-mono body { background: #f4ecd6 !important; color: #1c1a12 !important; }
 
 /* backgrounds: dark → even eggshell steps */
-html.theme-mono .bg-\[\#111111\] { background-color: #f7f3ea !important; }
-html.theme-mono .bg-\[\#141414\] { background-color: #f7f3ea !important; }
-html.theme-mono .bg-\[\#1a1a1a\] { background-color: #f0ebde !important; }
-html.theme-mono .bg-\[\#222222\] { background-color: #e9e3d3 !important; }
-html.theme-mono .bg-\[\#262626\] { background-color: #e6dfcd !important; }
-html.theme-mono .bg-\[\#2a2a2a\] { background-color: #e6dfcd !important; }
-html.theme-mono .bg-\[\#2a2412\] { background-color: #e7e0ce !important; }
-html.theme-mono .bg-\[\#2e2e2e\] { background-color: #ddd5c0 !important; }
-html.theme-mono .bg-\[\#3a3a3a\] { background-color: #d1c8b0 !important; }
-html.theme-mono .hover\:bg-\[\#222222\]:hover { background-color: #ede7d8 !important; }
-html.theme-mono .hover\:bg-\[\#1a1a1a\]:hover { background-color: #f0ebde !important; }
+html.theme-mono .bg-\[\#111111\] { background-color: #f4ecd6 !important; }
+html.theme-mono .bg-\[\#141414\] { background-color: #f4ecd6 !important; }
+html.theme-mono .bg-\[\#1a1a1a\] { background-color: #ede3c9 !important; }
+html.theme-mono .bg-\[\#222222\] { background-color: #e6dbbc !important; }
+html.theme-mono .bg-\[\#262626\] { background-color: #e2d6b4 !important; }
+html.theme-mono .bg-\[\#2a2a2a\] { background-color: #e2d6b4 !important; }
+html.theme-mono .bg-\[\#2a2412\] { background-color: #e3d7b5 !important; }
+html.theme-mono .bg-\[\#2e2e2e\] { background-color: #d9cca6 !important; }
+html.theme-mono .bg-\[\#3a3a3a\] { background-color: #ccbd92 !important; }
+html.theme-mono .hover\:bg-\[\#222222\]:hover { background-color: #eae0c4 !important; }
+html.theme-mono .hover\:bg-\[\#1a1a1a\]:hover { background-color: #ede3c9 !important; }
 
 /* borders: dark → even warm light */
-html.theme-mono .border-\[\#111111\] { border-color: #e8e1d1 !important; }
-html.theme-mono .border-\[\#1a1a1a\] { border-color: #e8e1d1 !important; }
-html.theme-mono .border-\[\#1f1f1f\] { border-color: #e2dac8 !important; }
-html.theme-mono .border-\[\#2e2e2e\] { border-color: #d7cdb7 !important; }
-html.theme-mono .border-\[\#555555\] { border-color: #c5b99e !important; }
-html.theme-mono .hover\:border-\[\#2e2e2e\]:hover { border-color: #b7a98a !important; }
+html.theme-mono .border-\[\#111111\] { border-color: #e4d9bd !important; }
+html.theme-mono .border-\[\#1a1a1a\] { border-color: #e4d9bd !important; }
+html.theme-mono .border-\[\#1f1f1f\] { border-color: #ded1b2 !important; }
+html.theme-mono .border-\[\#2e2e2e\] { border-color: #d0c19c !important; }
+html.theme-mono .border-\[\#555555\] { border-color: #bfae86 !important; }
+html.theme-mono .hover\:border-\[\#2e2e2e\]:hover { border-color: #b09c72 !important; }
 
 /* text: light → dark grayscale (even ramp) */
 html.theme-mono .text-\[\#f0f0f0\] { color: #141414 !important; }
@@ -120,10 +120,10 @@ html.theme-mono .app-logo:hover { color: #000000 !important; }
 html.theme-mono .app-logo img { filter: invert(1); }
 
 /* chrome */
-html.theme-mono ::selection { background: rgba(28,26,20,0.10); color: #1c1a14; }
-html.theme-mono ::-webkit-scrollbar-track { background: #efe9db; }
-html.theme-mono ::-webkit-scrollbar-thumb { background: #cbc0a6; }
-html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c1a14; }
+html.theme-mono ::selection { background: rgba(28,26,18,0.12); color: #1c1a12; }
+html.theme-mono ::-webkit-scrollbar-track { background: #ebe1c8; }
+html.theme-mono ::-webkit-scrollbar-thumb { background: #c8b98f; }
+html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c1a12; }
 
 /* Welcome message slide-down */
 @keyframes slideDown {
