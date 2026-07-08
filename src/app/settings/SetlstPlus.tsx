@@ -1,0 +1,79 @@
+"use client";
+import { useEffect, useState } from "react";
+import { purchasePlus, restorePurchases } from "@/lib/purchases";
+
+interface Status { premium: boolean; plan: string | null; until: string | null; appUserId: string | null }
+
+const PERKS = [
+  "Unlimited crates",
+  "Profile themes & a Plus badge",
+  "Advanced Diary stats",
+  "Ad-free experience",
+  "Early access to Grails",
+];
+
+export default function SetlstPlus() {
+  const [status, setStatus] = useState<Status | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    fetch("/api/premium/status").then((r) => r.json()).then(setStatus).catch(() => setStatus({ premium: false, plan: null, until: null, appUserId: null }));
+  }, []);
+
+  async function subscribe() {
+    if (!status?.appUserId) return;
+    setBusy(true); setMsg("");
+    const res = await purchasePlus(status.appUserId);
+    setMsg(res.message);
+    if (res.ok) fetch("/api/premium/status").then((r) => r.json()).then(setStatus).catch(() => {});
+    setBusy(false);
+  }
+
+  async function restore() {
+    if (!status?.appUserId) return;
+    setBusy(true); setMsg("");
+    const ok = await restorePurchases(status.appUserId);
+    setMsg(ok ? "Purchases restored." : "Nothing to restore.");
+    if (ok) fetch("/api/premium/status").then((r) => r.json()).then(setStatus).catch(() => {});
+    setBusy(false);
+  }
+
+  if (!status) return null;
+
+  return (
+    <div className="rounded-xl p-5 mb-5 border border-[#c4a832]/40 bg-gradient-to-br from-[#c4a832]/12 to-[#1a1a1a]">
+      <div className="flex items-center gap-2 mb-1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#c4a832"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+        <h2 className="text-sm text-[#f0f0f0] font-semibold">SETLST Plus</h2>
+        {status.premium && <span className="text-[10px] uppercase tracking-wide bg-[#c4a832] text-black rounded-full px-2 py-0.5 font-bold">Active</span>}
+      </div>
+
+      {status.premium ? (
+        <p className="text-xs text-[#a0a0a0]">
+          You’re a Plus member{status.until ? ` · renews ${new Date(status.until).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}. Thanks for supporting SETLST 💛
+        </p>
+      ) : (
+        <>
+          <p className="text-xs text-[#a0a0a0] mb-3">Support SETLST and unlock extras.</p>
+          <ul className="space-y-1.5 mb-4">
+            {PERKS.map((p) => (
+              <li key={p} className="flex items-center gap-2 text-sm text-[#d8d8d8]">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="2.5" className="shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                {p}
+              </li>
+            ))}
+          </ul>
+          <div className="flex items-center gap-3">
+            <button onClick={subscribe} disabled={busy}
+              className="bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-50 text-[#141414] text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+              {busy ? "…" : "Subscribe"}
+            </button>
+            <button onClick={restore} disabled={busy} className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">Restore purchases</button>
+          </div>
+        </>
+      )}
+      {msg && <p className="text-xs text-[#c4a832] mt-3">{msg}</p>}
+    </div>
+  );
+}

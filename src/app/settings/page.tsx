@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import SpotifyConnect from "./SpotifyConnect";
+import SetlstPlus from "./SetlstPlus";
 
 type Theme = "mono" | "amber";
 
@@ -223,6 +224,7 @@ export default function SettingsPage() {
       </>)}
 
       {tab === "account" && (<>
+      <SetlstPlus />
       <SpotifyConnect />
       {/* Privacy */}
       <div className={card}>

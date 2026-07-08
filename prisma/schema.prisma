@@ -21,6 +21,12 @@ model User {
   topAlbums     String?
   createdAt     DateTime @default(now())
 
+  // SETLST Plus (premium) — driven by Apple IAP via RevenueCat webhooks.
+  isPremium     Boolean   @default(false)
+  premiumPlan   String?   // e.g. "plus_monthly", "plus_yearly"
+  premiumUntil  DateTime? // current period end; premium is active while now < this
+  revenueCatId  String?   // RevenueCat app_user_id linked to this account
+
   // Spotify account link (authorization-code flow) — powers listening-based
   // concert + album recommendations.
   spotifyAccessToken  String?
