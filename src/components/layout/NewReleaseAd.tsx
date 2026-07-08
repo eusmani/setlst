@@ -13,6 +13,11 @@ interface Release {
 
 export default function NewReleaseAd() {
   const [release, setRelease] = useState<Release | null>(null);
+  const [premium, setPremium] = useState(false); // SETLST Plus = ad-free
+
+  useEffect(() => {
+    fetch("/api/premium/status").then((r) => r.json()).then((d) => setPremium(!!d.premium)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/releases?range=recent")
@@ -25,7 +30,7 @@ export default function NewReleaseAd() {
       .catch(() => {});
   }, []);
 
-  if (!release) return null;
+  if (premium || !release) return null;
   const r = release;
   const date = new Date(r.releaseDate + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 

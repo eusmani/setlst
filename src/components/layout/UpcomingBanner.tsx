@@ -15,6 +15,11 @@ export default function UpcomingBanner() {
   const pathname = usePathname();
   const [release, setRelease] = useState<Release | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [premium, setPremium] = useState(false); // SETLST Plus = ad-free
+
+  useEffect(() => {
+    fetch("/api/premium/status").then((r) => r.json()).then((d) => setPremium(!!d.premium)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/releases")
@@ -40,9 +45,8 @@ export default function UpcomingBanner() {
       .catch(() => {});
   }, []);
 
-  // Only on the home screen — it must disappear when you open any other screen
-  // so it never overlaps other tabs' UI.
-  if (pathname !== "/" || !release || dismissed) return null;
+  // Ad-free for SETLST Plus. Otherwise home-only, so it disappears on other screens.
+  if (premium || pathname !== "/" || !release || dismissed) return null;
 
   return (
     <div

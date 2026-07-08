@@ -1,15 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { purchasePlus, restorePurchases } from "@/lib/purchases";
 
 interface Status { premium: boolean; plan: string | null; until: string | null; appUserId: string | null }
 
 const PERKS = [
-  "Unlimited crates",
-  "Profile themes & a Plus badge",
-  "Advanced Diary stats",
   "Ad-free experience",
-  "Early access to Grails",
+  "Review analytics",
+  "Monthly recaps",
+  "Filter music by your streaming services",
+  "Custom app icons",
+  "Multiple photos per review",
 ];
 
 export default function SetlstPlus() {
@@ -50,9 +52,15 @@ export default function SetlstPlus() {
       </div>
 
       {status.premium ? (
-        <p className="text-xs text-[#a0a0a0]">
-          You’re a Plus member{status.until ? ` · renews ${new Date(status.until).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}. Thanks for supporting SETLST 💛
-        </p>
+        <>
+          <p className="text-xs text-[#a0a0a0] mb-3">
+            You’re a Plus member{status.until ? ` · renews ${new Date(status.until).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}. Thanks for supporting SETLST 💛
+          </p>
+          <Link href="/analytics" className="inline-flex items-center gap-1.5 text-xs text-[#c4a832] border border-[#c4a832]/50 hover:border-[#c4a832] rounded-full px-3 py-1.5 transition-colors">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
+            View your review analytics
+          </Link>
+        </>
       ) : (
         <>
           <p className="text-xs text-[#a0a0a0] mb-3">Support SETLST and unlock extras.</p>
