@@ -81,7 +81,7 @@ export default function ReleaseFilterPills() {
         <p className="text-xs text-[#6b6b6b] py-4">Nothing here right now — check back soon.</p>
       ) : (
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {albums.slice(0, 15).map((a) => (
+          {albums.slice(0, 40).map((a) => (
             <div key={a.id} className="snap-start shrink-0 w-[30%] sm:w-[23%]">
               <AlbumCard spotifyId={a.id} title={a.title} artist={a.artist} artwork={a.artwork}
                 year={a.releaseDate ? parseInt(a.releaseDate.slice(0, 4)) : undefined} />

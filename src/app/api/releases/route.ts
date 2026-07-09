@@ -58,8 +58,36 @@ const POPULAR_UNDERGROUND: Artist[] = [
   "Obongjayar", "Sampa the Great", "Little Simz", "Tems",
 ];
 
-// Radar roster — underground / non-mainstream artists across many genres.
-const ARTISTS: Artist[] = POPULAR_UNDERGROUND;
+// Mainstream + popular ROCK and RAP — fills the home pills with recent albums &
+// singles (iTunes "album" entity returns singles/EPs too) from the last few weeks.
+const MAINSTREAM_ROCK_RAP: Artist[] = [
+  // rock — active, chart & alt
+  "Foo Fighters", "Green Day", "Paramore", "The Killers", "Arctic Monkeys",
+  "Tame Impala", "The Strokes", "Red Hot Chili Peppers", "Muse", "Weezer",
+  "Fall Out Boy", "Twenty One Pilots", "Imagine Dragons", "Kings of Leon",
+  "The Black Keys", "Jack White", "Queens of the Stone Age", "Pearl Jam",
+  "Metallica", "Wolf Alice", "Fontaines D.C.", "IDLES", "Sleep Token",
+  "Bring Me the Horizon", "Bad Omens", "Måneskin", "Greta Van Fleet",
+  "Nothing But Thieves", "Royal Blood", "The 1975", "Gorillaz", "Interpol",
+  "Phoenix", "Vampire Weekend", "The National", "Beck", "St. Vincent",
+  "The War on Drugs", "Spoon", "My Chemical Romance", "Blink-182", "Deftones",
+  "Korn", "Linkin Park", "Evanescence", "Foals", "Glass Animals",
+  "Cage the Elephant", "Fleet Foxes", "Bon Iver", "The Smile", "Radiohead",
+  // rap — chart & popular
+  "Drake", "Kendrick Lamar", "J. Cole", "Travis Scott", "Future",
+  "Metro Boomin", "Playboi Carti", "Lil Uzi Vert", "21 Savage", "Gunna",
+  "Lil Baby", "Tyler, The Creator", "A$AP Rocky", "Doja Cat", "Nicki Minaj",
+  "Cardi B", "Megan Thee Stallion", "Latto", "GloRilla", "Ice Spice",
+  "Sexyy Red", "Central Cee", "Stormzy", "JID", "Vince Staples",
+  "Freddie Gibbs", "Pusha T", "Lil Wayne", "Big Sean", "Rick Ross",
+  "2 Chainz", "Offset", "Quavo", "Roddy Ricch", "Polo G", "Lil Durk",
+  "Kodak Black", "Don Toliver", "Baby Keem", "Isaiah Rashad", "Aminé",
+  "Rico Nasty", "Flo Milli", "Doechii", "Coi Leray", "Ken Carson",
+  "Destroy Lonely", "Yeat", "BossMan Dlow", "Veeze",
+];
+
+// Radar roster — underground/acclaimed plus mainstream rock & rap for fuller pills.
+const ARTISTS: Artist[] = [...POPULAR_UNDERGROUND, ...MAINSTREAM_ROCK_RAP];
 
 interface ItunesAlbum {
   collectionId?: number;
@@ -140,9 +168,16 @@ export async function GET(req: NextRequest) {
   }
 
   // One combined roster — mainstream, underground, acclaimed and online.
-  const lists = await Promise.all(
-    [...new Set(ARTISTS)].map((a) => recentForArtist(a, cutoffStr))
-  );
+  // Fetch in small batches so we don't hammer the iTunes API (which throttles
+  // large bursts of parallel requests, dropping results). Cached 6h per artist.
+  const roster = [...new Set(ARTISTS)];
+  const lists: Awaited<ReturnType<typeof recentForArtist>>[] = [];
+  const BATCH = 8;
+  for (let i = 0; i < roster.length; i += BATCH) {
+    const chunk = await Promise.all(roster.slice(i, i + BATCH).map((a) => recentForArtist(a, cutoffStr)));
+    lists.push(...chunk);
+    if (i + BATCH < roster.length) await new Promise((res) => setTimeout(res, 90));
+  }
 
   const seen = new Set<string>();
   const recs = lists.flat()
