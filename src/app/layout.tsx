@@ -75,6 +75,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <a href="/privacy" className="hover:text-[#c4a832] transition-colors">Privacy</a>
             <span className="mx-2 text-[#2e2e2e]">·</span>
             <a href="/terms" className="hover:text-[#c4a832] transition-colors">Terms</a>
+            <span className="mx-2 text-[#2e2e2e]">·</span>
+            <a href="/support" className="hover:text-[#c4a832] transition-colors">Support</a>
           </footer>
           <SpeedInsights />
         </Providers>
