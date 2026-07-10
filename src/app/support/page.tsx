@@ -5,7 +5,7 @@ export const metadata = {
   description: "Get help with SETLST — contact, account, and subscription questions.",
 };
 
-const CONTACT = "themastersword28@gmail.com";
+const CONTACT = "support@setlst.dev";
 
 function Q({ q, children }: { q: string; children: React.ReactNode }) {
   return (
