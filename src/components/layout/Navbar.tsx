@@ -194,10 +194,11 @@ export default function Navbar() {
                       </svg>
                       News
                     </Link>
-                    {/* Desktop: Inbox lives here (on mobile it's in the bottom bar) */}
+                    {/* Inbox lives in this menu on both mobile and desktop (on
+                        mobile the bottom bar now shows Home in its place). */}
                     <Link
                       href="/inbox"
-                      className="hidden sm:flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
                       onClick={() => { setUserOpen(false); setUnread(0); }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

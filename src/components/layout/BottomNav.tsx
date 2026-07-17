@@ -6,11 +6,11 @@ import Avatar from "@/components/ui/Avatar";
 
 const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profile?: boolean }[] = [
   {
-    href: "/inbox", label: "Inbox",
+    href: "/", label: "Home",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="22" y1="2" x2="11" y2="13" />
-        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
+        <polyline points="9,21 9,12 15,12 15,21" />
       </svg>
     ),
   },

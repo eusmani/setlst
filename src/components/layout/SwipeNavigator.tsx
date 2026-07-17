@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 // left advances to the next section, right to the previous — like paging through
 // native tabs. The center "+" (write a review) is an action, so it's excluded.
 // "/profile" is matched by prefix; the real target is resolved per-user below.
-const SECTIONS = ["/", "/inbox", "/search", "/activity", "/profile"] as const;
+const SECTIONS = ["/", "/search", "/activity", "/profile"] as const;
 
 function sectionIndex(pathname: string): number {
   if (pathname === "/") return 0;
