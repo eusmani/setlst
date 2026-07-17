@@ -99,6 +99,49 @@ export async function recentPopularAlbums(limit = 20, sort: "popularity" | "date
   }
 }
 
+// Resolve the canonical cover art for a KNOWN album (exact title + artist) from
+// the real Spotify catalog. Uses a structured `album:… artist:…` query and then
+// verifies BOTH the artist and the title, so we never fall back to a same-named
+// album by another artist, a remix/B-sides EP, or a tribute — the exact failure
+// modes of loose text search (and of the iTunes-backed /spotify/search route,
+// whose catalog is missing many of these albums entirely).
+export async function resolveAlbumCover(title: string, artist: string): Promise<string | null> {
+  const items = await searchAlbums(`album:${title} artist:${artist}`);
+  if (!items.length) return null;
+
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const wantTitle = norm(title);
+  const wantArtist = norm(artist);
+  // Words marking a non-canonical edition. Only penalized when the target title
+  // itself doesn't include them (so an actual "… Remixes" anniversary still works).
+  const VARIANT = /\b(remix|remixes|b sides?|deluxe|instrumental|live|karaoke|reissue|edition|version|demos?|commentary)\b/;
+  const titleWantsVariant = VARIANT.test(wantTitle);
+
+  const score = (a: SpotifyAlbum): number => {
+    const an = norm(a.name);
+    const ar = norm(a.artists?.[0]?.name ?? "");
+    // Artist must match, else it's a different album that merely shares a title.
+    let s: number;
+    if (ar === wantArtist) s = 100;
+    else if (ar.includes(wantArtist) || wantArtist.includes(ar)) s = 60;
+    else return -1;
+    // Title match tiers: prefer an exact title over a superset ("Currents" beats
+    // "Currents B-Sides & Remixes").
+    if (an === wantTitle) s += 50;
+    else if (an.startsWith(wantTitle)) s += 30;
+    else if (an.includes(wantTitle)) s += 15;
+    else return -1; // title unrelated — reject
+    if (!titleWantsVariant && VARIANT.test(an)) s -= 40;
+    return s;
+  };
+
+  const best = items
+    .map((a) => ({ a, s: score(a) }))
+    .filter((x) => x.s >= 0)
+    .sort((x, y) => y.s - x.s)[0];
+  return best?.a.images?.[0]?.url ?? null;
+}
+
 export async function getAlbum(id: string): Promise<SpotifyAlbum | null> {
   const t = await token();
   const r = await fetch(`https://api.spotify.com/v1/albums/${id}`, {

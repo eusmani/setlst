@@ -24,26 +24,26 @@ export default function AnniversaryBanner() {
   // Resolve artwork + description for the current album.
   useEffect(() => {
     if (!cur) return;
+    // The slideshow rotates while requests are in flight; ignore a stale response
+    // so a slow lookup for the previous album can't overwrite the current cover.
+    let cancelled = false;
     const override = coverOverride(cur.title, cur.artist);
     setArtwork(override ?? null);
     setDescription(null);
-    // Artwork: use override if present, else resolve from iTunes.
+    // Artwork: use override if present, else resolve the canonical cover from the
+    // real Spotify catalog (verifies exact artist + title — no same-named albums,
+    // remixes, or tributes).
     if (!override) {
-      const q = encodeURIComponent(`${cur.artist} ${cur.title}`);
-      fetch(`/api/spotify/search?q=${q}`)
+      fetch(`/api/spotify/cover?title=${encodeURIComponent(cur.title)}&artist=${encodeURIComponent(cur.artist)}`)
         .then((r) => r.json())
-        .then((d: { results?: { name: string; images?: { url: string }[] }[] }) => {
-          const results = d.results ?? [];
-          const want = cur.title.toLowerCase();
-          const hit = results.find((a) => a.name?.toLowerCase().includes(want)) ?? results[0];
-          setArtwork(hit?.images?.[0]?.url ?? null);
-        })
+        .then((d: { cover?: string | null }) => { if (!cancelled) setArtwork(d.cover ?? null); })
         .catch(() => {});
     }
     fetch(`/api/album-description?title=${encodeURIComponent(cur.title)}&artist=${encodeURIComponent(cur.artist)}`)
       .then((r) => r.json())
-      .then((d: { description?: string | null }) => setDescription(d.description ?? null))
+      .then((d: { description?: string | null }) => { if (!cancelled) setDescription(d.description ?? null); })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [cur?.title, cur?.artist]);
 
   if (!today || !cur) return null;
