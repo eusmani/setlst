@@ -213,3 +213,48 @@ html.theme-mono .pro-turntable { filter: invert(1); }
   html.theme-mono .top-nav .app-logo:hover { color: #c4a832 !important; }
   html.theme-mono .top-nav .app-logo img { filter: none !important; }
 }
+
+/* ---------------------------------------------------------------------------
+   Native-style sliding page transitions (Spotify / Apple Music feel).
+   Enabled by `experimental.viewTransition` in next.config.ts, which wraps every
+   route navigation in document.startViewTransition(). By default a navigation
+   pushes the new page in from the right; links tagged transitionTypes={['nav-back']}
+   reverse it (current page slides off to the right, previous returns from the left).
+   Only animate when the user hasn't asked to reduce motion.
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Anchor the app chrome (top nav + bottom tab bar) so only the page content
+     slides underneath it — like a native navigation stack. Naming them lifts
+     them out of the root snapshot; animation:none keeps them still. */
+  .top-nav { view-transition-name: app-top-nav; }
+  .bottom-nav { view-transition-name: app-bottom-nav; }
+  ::view-transition-group(app-top-nav),
+  ::view-transition-group(app-bottom-nav) { animation: none; z-index: 100; }
+
+  /* Default + forward navigation: incoming page pushes in from the right while
+     the outgoing page parallaxes slightly left underneath it. */
+  ::view-transition-old(root) {
+    z-index: 1;
+    animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-out-left;
+  }
+  ::view-transition-new(root) {
+    z-index: 2;
+    animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-in-right;
+  }
+
+  /* Back navigation (links tagged nav-back): outgoing page slides off to the
+     right on top, revealing the previous page returning from the left. */
+  :active-view-transition-type(nav-back)::view-transition-old(root) {
+    z-index: 2;
+    animation-name: vt-out-right;
+  }
+  :active-view-transition-type(nav-back)::view-transition-new(root) {
+    z-index: 1;
+    animation-name: vt-in-left;
+  }
+}
+
+@keyframes vt-in-right  { from { transform: translateX(100%); }  to { transform: translateX(0); } }
+@keyframes vt-out-left  { from { transform: translateX(0); }     to { transform: translateX(-22%); } }
+@keyframes vt-out-right { from { transform: translateX(0); }     to { transform: translateX(100%); } }
+@keyframes vt-in-left   { from { transform: translateX(-22%); }  to { transform: translateX(0); } }

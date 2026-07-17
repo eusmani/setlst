@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import AlbumCard from "@/components/album/AlbumCard";
+import { useSwipe } from "@/lib/useSwipe";
 
 interface Release { id: string; title: string; artist: string; artwork: string | null; releaseDate: string }
 
@@ -20,6 +21,14 @@ export default function ReleaseFilterPills() {
   const [radarArtists, setRadarArtists] = useState<Set<string>>(new Set());
 
   const active = PILLS.find((p) => p.key === filter)!;
+  const idx = PILLS.findIndex((p) => p.key === filter);
+
+  // Swipe across the pill bar to move between Recent / This week / Upcoming.
+  const swipe = useSwipe({
+    onSwipeLeft: () => setFilter(PILLS[Math.min(idx + 1, PILLS.length - 1)].key),
+    onSwipeRight: () => setFilter(PILLS[Math.max(idx - 1, 0)].key),
+    threshold: 40,
+  });
 
   // Artists shown in Release Radar — excluded here so the pills are always different.
   useEffect(() => {
@@ -54,8 +63,10 @@ export default function ReleaseFilterPills() {
   })();
 
   return (
-    <div className="lg:hidden">
-      <div className="flex items-center gap-2 mb-3">
+    // data-swipe-passthrough: this widget owns its own horizontal gestures
+    // (pill-bar swipe + album scroller), so the global section navigator ignores it.
+    <div className="lg:hidden" data-swipe-passthrough>
+      <div {...swipe} className="flex items-center gap-2 mb-3 touch-pan-y select-none">
         {PILLS.map((p) => (
           <button
             key={p.key}

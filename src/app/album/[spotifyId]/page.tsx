@@ -214,7 +214,7 @@ export default async function AlbumPage({
       {artwork && <AlbumBackdrop artwork={artwork} />}
       <div className="max-w-4xl mx-auto px-5 py-12 relative z-10">
       <div className="flex items-center justify-between mb-6">
-        <Link href="/search" className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
+        <Link href="/search" transitionTypes={["nav-back"]} className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
           ← Back to search
         </Link>
         <SendAlbum album={{ spotifyId, title, artist, artwork: artwork ?? null }} isLoggedIn={!!session} />

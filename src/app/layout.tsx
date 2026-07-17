@@ -7,6 +7,7 @@ import Navbar from "@/components/layout/Navbar";
 import BottomNav from "@/components/layout/BottomNav";
 import VerifyBanner from "@/components/layout/VerifyBanner";
 import RegisterSW from "@/components/layout/RegisterSW";
+import SwipeNavigator from "@/components/layout/SwipeNavigator";
 import UpcomingBanner from "@/components/layout/UpcomingBanner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import NativeBridge from "@/components/layout/NativeBridge";
@@ -60,6 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen flex flex-col bg-[#111111] text-[#f0f0f0] overflow-x-clip pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
         <Providers>
           <RegisterSW />
+          <SwipeNavigator />
           <NativeBridge />
           <Navbar />
           {/* Desktop only: offsets the fixed navbar (h-16). On mobile the navbar is
