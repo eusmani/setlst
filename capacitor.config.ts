@@ -7,7 +7,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // For local development against your dev server instead, temporarily set
 // server.url to "http://<your-LAN-ip>:3000" and add "cleartext: true".
 const config: CapacitorConfig = {
-  appId: "app.setlst.mobile",
+  appId: "app.setlst.native",
   appName: "SETLST",
   webDir: "mobile-shell",
   // Dark native background so the iPhone safe areas (notch / home indicator)
