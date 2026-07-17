@@ -216,41 +216,46 @@ html.theme-mono .pro-turntable { filter: invert(1); }
 
 /* ---------------------------------------------------------------------------
    Native-style sliding page transitions (Spotify / Apple Music feel).
-   Enabled by `experimental.viewTransition` in next.config.ts, which wraps every
-   route navigation in document.startViewTransition(). By default a navigation
-   pushes the new page in from the right; links tagged transitionTypes={['nav-back']}
-   reverse it (current page slides off to the right, previous returns from the left).
-   Only animate when the user hasn't asked to reduce motion.
+   Driven by React's <ViewTransition> in app/template.tsx (enabled via
+   `experimental.viewTransition` in next.config.ts). The template tags each
+   navigation's page content with a class based on its transition type:
+   `.nav-forward` (default — album taps, forward paging) pushes the new page in
+   from the right; `.nav-back` (set by <Link transitionTypes={['nav-back']}> and
+   the edge-swipe in SwipeNavigator) reverses it. Untyped/initial loads fall back
+   to nav-forward. Only animate when the user hasn't asked to reduce motion.
 --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: no-preference) {
   /* Anchor the app chrome (top nav + bottom tab bar) so only the page content
      slides underneath it — like a native navigation stack. Naming them lifts
-     them out of the root snapshot; animation:none keeps them still. */
+     them out of the sliding snapshot; animation:none keeps them still, and
+     hiding the old snapshot avoids a brief double-chrome flash mid-slide. */
   .top-nav { view-transition-name: app-top-nav; }
   .bottom-nav { view-transition-name: app-bottom-nav; }
   ::view-transition-group(app-top-nav),
   ::view-transition-group(app-bottom-nav) { animation: none; z-index: 100; }
+  ::view-transition-old(app-top-nav),
+  ::view-transition-old(app-bottom-nav) { display: none; }
 
-  /* Default + forward navigation: incoming page pushes in from the right while
-     the outgoing page parallaxes slightly left underneath it. */
-  ::view-transition-old(root) {
+  /* Forward navigation: incoming page pushes in from the right while the
+     outgoing page parallaxes slightly left underneath it. */
+  ::view-transition-old(.nav-forward) {
     z-index: 1;
     animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-out-left;
   }
-  ::view-transition-new(root) {
+  ::view-transition-new(.nav-forward) {
     z-index: 2;
     animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-in-right;
   }
 
-  /* Back navigation (links tagged nav-back): outgoing page slides off to the
-     right on top, revealing the previous page returning from the left. */
-  :active-view-transition-type(nav-back)::view-transition-old(root) {
+  /* Back navigation: outgoing page slides off to the right on top, revealing the
+     previous page returning from the left. */
+  ::view-transition-old(.nav-back) {
     z-index: 2;
-    animation-name: vt-out-right;
+    animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-out-right;
   }
-  :active-view-transition-type(nav-back)::view-transition-new(root) {
+  ::view-transition-new(.nav-back) {
     z-index: 1;
-    animation-name: vt-in-left;
+    animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-in-left;
   }
 }
 
