@@ -1,1 +1,6 @@
 CAPACITOR_DEBUG = true
+
+// Workaround for Xcode 16/26 "Undefined symbol: _main" in the GUI: disable the
+// debug-dylib split so @UIApplicationMain provides _main directly in a single
+// binary. The CLI builds fine either way; this keeps the Xcode GUI build working.
+ENABLE_DEBUG_DYLIB = NO
