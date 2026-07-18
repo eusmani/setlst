@@ -10,6 +10,7 @@ export async function getAlbumDescription(title: string, artist: string): Promis
     const res = await fetch(url, {
       headers: { "User-Agent": "SETLST/1.0 (music review app)" },
       next: { revalidate: 604800 }, // cache a week
+      signal: AbortSignal.timeout(2500), // enrichment only — never block the render
     });
     if (!res.ok) return null;
 

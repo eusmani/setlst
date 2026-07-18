@@ -23,6 +23,9 @@ async function mb(path: string): Promise<Record<string, unknown> | null> {
     const res = await fetch(`https://musicbrainz.org/ws/2/${path}`, {
       headers: { "User-Agent": UA, Accept: "application/json" },
       next: { revalidate: REVALIDATE },
+      // MusicBrainz is rate-limited and often slow; it's only enrichment (genres,
+      // members), so never let it block the album render for more than ~2.5s.
+      signal: AbortSignal.timeout(2500),
     });
     if (!res.ok) return null;
     return await res.json();

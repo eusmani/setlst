@@ -42,7 +42,7 @@ export async function getTracklist(title: string, artist: string): Promise<Track
     let collectionId: number | undefined;
     const sRes = await fetch(
       `https://itunes.apple.com/search?term=${term}&entity=album&limit=5`,
-      { next: { revalidate: 604800 } }
+      { next: { revalidate: 604800 }, signal: AbortSignal.timeout(2500) }
     );
     if (sRes.ok) {
       const sData = await sRes.json();
@@ -58,7 +58,7 @@ export async function getTracklist(title: string, artist: string): Promise<Track
     if (!collectionId) {
       const songRes = await fetch(
         `https://itunes.apple.com/search?term=${term}&entity=song&limit=25`,
-        { next: { revalidate: 604800 } }
+        { next: { revalidate: 604800 }, signal: AbortSignal.timeout(2500) }
       );
       if (songRes.ok) {
         const songData = await songRes.json();
@@ -76,7 +76,7 @@ export async function getTracklist(title: string, artist: string): Promise<Track
 
     // 2. Look up all songs in that album, in order
     const lookupUrl = `https://itunes.apple.com/lookup?id=${collectionId}&entity=song&limit=200`;
-    const lRes = await fetch(lookupUrl, { next: { revalidate: 604800 } });
+    const lRes = await fetch(lookupUrl, { next: { revalidate: 604800 }, signal: AbortSignal.timeout(2500) });
     if (!lRes.ok) return [];
     const lData = await lRes.json();
 

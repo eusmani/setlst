@@ -17,6 +17,8 @@ import GenrePills from "./GenrePills";
 import SimilarAlbums from "./SimilarAlbums";
 import Discussion from "./Discussion";
 import { RatingMeter } from "@/components/ui/RatingMeter";
+import { unstable_cache } from "next/cache";
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +64,7 @@ async function itunesGenres(title: string, artist: string): Promise<string[]> {
   try {
     const r = await fetch(
       `https://itunes.apple.com/search?term=${encodeURIComponent(`${artist} ${title}`)}&entity=album&limit=1`,
-      { next: { revalidate: 604800 } }
+      { next: { revalidate: 604800 }, signal: AbortSignal.timeout(2500) }
     );
     if (!r.ok) return [];
     const g = (await r.json()).results?.[0]?.primaryGenreName as string | undefined;
@@ -87,6 +89,108 @@ async function getOembed(spotifyId: string): Promise<{ title: string | null; art
   }
 }
 
+// FAST enrichment — iTunes tracklist + genre tag (~1s). Needed for the shell
+// (tracklist, contributors), so it's awaited before first paint. Cached a week.
+const getFastEnrichment = unstable_cache(
+  async (title: string, artist: string) => {
+    const [itunesTracks, itGenres] = await Promise.all([
+      getTracklist(title, artist),
+      itunesGenres(title, artist),
+    ]);
+    return { itunesTracks, itGenres };
+  },
+  ["album-fast-enrichment-v1"],
+  { revalidate: 604800 }
+);
+
+// SLOW enrichment — Wikipedia blurb + MusicBrainz meta/members. MusicBrainz is
+// rate-limited and makes sequential search→detail calls (~5s), so this is NOT
+// awaited on the render path: it's passed as a promise into <Suspense> boundaries
+// that stream in once it resolves, behind fast fallbacks. Cached a week.
+export type SlowEnrichment = { wiki: string | null; meta: Awaited<ReturnType<typeof getAlbumMeta>>; members: string[] };
+const getSlowEnrichment = unstable_cache(
+  async (title: string, artist: string, year: number | null): Promise<SlowEnrichment> => {
+    const [wiki, meta, members] = await Promise.all([
+      getAlbumDescription(title, artist),
+      getAlbumMeta(title, artist),
+      getBandMembers(artist, year),
+    ]);
+    return { wiki, meta, members };
+  },
+  ["album-slow-enrichment-v1"],
+  { revalidate: 604800 }
+);
+
+// ---- Streamed enrichment sections (render behind fast fallbacks in <Suspense>) ----
+
+// Genre pills + Discogs-noise notes, upgraded with MusicBrainz genres/styles.
+async function EnrichedGenres({ p, spotifyGenres, itGenres, overrideGenres, spotifyId }: {
+  p: Promise<SlowEnrichment>; spotifyGenres: string[]; itGenres: string[]; overrideGenres: string[]; spotifyId: string;
+}) {
+  const { meta } = await p;
+  const rawGenres = meta?.genres.length ? meta.genres : spotifyGenres;
+  const rawStyles = meta?.styles ?? [];
+  const notes = [...new Set([...rawGenres, ...rawStyles].filter(isGenreNoise))];
+  const dg = rawGenres.filter((s) => !isGenreNoise(s));
+  const ds = rawStyles.filter((s) => !isGenreNoise(s));
+  let pills = [...new Set([...dg, ...ds, ...overrideGenres])];
+  if (pills.length === 0) pills = itGenres;
+  return (
+    <>
+      <GenrePills genres={pills.slice(0, 8)} currentId={spotifyId} />
+      {notes.length > 0 && (
+        <div className="mb-3 space-y-1">
+          {notes.map((note) => (
+            <p key={note} className="text-xs text-[#6b6b6b] italic flex items-start gap-1.5">
+              <span aria-hidden className="not-italic">📌</span>
+              <a href={`https://www.discogs.com/search/?q=${encodeURIComponent(note.replace(/^discogs\s*\/\s*/i, ""))}&type=all`} target="_blank" rel="noopener noreferrer" className="hover:text-[#c4a832] hover:underline transition-colors">{note}</a>
+            </p>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+// Album description: Wikipedia blurb when it resolves, else the generated fallback.
+async function EnrichedDescription({ p, fallback }: { p: Promise<SlowEnrichment>; fallback: string }) {
+  const { wiki } = await p;
+  return <p className="text-sm text-[#bbbbbb] leading-relaxed mb-5">{wiki ?? fallback}</p>;
+}
+
+// MusicBrainz detail rows (genre, styles, release date, label).
+async function EnrichedDetailRows({ p, spotifyGenres, year }: { p: Promise<SlowEnrichment>; spotifyGenres: string[]; year: number | null }) {
+  const { meta } = await p;
+  const dg = (meta?.genres.length ? meta.genres : spotifyGenres).filter((s) => !isGenreNoise(s));
+  const ds = (meta?.styles ?? []).filter((s) => !isGenreNoise(s));
+  const labels = meta?.labels ?? [];
+  const releaseDateStr = formatReleaseDate(meta?.releaseDate ?? null) ?? (year ? String(year) : null);
+  return (
+    <>
+      {dg.length > 0 && <div className="flex gap-2"><span className="text-[#6b6b6b] w-28 shrink-0">Genre</span><span className="text-[#d8d8d8]">{dg.join(", ")}</span></div>}
+      {ds.length > 0 && <div className="flex gap-2"><span className="text-[#6b6b6b] w-28 shrink-0">Styles</span><span className="text-[#d8d8d8]">{ds.join(", ")}</span></div>}
+      {releaseDateStr && <div className="flex gap-2"><span className="text-[#6b6b6b] w-28 shrink-0">Release date</span><span className="text-[#d8d8d8]">{releaseDateStr}</span></div>}
+      {labels.length > 0 && <div className="flex gap-2"><span className="text-[#6b6b6b] w-28 shrink-0">Label</span><span className="text-[#d8d8d8]">{labels.join(", ")}</span></div>}
+    </>
+  );
+}
+
+// Band members (MusicBrainz).
+async function EnrichedBandMembers({ p }: { p: Promise<SlowEnrichment> }) {
+  const { members } = await p;
+  if (members.length === 0) return null;
+  return (
+    <div className="mb-5">
+      <p className="text-[11px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-2">Band Members</p>
+      <div className="flex flex-wrap gap-1.5">
+        {members.map((name) => (
+          <span key={name} className="text-xs bg-[#222222] border border-[#2e2e2e] text-[#d8d8d8] px-2.5 py-1 rounded-full">{name}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function AlbumPage({
   params,
   searchParams,
@@ -98,21 +202,22 @@ export default async function AlbumPage({
   const sp = await searchParams;
   const session = await auth();
 
-  let spotifyAlbum = null;
-  try { spotifyAlbum = await getAlbum(spotifyId); } catch {}
-
-  const dbAlbum = await prisma.album.findUnique({
-    where: { spotifyId },
-    include: {
-      reviews: {
-        include: {
-          user: { select: { id: true, username: true, avatar: true } },
-          likes: { select: { value: true, userId: true } },
+  // The Spotify lookup and the DB read are independent — run them in parallel.
+  const [spotifyAlbum, dbAlbum] = await Promise.all([
+    getAlbum(spotifyId).catch(() => null),
+    prisma.album.findUnique({
+      where: { spotifyId },
+      include: {
+        reviews: {
+          include: {
+            user: { select: { id: true, username: true, avatar: true } },
+            likes: { select: { value: true, userId: true } },
+          },
+          orderBy: { createdAt: "desc" },
         },
-        orderBy: { createdAt: "desc" },
       },
-    },
-  });
+    }),
+  ]);
 
   // Resolve metadata: Spotify API → DB → query params (from cards) → oEmbed (bare links)
   let title = spotifyAlbum?.name ?? dbAlbum?.title ?? sp.title ?? null;
@@ -142,42 +247,32 @@ export default async function AlbumPage({
     ? reviews.find((r) => r.user.id === session.user.id) ?? null
     : null;
 
-  // Tracklist: Spotify (when available) → iTunes (works server-side, with 30s previews)
-  if (tracks.length === 0 && title !== "Unknown Album" && artist) {
-    tracks = await getTracklist(title, artist);
-  }
-
   const album = { spotifyId, title, artist, artwork, year, genres };
+  const hasMeta = title !== "Unknown Album" && !!artist;
 
-  let description = buildDescription(title, artist, year, tracks.length, genres as string[]);
-  let meta = null;
-  let bandMembers: string[] = [];
-  if (title !== "Unknown Album" && artist) {
-    const [wiki, mbMeta, members] = await Promise.all([
-      getAlbumDescription(title, artist),
-      getAlbumMeta(title, artist),
-      getBandMembers(artist, year),
-    ]);
-    if (wiki) description = wiki;
-    meta = mbMeta;
-    bandMembers = members;
+  // Fast enrichment (iTunes tracklist + genre tag, ~1s) — needed for the shell.
+  let itGenres: string[] = [];
+  if (hasMeta) {
+    const f = await getFastEnrichment(title, artist);
+    if (tracks.length === 0) tracks = f.itunesTracks;
+    itGenres = f.itGenres;
   }
 
-  const rawDisplayGenres = (meta?.genres.length ? meta.genres : (genres as string[]));
-  const rawStyles = meta?.styles ?? [];
-  // Pull out non-genre noise (Discogs lists, etc.) to show as a note instead.
-  const genreNotes = [...new Set([...(rawDisplayGenres as string[]), ...rawStyles].filter(isGenreNoise))];
-  const displayGenres = (rawDisplayGenres as string[]).filter((s) => !isGenreNoise(s));
-  const displayStyles = (rawStyles as string[]).filter((s) => !isGenreNoise(s));
+  // Slow enrichment (Wikipedia + MusicBrainz) — started but NOT awaited; it streams
+  // into the <Suspense> boundaries below, so it never blocks first paint.
+  const slow: Promise<SlowEnrichment> = hasMeta
+    ? getSlowEnrichment(title, artist, year)
+    : Promise.resolve({ wiki: null, meta: null, members: [] });
 
-  // Genre pills: broad genres + subgenres/styles + any curated overrides (deduped); fall back to iTunes' genre tag.
   const overrideGenres = SUBGENRE_OVERRIDES[overrideKey(artist, title)] ?? [];
-  let pillGenres = [...new Set([...(displayGenres as string[]), ...displayStyles, ...overrideGenres])];
-  if (pillGenres.length === 0 && title !== "Unknown Album" && artist) {
-    pillGenres = await itunesGenres(title, artist);
-  }
-  const displayLabels = meta?.labels ?? [];
-  const releaseDateStr = formatReleaseDate(meta?.releaseDate ?? null) ?? (year ? String(year) : null);
+  // Fast fallbacks rendered immediately; the streamed components upgrade them.
+  const spotifyGenres = genres as string[];
+  const fastGenreList = spotifyGenres.filter((s) => !isGenreNoise(s));
+  let fastPills = [...new Set([...fastGenreList, ...overrideGenres])];
+  if (fastPills.length === 0) fastPills = itGenres;
+  const fastDescription = buildDescription(title, artist, year, tracks.length, spotifyGenres);
+  const fastReleaseDateStr = year ? String(year) : null;
+  const similarGenre = fastGenreList[0] ?? fastPills[0];
 
   // Writing credits: primary artists + any featured artists parsed from track titles
   const primaryArtists = artist.split(", ").filter(Boolean);
@@ -286,25 +381,9 @@ export default async function AlbumPage({
           </p>
           {year && <p className="text-sm text-[#6b6b6b] mb-3">{year}</p>}
 
-          <GenrePills genres={pillGenres.slice(0, 8)} currentId={spotifyId} />
-
-          {genreNotes.length > 0 && (
-            <div className="mb-3 space-y-1">
-              {genreNotes.map((note) => (
-                <p key={note} className="text-xs text-[#6b6b6b] italic flex items-start gap-1.5">
-                  <span aria-hidden className="not-italic">📌</span>
-                  <a
-                    href={`https://www.discogs.com/search/?q=${encodeURIComponent(note.replace(/^discogs\s*\/\s*/i, ""))}&type=all`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-[#c4a832] hover:underline transition-colors"
-                  >
-                    {note}
-                  </a>
-                </p>
-              ))}
-            </div>
-          )}
+          <Suspense fallback={<GenrePills genres={fastPills.slice(0, 8)} currentId={spotifyId} />}>
+            <EnrichedGenres p={slow} spotifyGenres={spotifyGenres} itGenres={itGenres} overrideGenres={overrideGenres} spotifyId={spotifyId} />
+          </Suspense>
 
           {avgRating != null && (
             <div className="mb-4 max-w-[220px]">
@@ -316,36 +395,22 @@ export default async function AlbumPage({
           )}
 
           {/* Description */}
-          <p className="text-sm text-[#bbbbbb] leading-relaxed mb-5">{description}</p>
+          <Suspense fallback={<p className="text-sm text-[#bbbbbb] leading-relaxed mb-5">{fastDescription}</p>}>
+            <EnrichedDescription p={slow} fallback={fastDescription} />
+          </Suspense>
 
           {/* Details & credits */}
           <div className="mb-5">
             <p className="text-[11px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-2">Details</p>
             <div className="space-y-1 text-sm">
-              {displayGenres.length > 0 && (
-                <div className="flex gap-2">
-                  <span className="text-[#6b6b6b] w-28 shrink-0">Genre</span>
-                  <span className="text-[#d8d8d8]">{displayGenres.join(", ")}</span>
-                </div>
-              )}
-              {displayStyles.length > 0 && (
-                <div className="flex gap-2">
-                  <span className="text-[#6b6b6b] w-28 shrink-0">Styles</span>
-                  <span className="text-[#d8d8d8]">{displayStyles.join(", ")}</span>
-                </div>
-              )}
-              {releaseDateStr && (
+              <Suspense fallback={fastReleaseDateStr ? (
                 <div className="flex gap-2">
                   <span className="text-[#6b6b6b] w-28 shrink-0">Release date</span>
-                  <span className="text-[#d8d8d8]">{releaseDateStr}</span>
+                  <span className="text-[#d8d8d8]">{fastReleaseDateStr}</span>
                 </div>
-              )}
-              {displayLabels.length > 0 && (
-                <div className="flex gap-2">
-                  <span className="text-[#6b6b6b] w-28 shrink-0">Label</span>
-                  <span className="text-[#d8d8d8]">{displayLabels.join(", ")}</span>
-                </div>
-              )}
+              ) : null}>
+                <EnrichedDetailRows p={slow} spotifyGenres={spotifyGenres} year={year} />
+              </Suspense>
               {primaryArtists.length > 0 && (
                 <div className="flex gap-2">
                   <span className="text-[#6b6b6b] w-28 shrink-0">Performed by</span>
@@ -361,19 +426,10 @@ export default async function AlbumPage({
             </div>
           </div>
 
-          {/* Band members */}
-          {bandMembers.length > 0 && (
-            <div className="mb-5">
-              <p className="text-[11px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-2">Band Members</p>
-              <div className="flex flex-wrap gap-1.5">
-                {bandMembers.map((name) => (
-                  <span key={name} className="text-xs bg-[#222222] border border-[#2e2e2e] text-[#d8d8d8] px-2.5 py-1 rounded-full">
-                    {name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Band members (streams in from MusicBrainz) */}
+          <Suspense fallback={null}>
+            <EnrichedBandMembers p={slow} />
+          </Suspense>
 
           {/* Contributors */}
           {contributors.length > 1 && (
@@ -434,7 +490,7 @@ export default async function AlbumPage({
 
       <SimilarAlbums
         artist={artist}
-        genre={displayStyles[0] ?? displayGenres[0]}
+        genre={similarGenre}
         excludeId={spotifyId}
       />
       </div>
