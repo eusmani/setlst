@@ -214,22 +214,6 @@ html.theme-mono .pro-turntable { filter: invert(1); }
   html.theme-mono .top-nav .app-logo img { filter: none !important; }
 }
 
-/* ---------------------------------------------------------------------------
-   Native-style page slide on navigation. Replayed by the `.page-enter` wrapper
-   in app/template.tsx, which remounts on every route change. This deliberately
-   does NOT use the View Transitions API / React <ViewTransition>: that relies on
-   experimental `view-transition-class` CSS matching the iOS WKWebView doesn't
-   reliably support, so the slide never played on iPhone. A plain @keyframes
-   animation works everywhere. Only animate when reduced-motion isn't requested.
---------------------------------------------------------------------------- */
-@media (prefers-reduced-motion: no-preference) {
-  .page-enter {
-    animation: page-enter 340ms cubic-bezier(0.32, 0.72, 0, 1) both;
-    will-change: transform, opacity;
-  }
-}
-
-@keyframes page-enter {
-  from { transform: translateX(38px); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
-}
+/* Native-style page slide on navigation is driven imperatively by the Web
+   Animations API in app/template.tsx (element.animate), not CSS — see the note
+   there for why. Nothing needed here. */
