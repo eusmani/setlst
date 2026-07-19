@@ -1,12 +1,20 @@
+"use client";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-// A `template` remounts on every navigation, so this wrapper's CSS enter animation
-// replays each time — giving a native-style page slide on each route change.
+// A `template` remounts on navigation, but React can still reuse the wrapper DOM
+// node — which means a CSS animation on it won't replay. Keying the wrapper by
+// pathname forces a brand-new element each route change, so the `.page-enter`
+// slide (globals.css) restarts every time.
 //
 // This deliberately does NOT use the View Transitions API / React <ViewTransition>:
-// that relies on experimental `view-transition-class` CSS matching that the iOS
-// WKWebView doesn't reliably support, so the slide never played on iPhone. A plain
-// CSS @keyframes animation (in globals.css: .page-enter) works everywhere.
+// the iOS WKWebView doesn't reliably support its `view-transition-class` matching,
+// so the slide never played on iPhone. Plain @keyframes works everywhere.
 export default function Template({ children }: { children: ReactNode }) {
-  return <div className="page-enter">{children}</div>;
+  const pathname = usePathname();
+  return (
+    <div key={pathname} className="page-enter">
+      {children}
+    </div>
+  );
 }
