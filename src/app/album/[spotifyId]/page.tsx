@@ -79,7 +79,7 @@ async function getOembed(spotifyId: string): Promise<{ title: string | null; art
   try {
     const res = await fetch(
       `https://open.spotify.com/oembed?url=https://open.spotify.com/album/${spotifyId}`,
-      { next: { revalidate: 86400 } }
+      { next: { revalidate: 86400 }, signal: AbortSignal.timeout(2500) }
     );
     if (!res.ok) return { title: null, artwork: null };
     const d = await res.json();
