@@ -18,7 +18,7 @@ import SimilarAlbums from "./SimilarAlbums";
 import Discussion from "./Discussion";
 import { RatingMeter } from "@/components/ui/RatingMeter";
 import { unstable_cache } from "next/cache";
-import { Suspense } from "react";
+import { Suspense, type ComponentProps } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -89,45 +89,42 @@ async function getOembed(spotifyId: string): Promise<{ title: string | null; art
   }
 }
 
-// FAST enrichment — iTunes tracklist + genre tag (~1s). Needed for the shell
-// (tracklist, contributors), so it's awaited before first paint. Cached a week.
-const getFastEnrichment = unstable_cache(
-  async (title: string, artist: string) => {
-    const [itunesTracks, itGenres] = await Promise.all([
-      getTracklist(title, artist),
-      itunesGenres(title, artist),
-    ]);
-    return { itunesTracks, itGenres };
-  },
-  ["album-fast-enrichment-v1"],
+// iTunes tracklist, cached a week. For slug albums (no real Spotify ID) this is
+// the source of the tracklist; it's streamed via <Suspense>, NOT awaited on the
+// render path — so the page shell can flush before iTunes responds.
+type TrackItem = { name: string; duration_ms: number; track_number: number; preview_url: string | null; external_urls: { spotify: string } };
+const getTracklistCached = unstable_cache(
+  async (title: string, artist: string): Promise<TrackItem[]> => getTracklist(title, artist),
+  ["album-tracklist-v1"],
   { revalidate: 604800 }
 );
 
-// SLOW enrichment — Wikipedia blurb + MusicBrainz meta/members. MusicBrainz is
-// rate-limited and makes sequential search→detail calls (~5s), so this is NOT
-// awaited on the render path: it's passed as a promise into <Suspense> boundaries
-// that stream in once it resolves, behind fast fallbacks. Cached a week.
-export type SlowEnrichment = { wiki: string | null; meta: Awaited<ReturnType<typeof getAlbumMeta>>; members: string[] };
+// SLOW enrichment — Wikipedia blurb + MusicBrainz meta/members + iTunes genre tag.
+// MusicBrainz is rate-limited and makes sequential search→detail calls (~5s), so
+// this is NOT awaited on the render path: it streams into <Suspense> boundaries
+// behind fast fallbacks. Cached a week.
+export type SlowEnrichment = { wiki: string | null; meta: Awaited<ReturnType<typeof getAlbumMeta>>; members: string[]; itGenres: string[] };
 const getSlowEnrichment = unstable_cache(
   async (title: string, artist: string, year: number | null): Promise<SlowEnrichment> => {
-    const [wiki, meta, members] = await Promise.all([
+    const [wiki, meta, members, itGenres] = await Promise.all([
       getAlbumDescription(title, artist),
       getAlbumMeta(title, artist),
       getBandMembers(artist, year),
+      itunesGenres(title, artist),
     ]);
-    return { wiki, meta, members };
+    return { wiki, meta, members, itGenres };
   },
-  ["album-slow-enrichment-v1"],
+  ["album-slow-enrichment-v2"],
   { revalidate: 604800 }
 );
 
 // ---- Streamed enrichment sections (render behind fast fallbacks in <Suspense>) ----
 
 // Genre pills + Discogs-noise notes, upgraded with MusicBrainz genres/styles.
-async function EnrichedGenres({ p, spotifyGenres, itGenres, overrideGenres, spotifyId }: {
-  p: Promise<SlowEnrichment>; spotifyGenres: string[]; itGenres: string[]; overrideGenres: string[]; spotifyId: string;
+async function EnrichedGenres({ p, spotifyGenres, overrideGenres, spotifyId }: {
+  p: Promise<SlowEnrichment>; spotifyGenres: string[]; overrideGenres: string[]; spotifyId: string;
 }) {
-  const { meta } = await p;
+  const { meta, itGenres } = await p;
   const rawGenres = meta?.genres.length ? meta.genres : spotifyGenres;
   const rawStyles = meta?.styles ?? [];
   const notes = [...new Set([...rawGenres, ...rawStyles].filter(isGenreNoise))];
@@ -191,6 +188,50 @@ async function EnrichedBandMembers({ p }: { p: Promise<SlowEnrichment> }) {
   );
 }
 
+// ---- Streamed tracklist-dependent sections (fed by the iTunes tracks promise, so
+// the shell flushes before iTunes responds) ----
+type AlbumShape = ComponentProps<typeof AlbumClient>["album"];
+
+async function AlbumTracklist({ tp, album, reviews, isLoggedIn }: {
+  tp: Promise<TrackItem[]>; album: AlbumShape; reviews: ComponentProps<typeof AlbumClient>["reviews"]; isLoggedIn: boolean;
+}) {
+  const tracks = await tp;
+  return <AlbumClient album={album} tracks={tracks} reviews={reviews} isLoggedIn={isLoggedIn} />;
+}
+
+async function AlbumContributors({ tp, artist }: { tp: Promise<TrackItem[]>; artist: string }) {
+  const tracks = await tp;
+  const contributors = collectContributors(tracks, artist);
+  if (contributors.length <= 1) return null;
+  return (
+    <div className="mb-5">
+      <p className="text-[11px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-2">Contributors</p>
+      <div className="flex flex-wrap gap-1.5">
+        {contributors.map((name) => (
+          <span key={name} className="text-xs bg-[#222222] border border-[#2e2e2e] text-[#d8d8d8] px-2.5 py-1 rounded-full">{name}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+async function AlbumFeaturingRow({ tp }: { tp: Promise<TrackItem[]> }) {
+  const tracks = await tp;
+  const featured = new Set<string>();
+  for (const t of tracks) {
+    const m = t.name.match(/\(feat\.?\s([^)]+)\)/i) || t.name.match(/\(with\s([^)]+)\)/i);
+    if (m) m[1].split(/,|&|\band\b/).forEach((n) => { const v = n.trim(); if (v) featured.add(v); });
+  }
+  const featuredArtists = [...featured];
+  if (featuredArtists.length === 0) return null;
+  return (
+    <div className="flex gap-2">
+      <span className="text-[#6b6b6b] w-28 shrink-0">Featuring</span>
+      <span className="text-[#d8d8d8]">{featuredArtists.join(", ")}</span>
+    </div>
+  );
+}
+
 export default async function AlbumPage({
   params,
   searchParams,
@@ -227,8 +268,7 @@ export default async function AlbumPage({
     ? parseInt(spotifyAlbum.release_date)
     : dbAlbum?.year ?? (sp.year ? parseInt(sp.year) : null);
   const genres = spotifyAlbum?.genres ?? (dbAlbum?.genres ? JSON.parse(dbAlbum.genres) : []);
-  let tracks: { name: string; duration_ms: number; track_number: number; preview_url: string | null; external_urls: { spotify: string } }[] =
-    spotifyAlbum?.tracks?.items ?? [];
+  const spotifyTracks: TrackItem[] = spotifyAlbum?.tracks?.items ?? [];
   const reviews = dbAlbum?.reviews ?? [];
 
   // Last-resort fallback for bare links (no API, no DB, no params)
@@ -250,43 +290,41 @@ export default async function AlbumPage({
   const album = { spotifyId, title, artist, artwork, year, genres };
   const hasMeta = title !== "Unknown Album" && !!artist;
 
-  // Fast enrichment (iTunes tracklist + genre tag, ~1s) — needed for the shell.
-  let itGenres: string[] = [];
-  if (hasMeta) {
-    const f = await getFastEnrichment(title, artist);
-    if (tracks.length === 0) tracks = f.itunesTracks;
-    itGenres = f.itGenres;
-  }
+  // Tracklist promise — Spotify's tracks if present, else iTunes (streamed). Never
+  // awaited on the render path, so the shell flushes before iTunes responds.
+  const tracksPromise: Promise<TrackItem[]> = spotifyTracks.length > 0
+    ? Promise.resolve(spotifyTracks)
+    : hasMeta ? getTracklistCached(title, artist) : Promise.resolve([]);
 
-  // Slow enrichment (Wikipedia + MusicBrainz) — started but NOT awaited; it streams
-  // into the <Suspense> boundaries below, so it never blocks first paint.
+  // Slow enrichment (Wikipedia + MusicBrainz + iTunes genre) — started but NOT
+  // awaited; it streams into the <Suspense> boundaries below.
   const slow: Promise<SlowEnrichment> = hasMeta
     ? getSlowEnrichment(title, artist, year)
-    : Promise.resolve({ wiki: null, meta: null, members: [] });
+    : Promise.resolve({ wiki: null, meta: null, members: [], itGenres: [] });
 
   const overrideGenres = SUBGENRE_OVERRIDES[overrideKey(artist, title)] ?? [];
   // Fast fallbacks rendered immediately; the streamed components upgrade them.
   const spotifyGenres = genres as string[];
   const fastGenreList = spotifyGenres.filter((s) => !isGenreNoise(s));
-  let fastPills = [...new Set([...fastGenreList, ...overrideGenres])];
-  if (fastPills.length === 0) fastPills = itGenres;
-  const fastDescription = buildDescription(title, artist, year, tracks.length, spotifyGenres);
+  const fastPills = [...new Set([...fastGenreList, ...overrideGenres])];
+  const fastDescription = buildDescription(title, artist, year, spotifyTracks.length, spotifyGenres);
   const fastReleaseDateStr = year ? String(year) : null;
   const similarGenre = fastGenreList[0] ?? fastPills[0];
 
-  // Writing credits: primary artists + any featured artists parsed from track titles
+  // Primary performing artists (fast — from the artist string).
   const primaryArtists = artist.split(", ").filter(Boolean);
-  const featured = new Set<string>();
-  for (const t of tracks) {
-    const m = t.name.match(/\(feat\.?\s([^)]+)\)/i) || t.name.match(/\(with\s([^)]+)\)/i);
-    if (m) m[1].split(/,|&|\band\b/).forEach((n) => { const v = n.trim(); if (v) featured.add(v); });
-  }
-  const featuredArtists = [...featured];
-
-  // All performing contributors aggregated from the tracklist
-  const contributors = collectContributors(tracks, artist);
-
-  const trackNames = tracks.map((t) => t.name);
+  // LogPanel stays in the shell (so the review CTA is instant); its song picker
+  // uses Spotify's track names when present (empty for slug albums, where the
+  // full tracklist streams into <AlbumClient> below).
+  const spotifyTrackNames = spotifyTracks.map((t) => t.name);
+  const initialReview = myReview ? {
+    rating: myReview.rating,
+    subject: myReview.subject ?? null,
+    body: myReview.body ?? null,
+    favoriteSong: myReview.favoriteSong ?? null,
+    leastFavoriteSong: myReview.leastFavoriteSong ?? null,
+    showSongs: myReview.showSongs,
+  } : null;
 
   const reviewsForClient = reviews.map((r) => ({
     id: r.id,
@@ -339,15 +377,8 @@ export default async function AlbumPage({
             <div className="mt-4">
               <LogPanel
                 album={album}
-                trackNames={trackNames}
-                initialReview={myReview ? {
-                  rating: myReview.rating,
-                  subject: myReview.subject ?? null,
-                  body: myReview.body ?? null,
-                  favoriteSong: myReview.favoriteSong ?? null,
-                  leastFavoriteSong: myReview.leastFavoriteSong ?? null,
-                  showSongs: myReview.showSongs,
-                } : null}
+                trackNames={spotifyTrackNames}
+                initialReview={initialReview}
                 isLoggedIn={!!session}
                 autoOpenReview={sp.review === "1"}
               />
@@ -382,7 +413,7 @@ export default async function AlbumPage({
           {year && <p className="text-sm text-[#6b6b6b] mb-3">{year}</p>}
 
           <Suspense fallback={<GenrePills genres={fastPills.slice(0, 8)} currentId={spotifyId} />}>
-            <EnrichedGenres p={slow} spotifyGenres={spotifyGenres} itGenres={itGenres} overrideGenres={overrideGenres} spotifyId={spotifyId} />
+            <EnrichedGenres p={slow} spotifyGenres={spotifyGenres} overrideGenres={overrideGenres} spotifyId={spotifyId} />
           </Suspense>
 
           {avgRating != null && (
@@ -417,12 +448,9 @@ export default async function AlbumPage({
                   <span className="text-[#d8d8d8]">{primaryArtists.join(", ")}</span>
                 </div>
               )}
-              {featuredArtists.length > 0 && (
-                <div className="flex gap-2">
-                  <span className="text-[#6b6b6b] w-28 shrink-0">Featuring</span>
-                  <span className="text-[#d8d8d8]">{featuredArtists.join(", ")}</span>
-                </div>
-              )}
+              <Suspense fallback={null}>
+                <AlbumFeaturingRow tp={tracksPromise} />
+              </Suspense>
             </div>
           </div>
 
@@ -431,19 +459,10 @@ export default async function AlbumPage({
             <EnrichedBandMembers p={slow} />
           </Suspense>
 
-          {/* Contributors */}
-          {contributors.length > 1 && (
-            <div className="mb-5">
-              <p className="text-[11px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-2">Contributors</p>
-              <div className="flex flex-wrap gap-1.5">
-                {contributors.map((name) => (
-                  <span key={name} className="text-xs bg-[#222222] border border-[#2e2e2e] text-[#d8d8d8] px-2.5 py-1 rounded-full">
-                    {name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Contributors (streams in with the tracklist) */}
+          <Suspense fallback={null}>
+            <AlbumContributors tp={tracksPromise} artist={artist} />
+          </Suspense>
 
         </div>
       </div>
@@ -452,15 +471,8 @@ export default async function AlbumPage({
       <div className="sm:hidden mb-8 space-y-2">
         <LogPanel
           album={album}
-          trackNames={trackNames}
-          initialReview={myReview ? {
-            rating: myReview.rating,
-            subject: myReview.subject ?? null,
-            body: myReview.body ?? null,
-            favoriteSong: myReview.favoriteSong ?? null,
-            leastFavoriteSong: myReview.leastFavoriteSong ?? null,
-            showSongs: myReview.showSongs,
-          } : null}
+          trackNames={spotifyTrackNames}
+          initialReview={initialReview}
           isLoggedIn={!!session}
           autoOpenReview={sp.review === "1"}
         />
@@ -477,12 +489,9 @@ export default async function AlbumPage({
       {/* Average rating distribution — between the credits and the tracklist */}
       <RatingBars ratings={reviews.map((r) => r.rating)} />
 
-      <AlbumClient
-        album={album}
-        tracks={tracks}
-        reviews={reviewsForClient}
-        isLoggedIn={!!session}
-      />
+      <Suspense fallback={<div className="mt-6 h-40 rounded-xl bg-[#1a1a1a] border border-[#1f1f1f] animate-pulse" />}>
+        <AlbumTracklist tp={tracksPromise} album={album} reviews={reviewsForClient} isLoggedIn={!!session} />
+      </Suspense>
 
       <div id="discussion" className="mt-6 scroll-mt-20">
         <Discussion album={album} isLoggedIn={!!session} />
