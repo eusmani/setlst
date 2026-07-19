@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { getUserActivity, getFriendsActivity, getRecentActivity, type ActivityItem } from "@/lib/feed";
+import { getUserActivity, getFriendsActivity, getRecentActivity } from "@/lib/feed";
+import { cache, Suspense } from "react";
 import MobileActivitySection from "@/components/home/MobileActivitySection";
 import ClubsStrip from "@/components/home/ClubsStrip";
 import SpotifyForYou from "@/components/home/SpotifyForYou";
@@ -16,30 +16,48 @@ import TrendingAlbums from "@/components/album/TrendingAlbums";
 
 export const dynamic = "force-dynamic";
 
+// The activity feed is a heavy multi-relation query against a cross-region Turso
+// DB (~5s) — it used to block the whole home render. It's now streamed via
+// <Suspense> so the hero + discovery widgets paint instantly. cache() dedupes the
+// fetch across the mobile + desktop layouts (both render the same feed).
+const cachedFriends = cache((id: string) => getFriendsActivity(id, 30));
+const cachedMine = cache((id: string) => getUserActivity(id, 30));
+const cachedRecent = cache(() => getRecentActivity(20));
+
+function FeedSkeleton() {
+  return (
+    <div className="space-y-3" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="h-20 rounded-xl bg-[#1a1a1a] border border-[#1f1f1f] animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
+async function MobilePrimaryFeed({ userId }: { userId?: string }) {
+  if (userId) {
+    return <MobileActivitySection heading="Friends' Activity" items={await cachedFriends(userId)} href="/activity?tab=friends" empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }} />;
+  }
+  return <MobileActivitySection heading="Recent Activity" items={await cachedRecent()} href="/activity" empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }} />;
+}
+
+async function MobileMyFeed({ userId }: { userId: string }) {
+  return <MobileActivitySection heading="Your Activity" items={await cachedMine(userId)} href="/activity?tab=you" empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
+}
+
+async function DesktopPrimaryFeed({ userId }: { userId?: string }) {
+  const items = userId ? await cachedFriends(userId) : await cachedRecent();
+  return <HomeFeed items={items} isLoggedIn={!!userId} />;
+}
+
+async function DesktopMyFeed({ userId }: { userId: string }) {
+  return <HomeFeed items={await cachedMine(userId)} isLoggedIn={true} />;
+}
+
 export default async function HomePage() {
   const session = await auth();
-
-  // Activity = reviews + discussion threads, merged. Recent (site-wide) for
-  // logged-out; your own + friends' for logged-in.
-  let recentActivity: ActivityItem[] = [];
-  let myActivity: ActivityItem[] = [];
-  let friendsActivity: ActivityItem[] = [];
-  // Current username from the DB (the JWT token can be stale after a rename).
-  let username = session?.user?.username ?? "";
-  if (session?.user?.id) {
-    try {
-      const [mine, friends, me] = await Promise.all([
-        getUserActivity(session.user.id, 30),
-        getFriendsActivity(session.user.id, 30),
-        prisma.user.findUnique({ where: { id: session.user.id }, select: { username: true } }),
-      ]);
-      myActivity = mine;
-      friendsActivity = friends;
-      if (me) username = me.username;
-    } catch {}
-  } else {
-    try { recentActivity = await getRecentActivity(20); } catch {}
-  }
+  const userId = session?.user?.id;
+  const username = session?.user?.username ?? "";
 
   return (
     <div className="relative">
@@ -96,32 +114,17 @@ export default async function HomePage() {
             heading="Popular This Week"
             emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
           />
-          {/* Friends' Activity — above Grails */}
-          {session ? (
-            <MobileActivitySection
-              heading="Friends' Activity"
-              items={friendsActivity}
-              href="/activity?tab=friends"
-              empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }}
-            />
-          ) : (
-            <MobileActivitySection
-              heading="Recent Activity"
-              items={recentActivity}
-              href="/activity"
-              empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }}
-            />
-          )}
+          {/* Friends' Activity — above Grails (streamed) */}
+          <Suspense fallback={<FeedSkeleton />}>
+            <MobilePrimaryFeed userId={userId} />
+          </Suspense>
 
           <ClubsStrip />
 
-          {session && (
-            <MobileActivitySection
-              heading="Your Activity"
-              items={myActivity}
-              href="/activity?tab=you"
-              empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }}
-            />
+          {userId && (
+            <Suspense fallback={<FeedSkeleton />}>
+              <MobileMyFeed userId={userId} />
+            </Suspense>
           )}
 
           <ReleaseRadar />
@@ -149,15 +152,19 @@ export default async function HomePage() {
             {/* Friends' Activity — above Grails */}
             <div>
               <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
-              {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. */}
-              <HomeFeed items={session ? friendsActivity : recentActivity} isLoggedIn={!!session} />
+              {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. Streamed. */}
+              <Suspense fallback={<FeedSkeleton />}>
+                <DesktopPrimaryFeed userId={userId} />
+              </Suspense>
             </div>
             <ClubsStrip />
-            {session && (
+            {userId && (
               <div>
                 <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your recent activity</h2>
                 {/* Reviews + discussion posts + replies — not just albums. */}
-                <HomeFeed items={myActivity} isLoggedIn={!!session} />
+                <Suspense fallback={<FeedSkeleton />}>
+                  <DesktopMyFeed userId={userId} />
+                </Suspense>
               </div>
             )}
             <div className="hidden lg:block"><AnniversaryBanner /></div>
