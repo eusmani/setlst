@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Avatar from "@/components/ui/Avatar";
+import { isNative } from "@/lib/native";
 
 const NAV = [
   {
@@ -66,6 +67,9 @@ export default function Navbar() {
   const [unread, setUnread] = useState(0);
   const [me, setMe] = useState<{ username: string; avatar: string | null } | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  // Inside the native app (iPhone or iPad), there's nothing to download.
+  const [native, setNative] = useState(false);
+  useEffect(() => setNative(isNative()), []);
 
   // Unread shared-discussion count for the inbox badge.
   useEffect(() => {
@@ -131,16 +135,19 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3 ml-auto">
-          {/* Get the iOS app — desktop only (you're already in it on mobile) */}
-          <Link
-            href="/download"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs border border-[#2e2e2e] hover:border-[#c4a832] text-[#a0a0a0] hover:text-[#c4a832] px-2.5 py-1 rounded-full transition-colors"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="7" y="2" width="10" height="20" rx="2" /><line x1="11" y1="18" x2="13" y2="18" />
-            </svg>
-            Download app
-          </Link>
+          {/* Get the iOS app — desktop web only; hidden on mobile (sm:) and inside
+              the native app (iPhone/iPad), where there's nothing to download. */}
+          {!native && (
+            <Link
+              href="/download"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs border border-[#2e2e2e] hover:border-[#c4a832] text-[#a0a0a0] hover:text-[#c4a832] px-2.5 py-1 rounded-full transition-colors"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="7" y="2" width="10" height="20" rx="2" /><line x1="11" y1="18" x2="13" y2="18" />
+              </svg>
+              Download app
+            </Link>
+          )}
           {session ? (
             <div className="relative" ref={userMenuRef}>
               <button
