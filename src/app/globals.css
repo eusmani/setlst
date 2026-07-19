@@ -215,51 +215,21 @@ html.theme-mono .pro-turntable { filter: invert(1); }
 }
 
 /* ---------------------------------------------------------------------------
-   Native-style sliding page transitions (Spotify / Apple Music feel).
-   Driven by React's <ViewTransition> in app/template.tsx (enabled via
-   `experimental.viewTransition` in next.config.ts). The template tags each
-   navigation's page content with a class based on its transition type:
-   `.nav-forward` (default — album taps, forward paging) pushes the new page in
-   from the right; `.nav-back` (set by <Link transitionTypes={['nav-back']}> and
-   the edge-swipe in SwipeNavigator) reverses it. Untyped/initial loads fall back
-   to nav-forward. Only animate when the user hasn't asked to reduce motion.
+   Native-style page slide on navigation. Replayed by the `.page-enter` wrapper
+   in app/template.tsx, which remounts on every route change. This deliberately
+   does NOT use the View Transitions API / React <ViewTransition>: that relies on
+   experimental `view-transition-class` CSS matching the iOS WKWebView doesn't
+   reliably support, so the slide never played on iPhone. A plain @keyframes
+   animation works everywhere. Only animate when reduced-motion isn't requested.
 --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: no-preference) {
-  /* Anchor the app chrome (top nav + bottom tab bar) so only the page content
-     slides underneath it — like a native navigation stack. Naming them lifts
-     them out of the sliding snapshot; animation:none keeps them still, and
-     hiding the old snapshot avoids a brief double-chrome flash mid-slide. */
-  .top-nav { view-transition-name: app-top-nav; }
-  .bottom-nav { view-transition-name: app-bottom-nav; }
-  ::view-transition-group(app-top-nav),
-  ::view-transition-group(app-bottom-nav) { animation: none; z-index: 100; }
-  ::view-transition-old(app-top-nav),
-  ::view-transition-old(app-bottom-nav) { display: none; }
-
-  /* Forward navigation: incoming page pushes in from the right while the
-     outgoing page parallaxes slightly left underneath it. */
-  ::view-transition-old(.nav-forward) {
-    z-index: 1;
-    animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-out-left;
-  }
-  ::view-transition-new(.nav-forward) {
-    z-index: 2;
-    animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-in-right;
-  }
-
-  /* Back navigation: outgoing page slides off to the right on top, revealing the
-     previous page returning from the left. */
-  ::view-transition-old(.nav-back) {
-    z-index: 2;
-    animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-out-right;
-  }
-  ::view-transition-new(.nav-back) {
-    z-index: 1;
-    animation: 340ms cubic-bezier(0.32, 0.72, 0, 1) both vt-in-left;
+  .page-enter {
+    animation: page-enter 340ms cubic-bezier(0.32, 0.72, 0, 1) both;
+    will-change: transform, opacity;
   }
 }
 
-@keyframes vt-in-right  { from { transform: translateX(100%); }  to { transform: translateX(0); } }
-@keyframes vt-out-left  { from { transform: translateX(0); }     to { transform: translateX(-22%); } }
-@keyframes vt-out-right { from { transform: translateX(0); }     to { transform: translateX(100%); } }
-@keyframes vt-in-left   { from { transform: translateX(-22%); }  to { transform: translateX(0); } }
+@keyframes page-enter {
+  from { transform: translateX(38px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
