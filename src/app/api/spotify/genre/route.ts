@@ -559,7 +559,7 @@ async function fetchOne(q: string) {
       const d = await r.json();
       const results: ItunesAlbum[] = d.results ?? [];
 
-      const a = results.find((x) =>
+      const valid = results.filter((x) =>
         x.collectionId &&
         x.artworkUrl100 &&
         x.collectionName &&
@@ -569,7 +569,30 @@ async function fetchOne(q: string) {
         !isLikelyAI(x.artistName, x.collectionName)
         // singles & EPs allowed — no trackCount restriction
       );
-      if (!a) return null; // genuine no-match — don't waste retries
+      // iTunes' first result isn't always the intended album (tributes, same-named
+      // albums, wrong artists). Score each candidate by how many of the query's
+      // words appear in its "title artist", and take the best — so the curated
+      // query actually resolves to that album, not whatever iTunes lists first.
+      const norm = (s: string) => " " + s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() + " ";
+      const qWords = norm(q).trim().split(" ").filter((w) => w.length > 1);
+      // Non-canonical editions that share the album's name+artist (so they tie on
+      // word overlap): instrumentals, beat tapes, remixes, deluxe/live/etc.
+      const VARIANT = /instrumental|\bbeats\b|remix|deluxe|\blive\b|karaoke|\bversion\b|\bedition\b|\bdemos?\b|commentary|b.?sides?|screwed|chopped|slowed|acoustic|reprise/i;
+      const qWantsVariant = VARIANT.test(q);
+      const scoreOf = (x: ItunesAlbum) => {
+        const hay = norm(`${x.collectionName} ${x.artistName}`);
+        let s = qWords.reduce((n, w) => n + (hay.includes(" " + w + " ") ? 1 : 0), 0);
+        // Gently demote editions the query didn't ask for, so the canonical album
+        // wins a tie — but not so hard it loses to an unrelated album when iTunes
+        // only carries the edition (then the same album's variant is the best fit).
+        if (!qWantsVariant && VARIANT.test(x.collectionName as string)) s -= 1;
+        return s;
+      };
+      const best = valid
+        .map((x) => ({ x, s: scoreOf(x) }))
+        .sort((p, r) => r.s - p.s)[0];
+      if (!best || best.s <= 0) return null; // no real match — don't surface a wrong album
+      const a = best.x;
 
       return {
         id: String(a.collectionId),
