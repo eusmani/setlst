@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -46,4 +47,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+}
+
+// Enables the WKWebView's native interactive edge-swipe back/forward gesture, so
+// navigation tracks the user's finger like a standard iPhone app. Referenced by
+// Main.storyboard (customClass "MainViewController"). Defined here in the already-
+// compiled AppDelegate.swift so it's part of the app target without a project edit.
+class MainViewController: CAPBridgeViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        webView?.allowsBackForwardNavigationGestures = true
+    }
 }
