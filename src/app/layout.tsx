@@ -10,6 +10,7 @@ import RegisterSW from "@/components/layout/RegisterSW";
 import UpcomingBanner from "@/components/layout/UpcomingBanner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import NativeBridge from "@/components/layout/NativeBridge";
+import OnboardingSlideshow from "@/components/layout/OnboardingSlideshow";
 
 const wallpoet = Wallpoet({ variable: "--font-wallpoet", subsets: ["latin"], weight: "400" });
 const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"], weight: ["400", "600", "700", "800"] });
@@ -61,6 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Providers>
           <RegisterSW />
           <NativeBridge />
+          <OnboardingSlideshow />
           <Navbar />
           {/* Desktop only: offsets the fixed navbar (h-16). On mobile the navbar is
               in normal flow (scrolls away with the page), so no spacer is needed. */}
