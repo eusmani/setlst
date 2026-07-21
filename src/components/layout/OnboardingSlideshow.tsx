@@ -11,27 +11,27 @@ type Slide = { icon: React.ReactNode; title: string; body: string };
 
 const SLIDES: Slide[] = [
   {
-    icon: <img src="/turntable-logo.png" alt="" className="w-24 h-24 object-contain" />,
+    icon: <img src="/turntable-logo.png" alt="" className="w-44 h-44 object-contain drop-shadow-[0_8px_30px_rgba(196,168,50,0.25)]" />,
     title: "Welcome to SETLST",
     body: "Your all-in-one music database and review hub — track everything you listen to.",
   },
   {
-    icon: <span className="text-6xl" aria-hidden>💿</span>,
+    icon: <span className="text-8xl" aria-hidden>💿</span>,
     title: "Log & rate every album",
     body: "Rate your favorites, write reviews, and build a diary of what you're spinning.",
   },
   {
-    icon: <span className="text-6xl" aria-hidden>🔎</span>,
+    icon: <span className="text-8xl" aria-hidden>🔎</span>,
     title: "Discover your next favorite",
     body: "New releases, hidden gems, and deep cuts across every genre — powered by what you actually listen to.",
   },
   {
-    icon: <span className="text-6xl" aria-hidden>🎟️</span>,
+    icon: <span className="text-8xl" aria-hidden>🎟️</span>,
     title: "Catch shows near you",
     body: "See concerts nearby from the artists in your rotation, and mark the ones you're going to.",
   },
   {
-    icon: <span className="text-6xl" aria-hidden>👥</span>,
+    icon: <span className="text-8xl" aria-hidden>👥</span>,
     title: "Follow friends",
     body: "See what your friends are rating, share your picks, and start the conversation.",
   },
@@ -71,41 +71,45 @@ export default function OnboardingSlideshow() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-[#111111] text-[#f0f0f0] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+      className="onb-overlay fixed inset-0 z-[100] flex flex-col text-[#f0f0f0] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
       {/* Skip */}
       <div className="flex justify-end px-5 pt-4">
-        <button onClick={finish} className="text-sm text-[#6b6b6b] hover:text-[#a0a0a0] px-2 py-1 transition-colors">
+        <button onClick={finish} className="text-sm text-[#8a8a8a] hover:text-[#c4a832] px-3 py-1.5 rounded-full transition-colors">
           Skip
         </button>
       </div>
 
       {/* Slide */}
       <div key={i} className="flex-1 flex flex-col items-center justify-center px-8 text-center onb-slide">
-        <div className="mb-8 flex items-center justify-center h-28">{s.icon}</div>
-        <h1 className="font-serif text-3xl leading-tight mb-3">{s.title}</h1>
-        <p className="text-[#a0a0a0] text-base leading-relaxed max-w-sm">{s.body}</p>
+        <div className="relative mb-12 flex h-52 w-52 items-center justify-center">
+          {/* radial gold glow behind the icon */}
+          <div className="onb-glow absolute inset-0 rounded-full" />
+          <div className="onb-float relative flex items-center justify-center">{s.icon}</div>
+        </div>
+        <h1 className="font-serif text-4xl leading-[1.1] tracking-tight mb-4">{s.title}</h1>
+        <p className="text-[#a8a8a8] text-[15px] leading-relaxed max-w-sm">{s.body}</p>
       </div>
 
       {/* Dots */}
-      <div className="flex justify-center gap-2 mb-6">
+      <div className="flex justify-center gap-2 mb-7">
         {SLIDES.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setI(idx)}
             aria-label={`Slide ${idx + 1}`}
-            className={`h-2 rounded-full transition-all ${idx === i ? "w-6 bg-[#c4a832]" : "w-2 bg-[#3a3a3a]"}`}
+            className={`h-2 rounded-full transition-all duration-300 ${idx === i ? "w-7 bg-[#c4a832] shadow-[0_0_10px_rgba(196,168,50,0.6)]" : "w-2 bg-[#3a3a3a]"}`}
           />
         ))}
       </div>
 
       {/* CTA */}
-      <div className="px-6 pb-8">
+      <div className="px-6 pb-9">
         <button
           onClick={next}
-          className="w-full bg-[#c4a832] hover:bg-[#d4ba44] active:scale-[0.99] text-[#111111] font-semibold py-3.5 rounded-xl transition-all"
+          className="w-full bg-gradient-to-b from-[#d4ba44] to-[#c4a832] hover:brightness-110 active:scale-[0.98] text-[#1a1408] font-bold tracking-wide py-4 rounded-2xl shadow-lg shadow-[#c4a832]/20 transition-all"
         >
           {last ? "Get Started" : "Next"}
         </button>

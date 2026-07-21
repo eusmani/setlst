@@ -218,9 +218,31 @@ html.theme-mono .pro-turntable { filter: invert(1); }
    Animations API in app/template.tsx (element.animate), not CSS — see the note
    there for why. Nothing needed here. */
 
-/* Onboarding slideshow: each slide fades + rises in when it becomes active. */
-.onb-slide { animation: onb-slide 360ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* Onboarding slideshow. */
+.onb-overlay {
+  background:
+    radial-gradient(125% 55% at 50% -8%, rgba(196, 168, 50, 0.12), transparent 60%),
+    linear-gradient(180deg, #141210 0%, #0c0b0a 55%);
+}
+/* Each slide fades + rises in when it becomes active. */
+.onb-slide { animation: onb-slide 400ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 @keyframes onb-slide {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+/* Soft pulsing gold glow behind the slide icon. */
+.onb-glow {
+  background: radial-gradient(circle, rgba(196, 168, 50, 0.24), transparent 66%);
+  filter: blur(10px);
+  animation: onb-pulse 4.5s ease-in-out infinite;
+}
+@keyframes onb-pulse {
+  0%, 100% { opacity: 0.65; transform: scale(0.92); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+/* Gentle float on the icon. */
+.onb-float { animation: onb-float 5.5s ease-in-out infinite; }
+@keyframes onb-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-9px); }
 }
