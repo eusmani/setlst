@@ -1,10 +1,15 @@
 "use client";
 import { useEffect } from "react";
 
+// Must match OnboardingSlideshow's SEEN_KEY.
+const SEEN_KEY = "setlst_onboarded_v1";
+
 // Runs only inside the native iOS/Android shell. Styles the status bar, hides the
 // splash screen once loaded, and registers for push notifications.
 export default function NativeBridge() {
   useEffect(() => {
+    let removeListener: (() => void) | null = null;
+
     (async () => {
       const { Capacitor } = await import("@capacitor/core");
       if (!Capacitor.isNativePlatform()) return;
@@ -22,22 +27,40 @@ export default function NativeBridge() {
       } catch {}
 
       // Push notifications: ask permission, register, forward the device token.
-      try {
-        const { PushNotifications } = await import("@capacitor/push-notifications");
-        const perm = await PushNotifications.requestPermissions();
-        if (perm.receive === "granted") {
-          await PushNotifications.register();
-          await PushNotifications.addListener("registration", (token) => {
-            fetch("/api/push/register", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ token: token.value, platform: Capacitor.getPlatform() }),
-            }).catch(() => {});
-          });
-          await PushNotifications.addListener("registrationError", () => {});
-        }
-      } catch {}
+      const requestPush = async () => {
+        try {
+          const { PushNotifications } = await import("@capacitor/push-notifications");
+          const perm = await PushNotifications.requestPermissions();
+          if (perm.receive === "granted") {
+            await PushNotifications.register();
+            await PushNotifications.addListener("registration", (token) => {
+              fetch("/api/push/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: token.value, platform: Capacitor.getPlatform() }),
+              }).catch(() => {});
+            });
+            await PushNotifications.addListener("registrationError", () => {});
+          }
+        } catch {}
+      };
+
+      // Don't prompt for notifications during the first-launch onboarding — the
+      // system dialog would cover the welcome screen. If onboarding is already
+      // done, ask now; otherwise wait for it to finish (OnboardingSlideshow
+      // dispatches "setlst:onboarded" on Get Started / Skip).
+      let onboarded = true;
+      try { onboarded = !!localStorage.getItem(SEEN_KEY); } catch {}
+      if (onboarded) {
+        void requestPush();
+      } else {
+        const handler = () => { removeListener?.(); void requestPush(); };
+        window.addEventListener("setlst:onboarded", handler, { once: true });
+        removeListener = () => window.removeEventListener("setlst:onboarded", handler);
+      }
     })();
+
+    return () => { removeListener?.(); };
   }, []);
 
   return null;

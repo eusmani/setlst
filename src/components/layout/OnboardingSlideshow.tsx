@@ -54,6 +54,9 @@ export default function OnboardingSlideshow() {
   const finish = () => {
     try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
     setShow(false);
+    // Let NativeBridge request push permission now that onboarding is dismissed,
+    // so the system dialog doesn't cover the welcome screen on first launch.
+    try { window.dispatchEvent(new Event("setlst:onboarded")); } catch {}
   };
   const next = () => (last ? finish() : setI((n) => n + 1));
 
