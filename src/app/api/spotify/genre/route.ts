@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isLikelyAI } from "@/lib/aiFilter";
+import { searchAppleAlbum } from "@/lib/appleMusic";
 
 // Per-genre curated albums as "Title Artist" search queries.
 // Uses the SEARCH endpoint (works from serverless) rather than album-by-ID (dev-mode restricted).
@@ -549,6 +550,14 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 // Look up an album via iTunes (no auth). Retries on throttle/network errors so a
 // transient 403 doesn't drop the album (and, in aggregate, the whole genre).
 async function fetchOne(q: string) {
+  // Prefer the full Apple Music catalog (returns canonical albums the iTunes
+  // Search API omits, e.g. Madvillainy/Bandana). Fall back to iTunes when Apple
+  // Music isn't configured or has no confident match.
+  const am = await searchAppleAlbum(q).catch(() => null);
+  if (am && am.artwork) {
+    return { id: am.id, title: am.title, artist: am.artist, artwork: am.artwork, year: am.year };
+  }
+
   const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=5`;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
