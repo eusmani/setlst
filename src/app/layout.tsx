@@ -57,8 +57,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: `try{var m=document.cookie.match(/(?:^|; )setlst-theme=([^;]+)/);var t=m?m[1]:(localStorage.getItem('setlst-theme')||'amber');if(!m){document.cookie='setlst-theme='+t+'; path=/; max-age=31536000; samesite=lax';}var c=document.documentElement.classList;c.remove('theme-mono','theme-amber');c.add('theme-'+t);}catch(e){}`,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            // On the native app's first launch (not yet onboarded), synchronously
+            // cover the screen so the underlying app/login page never flashes
+            // before the React onboarding overlay mounts. Removed by the overlay
+            // when onboarding is dismissed. Must match OnboardingSlideshow SEEN_KEY.
+            __html: `try{if(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&!localStorage.getItem('setlst_onboarded_v1')){document.documentElement.classList.add('onb-pending');}}catch(e){}`,
+          }}
+        />
       </head>
       <body className="min-h-screen flex flex-col bg-[#111111] text-[#f0f0f0] overflow-x-clip pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
+        {/* Pre-hydration onboarding cover — see globals.css #onb-preload and the
+            head script that toggles .onb-pending. Hidden unless first launch. */}
+        <div id="onb-preload" aria-hidden="true">
+          <img src="/turntable-logo.png" alt="" style={{ width: "11rem", height: "11rem", objectFit: "contain" }} />
+        </div>
         <Providers>
           <RegisterSW />
           <NativeBridge />

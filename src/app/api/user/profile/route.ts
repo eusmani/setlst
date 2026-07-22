@@ -23,17 +23,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Image too large" }, { status: 400 });
   }
 
-  // Optional username change
+  // Optional username change. Usernames are stored lowercase (same as register)
+  // so uniqueness is consistent — otherwise "bob" and "Bob" would be treated as
+  // distinct by SQLite's case-sensitive unique index, allowing case-variant dupes.
   let nextUsername: string | undefined;
   if (username != null) {
-    if (typeof username !== "string" || !/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-      return NextResponse.json({ error: "Username: 3–20 chars, letters/numbers/underscores" }, { status: 400 });
+    const cleanUsername = String(username).trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(cleanUsername)) {
+      return NextResponse.json({ error: "Username: 3–20 chars, lowercase letters/numbers/underscores" }, { status: 400 });
     }
     const current = await prisma.user.findUnique({ where: { id: session.user.id }, select: { username: true } });
-    if (username !== current?.username) {
-      const taken = await prisma.user.findFirst({ where: { username, NOT: { id: session.user.id } }, select: { id: true } });
+    if (cleanUsername !== current?.username) {
+      const taken = await prisma.user.findFirst({ where: { username: cleanUsername, NOT: { id: session.user.id } }, select: { id: true } });
       if (taken) return NextResponse.json({ error: "That username is already taken" }, { status: 409 });
-      nextUsername = username;
+      nextUsername = cleanUsername;
     }
   }
 
@@ -52,16 +55,24 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      bio: bio?.trim() || null,
-      ...(avatar !== undefined ? { avatar: avatar || null } : {}),
-      ...(nextUsername ? { username: nextUsername } : {}),
-      ...(phone !== undefined ? { phone: phone ? normalizePhone(phone) : null } : {}),
-      ...(nextEmail ? { email: nextEmail } : {}),
-    },
-  });
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        bio: bio?.trim() || null,
+        ...(avatar !== undefined ? { avatar: avatar || null } : {}),
+        ...(nextUsername ? { username: nextUsername } : {}),
+        ...(phone !== undefined ? { phone: phone ? normalizePhone(phone) : null } : {}),
+        ...(nextEmail ? { email: nextEmail } : {}),
+      },
+    });
+  } catch (e) {
+    // Unique-constraint race on username/email — surface a clean 409.
+    if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") {
+      return NextResponse.json({ error: "That username or email is already taken" }, { status: 409 });
+    }
+    throw e;
+  }
 
   return NextResponse.json({ ok: true, username: nextUsername });
 }

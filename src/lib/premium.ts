@@ -1,5 +1,13 @@
 import { prisma } from "./prisma";
 
+// Synchronous premium check from already-loaded user flags (no DB round-trip).
+// A user is active Plus if flagged and the current period hasn't lapsed.
+export function isPremiumActive(u: { isPremium: boolean; premiumUntil: Date | null }): boolean {
+  if (!u.isPremium) return false;
+  if (u.premiumUntil && u.premiumUntil.getTime() < Date.now()) return false;
+  return true;
+}
+
 // A user is SETLST Plus if flagged and the current period hasn't lapsed.
 export async function isPremium(userId: string | undefined | null): Promise<boolean> {
   if (!userId) return false;

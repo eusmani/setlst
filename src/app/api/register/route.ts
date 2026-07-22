@@ -23,9 +23,12 @@ export async function POST(req: NextRequest) {
   const limited = checkLimit("register", clientIp(req), 5, 60 * 60 * 1000);
   if (limited) return limited;
 
-  const { username, email, password, phone } = await req.json();
+  const { username, email, password, phone, name } = await req.json();
   if (!username || !email || !password || !phone)
     return NextResponse.json({ error: "All fields required" }, { status: 400 });
+  // Optional display name — stored in the profile bio for now (no dedicated
+  // column). Kept short and sanitized.
+  const cleanName = typeof name === "string" ? name.trim().slice(0, 60) : "";
   const cleanUsername = String(username).trim().toLowerCase();
   if (!/^[a-z0-9_]{3,20}$/.test(cleanUsername))
     return NextResponse.json({ error: "Username: 3–20 chars, lowercase letters/numbers/underscores" }, { status: 400 });
@@ -45,9 +48,26 @@ export async function POST(req: NextRequest) {
   if (exists) return NextResponse.json({ error: "Email or username already taken" }, { status: 409 });
 
   const hash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: { username: cleanUsername, email: cleanEmail, password: hash, phone: normalizedPhone },
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        username: cleanUsername,
+        email: cleanEmail,
+        password: hash,
+        phone: normalizedPhone,
+        ...(cleanName ? { bio: cleanName } : {}),
+      },
+    });
+  } catch (e) {
+    // Unique-constraint race: two concurrent signups passed the check above and
+    // one lost at the DB. The @unique constraint guarantees no duplicate is
+    // stored — surface a clean 409 instead of a 500.
+    if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") {
+      return NextResponse.json({ error: "Email or username already taken" }, { status: 409 });
+    }
+    throw e;
+  }
 
   // Send the verification email — non-blocking: registration still succeeds if email fails.
   try {
