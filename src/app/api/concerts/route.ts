@@ -46,7 +46,8 @@ function pickImage(e: SgEvent): string | null {
   );
 }
 
-async function fetchSeatGeek(lat: number, lon: number): Promise<Concert[]> {
+// Exported so the onboarding "shows near you" preview can reuse it.
+export async function fetchSeatGeek(lat: number, lon: number): Promise<Concert[]> {
   const clientId = process.env.SEATGEEK_CLIENT_ID;
   if (!clientId) return [];
   const params = new URLSearchParams({

@@ -549,7 +549,8 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 
 // Look up an album via iTunes (no auth). Retries on throttle/network errors so a
 // transient 403 doesn't drop the album (and, in aggregate, the whole genre).
-async function fetchOne(q: string) {
+// Exported so the onboarding "random popular album" endpoint can reuse it.
+export async function fetchOne(q: string) {
   // Prefer the full Apple Music catalog (returns canonical albums the iTunes
   // Search API omits, e.g. Madvillainy/Bandana). Fall back to iTunes when Apple
   // Music isn't configured or has no confident match.

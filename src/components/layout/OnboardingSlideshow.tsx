@@ -7,6 +7,16 @@ import { isNative } from "@/lib/native";
 // screen overlay with swipeable slides, dots, Skip, and a Get Started CTA.
 const SEEN_KEY = "setlst_onboarded_v1";
 
+type RandomAlbum = { title: string; artist: string; artwork: string };
+type DiscoverAlbum = { title: string; artist: string; artwork: string; genre: string };
+type OnbConcert = { id: string; name: string; date: string; venue: string; city: string; image: string | null };
+
+// "Fri, Aug 8" — compact date for the concert preview rows.
+function shortDate(d: string) {
+  const dt = new Date(d + "T00:00:00");
+  return isNaN(dt.getTime()) ? "" : dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
 type Slide = { icon: React.ReactNode; title: string; body: string };
 
 const SLIDES: Slide[] = [
@@ -16,6 +26,8 @@ const SLIDES: Slide[] = [
     body: "Your all-in-one music database and review hub — track everything you listen to.",
   },
   {
+    // Slide index 1 ("Log & rate every album") shows a random popular album
+    // cover instead of this fallback icon once it loads — see `album` state.
     icon: <span className="text-8xl" aria-hidden>💿</span>,
     title: "Log & rate every album",
     body: "Rate your favorites, write reviews, and build a diary of what you're spinning.",
@@ -40,11 +52,40 @@ const SLIDES: Slide[] = [
 export default function OnboardingSlideshow() {
   const [show, setShow] = useState(false);
   const [i, setI] = useState(0);
+  const [album, setAlbum] = useState<RandomAlbum | null>(null);
+  const [discover, setDiscover] = useState<DiscoverAlbum[]>([]);
+  const [concerts, setConcerts] = useState<OnbConcert[]>([]);
   const startX = useRef<number | null>(null);
 
   useEffect(() => {
     try {
-      if (isNative() && !localStorage.getItem(SEEN_KEY)) setShow(true);
+      if (isNative() && !localStorage.getItem(SEEN_KEY)) {
+        setShow(true);
+        // Pull a random popular album for the "Log & rate every album" slide.
+        // Fails silently — the slide falls back to the disc icon.
+        fetch("/api/onboarding/album")
+          .then((r) => (r.ok ? r.json() : null))
+          .then((a: RandomAlbum | null) => {
+            if (a && a.artwork) setAlbum(a);
+          })
+          .catch(() => {});
+        // Pull 4 albums across different genres for the "Discover" slide.
+        // Fails silently — the slide falls back to the magnifying-glass icon.
+        fetch("/api/onboarding/discover")
+          .then((r) => (r.ok ? r.json() : []))
+          .then((d: DiscoverAlbum[]) => {
+            if (Array.isArray(d) && d.length >= 4) setDiscover(d.slice(0, 4));
+          })
+          .catch(() => {});
+        // Pull a few upcoming concerts for the "Catch shows near you" slide.
+        // Fails silently — the slide falls back to the ticket icon.
+        fetch("/api/onboarding/concerts")
+          .then((r) => (r.ok ? r.json() : []))
+          .then((c: OnbConcert[]) => {
+            if (Array.isArray(c) && c.length) setConcerts(c);
+          })
+          .catch(() => {});
+      }
     } catch {}
   }, []);
 
@@ -60,14 +101,27 @@ export default function OnboardingSlideshow() {
   };
   const next = () => (last ? finish() : setI((n) => n + 1));
 
+  const prev = () => setI((n) => Math.max(0, n - 1));
+
   const onTouchStart = (e: React.TouchEvent) => { startX.current = e.touches[0].clientX; };
   const onTouchEnd = (e: React.TouchEvent) => {
     if (startX.current == null) return;
-    const dx = e.changedTouches[0].clientX - startX.current;
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX.current;
     startX.current = null;
-    if (Math.abs(dx) < 50) return;
-    if (dx < 0) next();
-    else setI((n) => Math.max(0, n - 1));
+    // Don't hijack taps on the actual controls (Skip / dots / CTA).
+    if ((e.target as HTMLElement).closest("button")) return;
+    // Swipe past the threshold: drag left = next, right = previous.
+    if (Math.abs(dx) >= 50) {
+      if (dx < 0) next();
+      else prev();
+      return;
+    }
+    // Tap: left half of the screen goes back, right half advances — like a
+    // story/reel. On the last slide, a right-tap does nothing (only the CTA
+    // finishes) so onboarding isn't dismissed by accident.
+    if (endX < window.innerWidth / 2) prev();
+    else if (!last) setI((n) => n + 1);
   };
 
   const s = SLIDES[i];
@@ -87,11 +141,68 @@ export default function OnboardingSlideshow() {
 
       {/* Slide */}
       <div key={i} className="flex-1 flex flex-col items-center justify-center px-8 text-center onb-slide">
-        <div className="relative mb-12 flex h-52 w-52 items-center justify-center">
-          {/* radial gold glow behind the icon */}
-          <div className="onb-glow absolute inset-0 rounded-full" />
-          <div className="onb-float relative flex items-center justify-center">{s.icon}</div>
-        </div>
+        {i === 2 && discover.length === 4 ? (
+          // "Discover your next favorite" — an assorted 2×2 of albums across
+          // different genres, with a magnifying glass over one of them.
+          <div className="mb-10 grid grid-cols-2 gap-3">
+            {discover.map((d, idx) => (
+              <div key={idx} className="relative">
+                <img
+                  src={d.artwork}
+                  alt=""
+                  className="h-28 w-28 rounded-xl object-cover shadow-xl shadow-black/50 ring-1 ring-white/10"
+                />
+                {/* Magnifying glass on the first tile — the "discover" cue. */}
+                {idx === 0 && (
+                  <div className="onb-float absolute -right-3 -bottom-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#c4a832] text-[#1a1408] shadow-lg shadow-[#c4a832]/40 ring-2 ring-[#111]">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <circle cx="11" cy="11" r="7" />
+                      <line x1="21" y1="21" x2="16.5" y2="16.5" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : i === 3 && concerts.length > 0 ? (
+          // "Catch shows near you" — a live preview of upcoming local concerts.
+          <div className="mb-10 w-full max-w-xs space-y-2.5">
+            {concerts.map((c) => (
+              <div key={c.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-2.5 text-left">
+                {c.image ? (
+                  <img src={c.image} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+                ) : (
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/10 text-lg" aria-hidden>🎟️</div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-[#f0f0f0]">{c.name}</p>
+                  <p className="truncate text-xs text-[#8a8a8a]">{[c.venue, c.city].filter(Boolean).join(" · ")}</p>
+                </div>
+                <span className="shrink-0 text-[11px] font-medium text-[#c4a832]">{shortDate(c.date)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="relative mb-12 flex h-52 w-52 items-center justify-center">
+            {/* radial gold glow behind the icon */}
+            <div className="onb-glow absolute inset-0 rounded-full" />
+            <div className="onb-float relative flex items-center justify-center">
+              {i === 1 && album ? (
+                <div className="flex flex-col items-center">
+                  <img
+                    src={album.artwork}
+                    alt=""
+                    className="w-44 h-44 rounded-xl object-cover shadow-2xl shadow-black/60 ring-1 ring-white/10"
+                  />
+                  <p className="mt-3 text-sm font-semibold text-[#f0f0f0] max-w-[12rem] truncate">{album.title}</p>
+                  <p className="text-xs text-[#8a8a8a] max-w-[12rem] truncate">{album.artist}</p>
+                </div>
+              ) : (
+                s.icon
+              )}
+            </div>
+          </div>
+        )}
         <h1 className="font-serif text-4xl leading-[1.1] tracking-tight mb-4">{s.title}</h1>
         <p className="text-[#a8a8a8] text-[15px] leading-relaxed max-w-sm">{s.body}</p>
       </div>
