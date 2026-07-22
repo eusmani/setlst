@@ -218,6 +218,23 @@ html.theme-mono .pro-turntable { filter: invert(1); }
    Animations API in app/template.tsx (element.animate), not CSS — see the note
    there for why. Nothing needed here. */
 
+/* Page transition — every route slides + fades in from the right on navigation
+   (see app/template.tsx). Kept short so it reads as responsive, not laggy.
+   translateX stays small and the body clips overflow-x, so no horizontal scroll. */
+.page-transition {
+  /* 'backwards' (not 'both'/'forwards') so no transform is retained after the
+     animation — a lingering transform would make this a containing block for
+     any position:fixed descendant (modals, action bars) and mis-anchor them. */
+  animation: page-slide 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes page-slide {
+  from { opacity: 0; transform: translate3d(22px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition { animation: none; }
+}
+
 /* Onboarding slideshow. */
 .onb-overlay {
   background:
