@@ -9,7 +9,7 @@ const AI_MARKERS =
 // Known AI-music generators / channels / projects (exact-ish artist names). Extend as needed.
 const AI_ARTISTS = new Set<string>([
   "suno", "suno ai", "udio", "boomy", "mubert", "aiva", "soundraw", "riffusion",
-  "ai music", "ai cover", "endel",
+  "ai music", "ai cover", "endel", "aummuse",
 ]);
 
 const norm = (s: string) => s.toLowerCase().trim();
