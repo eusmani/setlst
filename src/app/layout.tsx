@@ -11,6 +11,7 @@ import UpcomingBanner from "@/components/layout/UpcomingBanner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import NativeBridge from "@/components/layout/NativeBridge";
 import OnboardingSlideshow from "@/components/layout/OnboardingSlideshow";
+import NavProgress from "@/components/layout/NavProgress";
 
 const wallpoet = Wallpoet({ variable: "--font-wallpoet", subsets: ["latin"], weight: "400" });
 const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"], weight: ["400", "600", "700", "800"] });
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <img src="/turntable-logo.png" alt="" style={{ width: "11rem", height: "11rem", objectFit: "contain" }} />
         </div>
         <Providers>
+          <NavProgress />
           <RegisterSW />
           <NativeBridge />
           <OnboardingSlideshow />

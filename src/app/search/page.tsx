@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import AlbumCard from "@/components/album/AlbumCard";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
@@ -84,6 +84,16 @@ export default function SearchPage() {
     setActiveGenre(null); setGenreResults([]);
     search(q);
   }
+
+  // Live search as you type (debounced) — artists, albums, EPs & singles all
+  // come back in the one query, so results appear without pressing Search.
+  useEffect(() => {
+    const query = q.trim();
+    if (query.length < 2) return;
+    const t = setTimeout(() => search(query), 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
 
   const showGenreResults = activeGenre && genreResults.length > 0;
   const showSearchResults = !activeGenre && searchResults.length > 0;
@@ -226,16 +236,16 @@ export default function SearchPage() {
         <>
           <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-4">{activeGenre}</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {(showAll ? genreResults : genreResults.slice(0, 10)).map((a) => (
+            {(showAll ? genreResults : genreResults.slice(0, 30)).map((a) => (
               <AlbumCard key={a.id} spotifyId={a.id} title={a.title} artist={a.artist} artwork={a.artwork} year={a.year} />
             ))}
           </div>
-          {genreResults.length > 10 && (
+          {genreResults.length > 30 && (
             <button
               onClick={() => setShowAll(!showAll)}
               className="mt-4 w-full py-2.5 text-xs text-[#a0a0a0] hover:text-[#c4a832] border border-[#2e2e2e] hover:border-[#c4a832] rounded-lg transition-colors"
             >
-              {showAll ? "Show less ↑" : `See more (${genreResults.length - 10} more) ↓`}
+              {showAll ? "Show less ↑" : `See more (${genreResults.length - 30} more) ↓`}
             </button>
           )}
         </>

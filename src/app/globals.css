@@ -218,6 +218,30 @@ html.theme-mono .pro-turntable { filter: invert(1); }
    Animations API in app/template.tsx (element.animate), not CSS — see the note
    there for why. Nothing needed here. */
 
+/* Global navigation progress bar — a thin gold bar that creeps toward the top
+   during a laggy navigation (see NavProgress.tsx), then unmounts when the new
+   route mounts. Never quite reaches 100% until it's removed, the usual trick. */
+.nav-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  z-index: 200;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(90deg, #c4a832, #d4ba44);
+  box-shadow: 0 0 8px rgba(196, 168, 50, 0.7);
+  animation: nav-progress-grow 8s cubic-bezier(0.1, 0.6, 0.25, 1) forwards;
+}
+@keyframes nav-progress-grow {
+  0%   { width: 0; }
+  30%  { width: 55%; }
+  65%  { width: 80%; }
+  100% { width: 93%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress { animation: none; width: 40%; }
+}
+
 /* Loading skeletons — shimmer placeholder blocks shown by route loading.tsx
    files while a server-rendered page is being fetched, so a tap responds
    instantly instead of hanging on the previous screen. */

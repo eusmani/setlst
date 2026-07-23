@@ -97,10 +97,15 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", onDown);
   }, [userOpen]);
 
+  // On phones the SETLST top bar only shows on Home and the "+" (log) screen —
+  // content pages (Albums, Activity, Profile, etc.) get the full height and rely
+  // on the bottom tab bar. Desktop always keeps the bar (it's the main nav).
+  const showMobileBar = pathname === "/" || pathname === "/log" || pathname.startsWith("/log/");
+
   return (
     <>
     {/* Fixed so it never shifts during momentum/rubber-band scroll in the iOS webview. */}
-    <nav className="top-nav sm:fixed top-0 inset-x-0 z-50 border-b border-[#1f1f1f] bg-[#111111] sm:bg-[#111111]/96 sm:backdrop-blur-sm">
+    <nav className={`top-nav sm:fixed top-0 inset-x-0 z-50 border-b border-[#1f1f1f] bg-[#111111] sm:bg-[#111111]/96 sm:backdrop-blur-sm ${showMobileBar ? "" : "hidden sm:block"}`}>
       <div className="max-w-6xl mx-auto pl-3 pr-5 sm:px-8 h-16 flex items-center gap-10">
 
         {/* Logo */}

@@ -547,19 +547,34 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   return results;
 }
 
-// Look up an album via iTunes (no auth). Retries on throttle/network errors so a
-// transient 403 doesn't drop the album (and, in aggregate, the whole genre).
-// Exported so the onboarding "random popular album" endpoint can reuse it.
+type GenreAlbum = { id: string; title: string; artist: string; artwork: string; year: number | null };
+
+// Non-canonical editions that share an album's name+artist (so they tie on word
+// overlap): instrumentals, beat tapes, remixes, deluxe/live/etc.
+const VARIANT = /instrumental|\bbeats\b|remix|deluxe|\blive\b|karaoke|\bversion\b|\bedition\b|\bdemos?\b|commentary|b.?sides?|screwed|chopped|slowed|acoustic|reprise/i;
+
+// Resolve a single album for a curated query. Exported for the onboarding
+// endpoints (random album / discover grid).
 export async function fetchOne(q: string) {
-  // Prefer the full Apple Music catalog (returns canonical albums the iTunes
-  // Search API omits, e.g. Madvillainy/Bandana). Fall back to iTunes when Apple
-  // Music isn't configured or has no confident match.
+  return (await fetchAlbums(q, 1))[0] ?? null;
+}
+
+// Resolve up to `max` distinct albums for a curated query. Apple Music first
+// (canonical albums iTunes omits, e.g. Madvillainy), then iTunes fills the
+// remaining slots. Retries on throttle/network errors. Used by the genre browse
+// to gather enough albums to show up to 30 per genre.
+async function fetchAlbums(q: string, max = 1): Promise<GenreAlbum[]> {
+  const out: GenreAlbum[] = [];
+  const ids = new Set<string>();
+
   const am = await searchAppleAlbum(q).catch(() => null);
   if (am && am.artwork) {
-    return { id: am.id, title: am.title, artist: am.artist, artwork: am.artwork, year: am.year };
+    out.push({ id: am.id, title: am.title, artist: am.artist, artwork: am.artwork, year: am.year });
+    ids.add(am.id);
   }
+  if (out.length >= max) return out;
 
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=5`;
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=${Math.max(5, max * 5)}`;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       // Cache successful lookups for a week; bypass cache on retries so a throttled
@@ -581,13 +596,10 @@ export async function fetchOne(q: string) {
       );
       // iTunes' first result isn't always the intended album (tributes, same-named
       // albums, wrong artists). Score each candidate by how many of the query's
-      // words appear in its "title artist", and take the best — so the curated
-      // query actually resolves to that album, not whatever iTunes lists first.
+      // words appear in its "title artist", and take the best matches — so the
+      // curated query resolves to that album, not whatever iTunes lists first.
       const norm = (s: string) => " " + s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() + " ";
       const qWords = norm(q).trim().split(" ").filter((w) => w.length > 1);
-      // Non-canonical editions that share the album's name+artist (so they tie on
-      // word overlap): instrumentals, beat tapes, remixes, deluxe/live/etc.
-      const VARIANT = /instrumental|\bbeats\b|remix|deluxe|\blive\b|karaoke|\bversion\b|\bedition\b|\bdemos?\b|commentary|b.?sides?|screwed|chopped|slowed|acoustic|reprise/i;
       const qWantsVariant = VARIANT.test(q);
       const scoreOf = (x: ItunesAlbum) => {
         const hay = norm(`${x.collectionName} ${x.artistName}`);
@@ -598,24 +610,29 @@ export async function fetchOne(q: string) {
         if (!qWantsVariant && VARIANT.test(x.collectionName as string)) s -= 1;
         return s;
       };
-      const best = valid
+      const ranked = valid
         .map((x) => ({ x, s: scoreOf(x) }))
-        .sort((p, r) => r.s - p.s)[0];
-      if (!best || best.s <= 0) return null; // no real match — don't surface a wrong album
-      const a = best.x;
-
-      return {
-        id: String(a.collectionId),
-        title: a.collectionName as string,
-        artist: a.artistName as string,
-        artwork: (a.artworkUrl100 as string).replace("100x100bb", "600x600bb"),
-        year: a.releaseDate ? parseInt(a.releaseDate.slice(0, 4)) : null,
-      };
+        .filter((e) => e.s > 0) // no real match — don't surface a wrong album
+        .sort((p, r) => r.s - p.s);
+      for (const { x } of ranked) {
+        const id = String(x.collectionId);
+        if (ids.has(id)) continue;
+        ids.add(id);
+        out.push({
+          id,
+          title: x.collectionName as string,
+          artist: x.artistName as string,
+          artwork: (x.artworkUrl100 as string).replace("100x100bb", "600x600bb"),
+          year: x.releaseDate ? parseInt(x.releaseDate.slice(0, 4)) : null,
+        });
+        if (out.length >= max) break;
+      }
+      break; // got a usable response — stop retrying
     } catch {
       await sleep(250 * (attempt + 1));
     }
   }
-  return null;
+  return out;
 }
 
 export async function GET(req: NextRequest) {
@@ -625,12 +642,20 @@ export async function GET(req: NextRequest) {
   }
   try {
     const queries = GENRE_QUERIES[genre];
-    // Bounded concurrency (5) keeps us under iTunes' burst rate limit.
-    const results = await mapLimit(queries, 5, fetchOne);
-    const out: NonNullable<Awaited<ReturnType<typeof fetchOne>>>[] = [];
+    // Up to 2 albums per curated query so bigger genres can fill the 30-album
+    // grid. Bounded concurrency (5) keeps us under iTunes' burst rate limit.
+    const lists = await mapLimit(queries, 5, (q) => fetchAlbums(q, 2));
+    const out: GenreAlbum[] = [];
     const seen = new Set<string>();
-    for (const a of results) {
-      if (a && !seen.has(a.id)) { seen.add(a.id); out.push(a); }
+    outer: for (const list of lists) {
+      for (const a of list) {
+        if (seen.has(a.id)) continue;
+        seen.add(a.id);
+        out.push(a);
+        // Return more than the 30 shown up front so the grid's "See more" has
+        // extra albums to reveal; bounded to keep the response reasonable.
+        if (out.length >= 48) break outer;
+      }
     }
     return NextResponse.json(out);
   } catch {
