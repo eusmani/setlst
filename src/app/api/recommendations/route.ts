@@ -17,7 +17,11 @@ type Rec = {
   reviewCount: number;
 };
 
-interface SpAlbum { id: string; name: string; images?: { url: string }[]; release_date?: string; artists: { name: string }[] }
+interface SpAlbum { id: string; name: string; images?: { url: string }[]; release_date?: string; artists: { name: string }[]; album_type?: string }
+
+// Compilation / playlist-style albums that a bare genre search dredges up — not
+// real discovery, so they're filtered out of recommendations.
+const JUNK_NAME = /\bvarious\b|greatest hits|\bhits\b|anthems|\bmegamix\b|\bmix\b|playlist|best of|essentials|throwback|\btop \d+|\d+\s*(hits|songs|tracks|classics|anthems)|compilation|\bnow\b.*\bvol/i;
 
 const toRec = (a: SpAlbum): Rec => ({
   album: {
@@ -57,24 +61,37 @@ function topTokens(tokens: string[], n: number): string[] {
   return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map((e) => e[0]);
 }
 
-// Filter Spotify albums to fresh, artworked, not-yet-reviewed recs (dedup via `seen`).
-function collect(albums: SpAlbum[], seen: Set<string>, reviewed: Set<string>): Rec[] {
+// Filter Spotify albums to fresh, artworked, not-yet-reviewed recs. Drops
+// compilations / "Various Artists" / hits-collection junk, and dedups by both id
+// and title+artist (so deluxe/reissue variants don't repeat). `seen`/`seenKey`
+// can be shared across calls to dedup between the artist and genre passes.
+function collect(albums: SpAlbum[], reviewed: Set<string>, seen = new Set<string>(), seenKey = new Set<string>()): Rec[] {
   const out: Rec[] = [];
   for (const a of albums) {
     if (!a?.id || !a.images?.[0]?.url) continue;
+    if (a.album_type === "compilation") continue;
+    const artist = a.artists?.[0]?.name ?? "";
+    if (/various artists/i.test(artist)) continue;
+    if (JUNK_NAME.test(a.name)) continue;
     if (seen.has(a.id) || reviewed.has(a.id)) continue;
+    const key = `${a.name.toLowerCase().replace(/\s*\(.*$/, "").trim()}|${artist.toLowerCase().trim()}`;
+    if (seenKey.has(key)) continue;
     seen.add(a.id);
+    seenKey.add(key);
     out.push(toRec(a));
   }
   return out;
 }
 
-// Alternate two lists so results mix "more from artists you love" with genre discovery.
-function interleave(a: Rec[], b: Rec[], limit: number): Rec[] {
+// Merge two lists at ~2:1 — lead with the strong "more from artists you love"
+// signal, salted with genre discovery for variety.
+function merge(primary: Rec[], secondary: Rec[], limit: number): Rec[] {
   const out: Rec[] = [];
-  for (let i = 0; i < Math.max(a.length, b.length) && out.length < limit; i++) {
-    if (a[i]) out.push(a[i]);
-    if (b[i] && out.length < limit) out.push(b[i]);
+  let p = 0, s = 0;
+  while (out.length < limit && (p < primary.length || s < secondary.length)) {
+    if (p < primary.length) out.push(primary[p++]);
+    if (out.length < limit && p < primary.length) out.push(primary[p++]);
+    if (out.length < limit && s < secondary.length) out.push(secondary[s++]);
   }
   return out;
 }
@@ -84,9 +101,9 @@ const UNDERGROUND_QUERIES = [
   "genre:noise rock", "genre:dream pop", "genre:cloud rap", "genre:grime",
 ];
 
-async function searchToRecs(queries: string[], seen: Set<string>, reviewed: Set<string>): Promise<Rec[]> {
+async function searchToRecs(queries: string[], reviewed: Set<string>): Promise<Rec[]> {
   const results = await Promise.all(queries.map((q) => searchAlbums(q).catch(() => [])));
-  return collect(results.flat() as SpAlbum[], seen, reviewed);
+  return collect(results.flat() as SpAlbum[], reviewed);
 }
 
 export async function GET() {
@@ -94,7 +111,7 @@ export async function GET() {
   if (!session) {
     // Not signed in — surface underground discovery, then top-rated.
     try {
-      const under = await searchToRecs(UNDERGROUND_QUERIES, new Set(), new Set());
+      const under = await searchToRecs(UNDERGROUND_QUERIES, new Set());
       if (under.length) return NextResponse.json(under.slice(0, 12));
     } catch {}
     return NextResponse.json(await topRatedFallback());
@@ -138,13 +155,17 @@ export async function GET() {
   // --- Generate candidates tailored to that profile ---
   if (favoriteArtists.length || favoriteGenres.length) {
     const seen = new Set<string>();
+    const seenKey = new Set<string>();
     const [artistLists, genreLists] = await Promise.all([
       Promise.all(favoriteArtists.map((a) => searchAlbums(`artist:"${a}"`).catch(() => []))),
       Promise.all(favoriteGenres.map((g) => searchAlbums(g).catch(() => []))),
     ]);
-    const artistRecs = collect(artistLists.flat() as SpAlbum[], seen, reviewedIds);
-    const genreRecs = collect(genreLists.flat() as SpAlbum[], seen, reviewedIds);
-    const tailored = interleave(artistRecs, genreRecs, 15);
+    const artistRecs = collect(artistLists.flat() as SpAlbum[], reviewedIds, seen, seenKey);
+    // Drop albums literally titled after a genre (e.g. an album just called "Hip Hop").
+    const genreSet = new Set(favoriteGenres.map((g) => g.toLowerCase()));
+    const genreRecs = collect(genreLists.flat() as SpAlbum[], reviewedIds, seen, seenKey)
+      .filter((r) => !genreSet.has(r.album.title.toLowerCase().trim()));
+    const tailored = merge(artistRecs, genreRecs, 15);
     if (tailored.length >= 4) return NextResponse.json(tailored);
   }
 
@@ -178,7 +199,7 @@ export async function GET() {
 
   // Underground discovery.
   try {
-    const under = await searchToRecs(UNDERGROUND_QUERIES, new Set(), reviewedIds);
+    const under = await searchToRecs(UNDERGROUND_QUERIES, reviewedIds);
     if (under.length) return NextResponse.json(under.slice(0, 12));
   } catch {}
 
