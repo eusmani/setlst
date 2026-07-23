@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Dark warm palette */
-  --color-bg:          #111111;
-  --color-surface:     #1a1a1a;
-  --color-raised:      #222222;
+  /* Dark warm palette — pitch-black base */
+  --color-bg:          #000000;
+  --color-surface:     #0b0b0b;
+  --color-raised:      #151515;
   --color-border:      #2e2e2e;
   --color-border-dim:  #1f1f1f;
 
@@ -21,13 +21,13 @@
 
 * { box-sizing: border-box; }
 
-html { background: #111111; color: #f0f0f0; scroll-behavior: smooth; font-size: 17px; overflow-x: clip; overscroll-behavior: none; }
+html { background: #000000; color: #f0f0f0; scroll-behavior: smooth; font-size: 17px; overflow-x: clip; overscroll-behavior: none; }
 /* Stop the iOS webview's elastic overscroll bounce, which otherwise drags the
    fixed top bar up/down when you scroll past the top or bottom. */
 body { overscroll-behavior: none; }
 
 body {
-  background: #111111;
+  background: #000000;
   color: #f0f0f0;
   font-family: var(--font-jakarta), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -37,15 +37,54 @@ body {
 ::selection { background: #c4a83240; color: #f0f0f0; }
 
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #1a1a1a; }
+::-webkit-scrollbar-track { background: #0b0b0b; }
 ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #c4a832; }
 
 .font-serif { font-family: var(--font-jakarta), Arial, Helvetica, sans-serif; }
 
 /* ---- Themes ----
-   Components are authored in the dark amber palette. .theme-amber keeps that look.
-   .theme-mono (default) is an inverted black-&-white (light) theme. */
+   Components are authored in the dark amber palette. .theme-amber keeps that look
+   but drops the grey ramp to a pitch-black base (below).
+   .theme-mono is an inverted black-&-white (light) theme. */
+
+/* Pitch-black amber theme: remap the authored dark-grey backgrounds to a
+   near-black ramp so the app reads as pure black + yellow. Borders and the
+   amber accent (#c4a832) are intentionally left alone. A whisper of elevation
+   is kept (#0b0b0b cards / #151515 raised) so borderless cards don't vanish
+   into the pitch-black body. */
+html.theme-amber .bg-\[\#111111\] { background-color: #000000 !important; }
+html.theme-amber .bg-\[\#141414\] { background-color: #050505 !important; }
+html.theme-amber .bg-\[\#1a1a1a\] { background-color: #0b0b0b !important; }
+html.theme-amber .bg-\[\#222222\] { background-color: #151515 !important; }
+html.theme-amber .bg-\[\#262626\] { background-color: #191919 !important; }
+html.theme-amber .bg-\[\#2a2a2a\] { background-color: #191919 !important; }
+html.theme-amber .bg-\[\#2a2412\] { background-color: #1a1608 !important; }
+html.theme-amber .bg-\[\#2e2e2e\] { background-color: #1c1c1c !important; }
+html.theme-amber .bg-\[\#3a3a3a\] { background-color: #232323 !important; }
+html.theme-amber .hover\:bg-\[\#222222\]:hover { background-color: #151515 !important; }
+html.theme-amber .hover\:bg-\[\#1a1a1a\]:hover { background-color: #0b0b0b !important; }
+html.theme-amber .hover\:bg-\[\#2e2e2e\]:hover { background-color: #1c1c1c !important; }
+
+/* Translucent surfaces (sticky nav / modal backdrops) — keep the alpha, swap the tint to black. */
+html.theme-amber .bg-\[\#1a1a1a\]\/90 { background-color: #0b0b0be6 !important; }
+html.theme-amber .bg-\[\#1a1a1a\]\/95 { background-color: #0b0b0bf2 !important; }
+html.theme-amber .bg-\[\#111111\]\/95 { background-color: #000000f2 !important; }
+html.theme-amber .bg-\[\#111111\]\/96 { background-color: #000000f5 !important; }
+@media (min-width: 640px) {
+  html.theme-amber .sm\:bg-\[\#111111\]\/96 { background-color: #000000f5 !important; }
+}
+
+/* Gradient stops (album-art fades into the background) — fade to black, not grey,
+   so there's no seam where the gradient meets the pitch-black page. */
+html.theme-amber .from-\[\#111111\]\/10 { --tw-gradient-from: #0000001a !important; }
+html.theme-amber .from-\[\#111111\]\/55 { --tw-gradient-from: #0000008c !important; }
+html.theme-amber .from-\[\#111111\]      { --tw-gradient-from: #000000 !important; }
+html.theme-amber .via-\[\#111111\]\/45  { --tw-gradient-via: #00000073 !important; }
+html.theme-amber .via-\[\#111111\]       { --tw-gradient-via: #000000 !important; }
+html.theme-amber .to-\[\#111111\]\/55   { --tw-gradient-to: #0000008c !important; }
+html.theme-amber .to-\[\#111111\]        { --tw-gradient-to: #000000 !important; }
+html.theme-amber .to-\[\#1a1a1a\]        { --tw-gradient-to: #0b0b0b !important; }
 
 /* base surface — warm eggshell / cream (even, minimal) */
 html.theme-mono, html.theme-mono body { background: #f4ecd6 !important; color: #000000 !important; }
