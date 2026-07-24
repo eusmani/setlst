@@ -209,6 +209,13 @@ html.theme-mono ::-webkit-scrollbar-thumb:hover { background: #1c1a12; }
   font-family: var(--font-jakarta), system-ui, sans-serif;
   font-weight: 700;
 }
+/* Controls opt out of the header weight above. A segmented control filters
+   content rather than titling it, so at 700 it read heavier than the rows
+   underneath. Needs the extra attribute to outweigh the two-selector rule
+   above — a plain font-normal utility would lose. */
+[data-control][class*="uppercase"][class*="tracking-["] {
+  font-weight: 400;
+}
 /* The large section headers: white on dark mode, black on light (mono) mode. */
 [class*="text-xl"][class*="uppercase"][class*="tracking-["] {
   color: #f0f0f0;

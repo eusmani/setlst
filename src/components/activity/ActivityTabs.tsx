@@ -57,14 +57,16 @@ export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, 
 
   return (
     <div>
-      {/* Horizontal nested tab bar (segmented control), centered on its line */}
-      <div className="flex justify-center mb-6">
-        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-[#1a1a1a] border border-[#1f1f1f]">
+      {/* Horizontal nested tab bar (segmented control) — spans the column so the
+          three tabs split it evenly instead of huddling in the middle */}
+      <div className="mb-6">
+        <div className="flex w-full items-center gap-1 p-1 rounded-full bg-[#1a1a1a] border border-[#1f1f1f]">
           {TABS.map(({ key, label }) => (
             <button
               key={key}
+              data-control
               onClick={() => setTab((cur) => (cur === key ? null : key))}
-              className={`px-4 py-1.5 text-xs uppercase tracking-[0.12em] rounded-full transition-colors ${
+              className={`flex-1 px-4 py-2 text-xs uppercase tracking-[0.12em] rounded-full transition-colors ${
                 tab === key
                   ? "bg-[#c4a832] text-[#111111]"
                   : "text-[#6b6b6b] hover:text-[#a0a0a0]"
