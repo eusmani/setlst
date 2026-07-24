@@ -4,6 +4,8 @@ import Link from "next/link";
 import AlbumRow from "@/components/album/AlbumRow";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
 import RecentlyViewed from "@/components/album/RecentlyViewed";
+import SearchFilters, { type Filter } from "@/components/search/SearchFilters";
+import AlbumCard from "@/components/album/AlbumCard";
 import Avatar from "@/components/ui/Avatar";
 import AddFriendButton from "@/components/social/AddFriendButton";
 
@@ -14,6 +16,38 @@ interface SpotifyAlbum {
   images: { url: string }[];
   release_date: string;
   type?: "album" | "single" | "ep";
+}
+
+interface BrowseAlbum {
+  spotifyId: string;
+  title: string;
+  artist: string;
+  artwork: string | null;
+  year: number | null;
+  avgRating?: number | null;
+  reviewCount?: number;
+}
+
+// Where each filter chip gets its albums. Genre hits the curated iTunes lists;
+// the rest rank on real review activity in our own database.
+function filterEndpoint(f: Filter): string {
+  switch (f.kind) {
+    case "genre": return `/api/spotify/genre?genre=${encodeURIComponent(f.genre)}`;
+    case "popular": return "/api/albums/browse?sort=popular";
+    case "rating": return "/api/albums/browse?sort=rating";
+    case "decade": return `/api/albums/browse?decade=${f.decade}`;
+    case "year": return `/api/albums/browse?year=${f.year}`;
+  }
+}
+
+function filterLabel(f: Filter): string {
+  switch (f.kind) {
+    case "genre": return f.genre;
+    case "popular": return "Most Popular";
+    case "rating": return "Highest Rated";
+    case "decade": return `${f.decade}s`;
+    case "year": return String(f.year);
+  }
 }
 
 const TYPE_FILTERS = [
@@ -35,6 +69,13 @@ export default function SearchPage() {
   const [people, setPeople] = useState<{ id: string; username: string; avatar: string | null; bio: string | null }[]>([]);
   const [artists, setArtists] = useState<{ id: string; name: string; image: string | null; popularity: number }[]>([]);
   const [fetching, setFetching] = useState(false);
+
+  // Browse filters (decade / year / genre / popular / rated). These are a
+  // separate mode from text search: picking one takes over the idle area.
+  const [filter, setFilter] = useState<Filter | null>(null);
+  // Results are stored against the request they came from, so switching filters
+  // shows the skeleton again without an imperative reset.
+  const [browsed, setBrowsed] = useState<{ key: string; rows: BrowseAlbum[] } | null>(null);
 
   // Once the search bar is focused (or has a query), hide the default trending
   // strip so the screen shows only search results.
@@ -104,7 +145,41 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
+  // Load albums for the active browse filter. The genre endpoint returns a
+  // different shape ({ id, ... }) than our own browse route, so normalise here.
+  const filterKey = filter ? filterEndpoint(filter) : null;
+
+  useEffect(() => {
+    if (!filterKey) return;
+    let live = true;
+    fetch(filterKey)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!live) return;
+        const list = Array.isArray(d) ? d : [];
+        setBrowsed({
+          key: filterKey,
+          rows: list.map((a: Record<string, unknown>) => ({
+            spotifyId: String(a.spotifyId ?? a.id ?? ""),
+            title: String(a.title ?? ""),
+            artist: String(a.artist ?? ""),
+            artwork: (a.artwork as string | null) ?? null,
+            year: (a.year as number | null) ?? null,
+            avgRating: (a.avgRating as number | null) ?? null,
+            reviewCount: (a.reviewCount as number | undefined) ?? undefined,
+          })).filter((a) => a.spotifyId && a.title),
+        });
+      })
+      .catch(() => { if (live) setBrowsed({ key: filterKey, rows: [] }); });
+    return () => { live = false; };
+  }, [filterKey]);
+
+  // Null while the active filter's results are still in flight.
+  const filterRows = filterKey && browsed?.key === filterKey ? browsed.rows : null;
+
   const showSearchResults = searchResults.length > 0;
+  // Typing takes precedence over a browse filter.
+  const browsing = filter !== null && !searching && !searched;
 
   return (
     <div className="max-w-4xl mx-auto px-5 pt-3 pb-12">
@@ -126,6 +201,12 @@ export default function SearchPage() {
           )}
         </div>
       </form>
+
+      {/* Browse filters — between the search bar and Recently Viewed. Hidden
+          while text-searching so the two modes don't compete. */}
+      {!searching && !searched && (
+        <SearchFilters active={filter} onChange={setFilter} />
+      )}
 
       {/* Type filter — next to the search bar, shown when there are search results */}
       {showSearchResults && (
@@ -248,8 +329,46 @@ export default function SearchPage() {
         </>
       )}
 
-      {/* Default: your own history first, then trending — both hidden once searching */}
-      {!searched && !searching && (
+      {/* Browse results — replace the idle content while a filter is active */}
+      {browsing && (
+        <div className="mb-8">
+          <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-4">
+            {filterLabel(filter!)}
+          </p>
+          {filterRows === null ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="aspect-square rounded-lg bg-[#1a1a1a] border border-[#1f1f1f] animate-pulse" />
+              ))}
+            </div>
+          ) : filterRows.length === 0 ? (
+            <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-5 py-8 text-center">
+              <p className="text-sm text-[#a0a0a0]">
+                Nothing logged for {filterLabel(filter!)} yet.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {filterRows.map((a) => (
+                <AlbumCard
+                  key={a.spotifyId}
+                  spotifyId={a.spotifyId}
+                  title={a.title}
+                  artist={a.artist}
+                  artwork={a.artwork}
+                  year={a.year}
+                  avgRating={a.avgRating}
+                  reviewCount={a.reviewCount}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Default: your own history first, then trending — both hidden once
+          searching, and while a browse filter is showing results */}
+      {!searched && !searching && !browsing && (
         <>
           <RecentlyViewed limit={6} />
           <TrendingAlbums
