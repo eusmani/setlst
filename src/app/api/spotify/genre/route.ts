@@ -640,6 +640,7 @@ async function fetchAlbums(q: string, max = 1): Promise<GenreAlbum[]> {
         if (!qWantsVariant && VARIANT.test(x.collectionName as string)) s -= 1;
         return s;
       };
+      const qHay = norm(q);
       // How many query words land in the candidate's *artist* specifically. A
       // wrong album that merely has the band's name in its title (a soundtrack
       // named "My Bloody Valentine", a covers comp) scores on title words but
@@ -648,16 +649,24 @@ async function fetchAlbums(q: string, max = 1): Promise<GenreAlbum[]> {
         const hay = norm(x.artistName as string);
         return qWords.reduce((n, w) => n + (hay.includes(" " + w + " ") ? 1 : 0), 0);
       };
+      // Stronger signal: the candidate's *entire* artist name appears in the
+      // query. "Ride" is in "Nowhere Ride"; "Fly-By Ride" is not — so a
+      // different band that merely contains a common artist word is excluded.
+      const artistExact = (x: ItunesAlbum) => {
+        const words = norm(x.artistName as string).trim().split(" ").filter((w) => w.length > 1);
+        return words.length > 0 && words.every((w) => qHay.includes(" " + w + " "));
+      };
       const ranked = valid
-        .map((x) => ({ x, s: scoreOf(x), a: artistHits(x) }))
+        .map((x) => ({ x, s: scoreOf(x), a: artistHits(x), exact: artistExact(x) }))
         .filter((e) => e.s > 0) // no real match — don't surface a wrong album
         .sort((p, r) => r.s - p.s);
-      // Prefer candidates whose artist actually matches the query, which drops
-      // same-named albums by unrelated artists. Fall back to the unfiltered set
-      // only when nothing matches — e.g. queries that name the artist by an
-      // alias iTunes doesn't use ("…ATCQ" vs "A Tribe Called Quest").
+      // Tiered by how well the artist matches, each falling back to the next only
+      // when empty: full artist name in the query → any artist word in the query
+      // → unfiltered (queries that name the artist by an alias iTunes spells out,
+      // e.g. ATCQ vs "A Tribe Called Quest").
+      const exact = ranked.filter((e) => e.exact);
       const withArtist = ranked.filter((e) => e.a > 0);
-      const finalRanked = withArtist.length > 0 ? withArtist : ranked;
+      const finalRanked = exact.length > 0 ? exact : withArtist.length > 0 ? withArtist : ranked;
       for (const { x } of finalRanked) {
         const id = String(x.collectionId);
         if (ids.has(id)) continue;
