@@ -22,7 +22,18 @@ export async function GET(req: NextRequest) {
 
   // --- Catalog-backed release filters ---
   if (year !== null || decade !== null) {
-    const spec = year !== null ? String(year) : `${decade}-${decade! + 9}`;
+    // Backstop the UI's year cap: never search past the current year. A future
+    // year returns nothing; a decade is clamped so its range ends at this year
+    // (e.g. the 2020s searches 2020–2026 today, not 2020–2029).
+    const nowYear = new Date().getUTCFullYear();
+    let spec: string;
+    if (year !== null) {
+      if (year > nowYear) return NextResponse.json([]);
+      spec = String(year);
+    } else {
+      if (decade! > nowYear) return NextResponse.json([]);
+      spec = `${decade}-${Math.min(decade! + 9, nowYear)}`;
+    }
     try {
       const albums = await popularAlbumsByYear(spec, page);
       return NextResponse.json(
