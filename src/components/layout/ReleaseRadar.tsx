@@ -26,7 +26,9 @@ export default function ReleaseRadar() {
     // newest first, de-duped by artist. Refreshes as new albums drop each week.
     (async () => {
       try {
-        const list = await fetch("/api/new-releases").then((r) => r.json());
+        // no-store so the iOS webview never serves a stale cached list (which
+        // could resurface a since-banned AI act).
+        const list = await fetch("/api/new-releases", { cache: "no-store" }).then((r) => r.json());
         const seen = new Set<string>();
         const pick: Release[] = [];
         for (const r of (Array.isArray(list) ? list : []) as Release[]) {

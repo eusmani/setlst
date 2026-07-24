@@ -63,5 +63,7 @@ export async function GET() {
     .filter((a) => (seen.has(a.id) ? false : (seen.add(a.id), true)))
     .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));   // newest first
 
-  return NextResponse.json(thisWeek);
+  return NextResponse.json(thisWeek, {
+    headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+  });
 }
