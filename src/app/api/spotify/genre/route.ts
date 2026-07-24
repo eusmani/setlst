@@ -517,6 +517,11 @@ export const GENRE_QUERIES: Record<string, string[]> = {
 
 // Reject tributes, karaoke, covers, instrumentals, etc. (singles & EPs ARE allowed)
 const BAD = /\b(tribute|karaoke|made famous|in the style of|originally performed|cover version|covers of|string quartet|lullaby|piano versions?|instrumental|8-bit|performs|solo violin|sub par|parody|parodies|spoof)\b/i;
+
+// Bootleg / unofficial-live indicators. Deliberately phrase-based ("live at",
+// "live in") rather than a bare "live" so real studio albums that happen to
+// contain the word (Live Through This, Living Things) aren't caught.
+const BOOTLEG = /\bbootleg\b|\blive at\b|\blive in\b|\blive from\b|\bin concert\b|\bunofficial\b|\bsoundboard\b|\bbroadcast\b|\bradio sessions?\b|\bwestwood one\b|\bfm '?\d{2}\b|\bostankino\b|\brarities\b|\bouttakes\b/i;
 const BAD_ARTIST = /various artists|karaoke|tribute|vitamin string|string quartet|\bvsq\b|the insurgency|sub par all star|\bcover/i;
 
 interface ItunesAlbum {
@@ -548,6 +553,30 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 }
 
 type GenreAlbum = { id: string; title: string; artist: string; artwork: string; year: number | null };
+
+// Edition markers that make two listings of the same record look distinct.
+const EDITION = /\b(deluxe|expanded|remaster(ed)?|anniversary|special|collector'?s?|super\s*deluxe|bonus|explicit|clean|mono|stereo|reissue|the\s+remaster|redux|legacy|complete|definitive)\b/gi;
+
+// Collapse editions of one album to a single identity: drop any parenthetical/
+// bracketed suffix, trailing "- Deluxe …", and edition words, then compare on
+// letters+digits of "artist::title". So "In Rainbows", "In Rainbows (Deluxe)"
+// and "In Rainbows - Remastered" all share a key.
+function albumKey(title: string, artist: string): string {
+  const t = title
+    .replace(/\s*[([][^)\]]*[)\]]\s*/g, " ")   // (Deluxe), [Remastered]
+    .replace(/\s*[-–—:]\s*.*$/, "")             // "- Deluxe Edition", ": Legacy"
+    .replace(EDITION, " ")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const a = artist.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  return `${a}::${t}`;
+}
+
+// Lower = cleaner. Prefer the plainest edition when several collide.
+function editionScore(title: string): number {
+  const parens = (title.match(/[([]/g) || []).length;
+  const marks = (title.match(EDITION) || []).length;
+  return parens + marks;
+}
 
 // Non-canonical editions that share an album's name+artist (so they tie on word
 // overlap): instrumentals, beat tapes, remixes, deluxe/live/etc.
@@ -590,6 +619,7 @@ async function fetchAlbums(q: string, max = 1): Promise<GenreAlbum[]> {
         x.collectionName &&
         x.artistName &&
         !BAD.test(x.collectionName) &&
+        !BOOTLEG.test(x.collectionName) &&
         !BAD_ARTIST.test(x.artistName) &&
         !isLikelyAI(x.artistName, x.collectionName)
         // singles & EPs allowed — no trackCount restriction
@@ -645,18 +675,26 @@ export async function GET(req: NextRequest) {
     // Up to 2 albums per curated query so bigger genres can fill the 30-album
     // grid. Bounded concurrency (5) keeps us under iTunes' burst rate limit.
     const lists = await mapLimit(queries, 5, (q) => fetchAlbums(q, 2));
-    const out: GenreAlbum[] = [];
-    const seen = new Set<string>();
-    outer: for (const list of lists) {
+
+    // Collapse duplicates across editions/sources by album identity (not id),
+    // keeping the cleanest edition of each. Preserve first-seen order.
+    const byKey = new Map<string, GenreAlbum>();
+    const order: string[] = [];
+    for (const list of lists) {
       for (const a of list) {
-        if (seen.has(a.id)) continue;
-        seen.add(a.id);
-        out.push(a);
-        // Return more than the 30 shown up front so the grid's "See more" has
-        // extra albums to reveal; bounded to keep the response reasonable.
-        if (out.length >= 48) break outer;
+        const key = albumKey(a.title, a.artist);
+        const existing = byKey.get(key);
+        if (!existing) {
+          byKey.set(key, a);
+          order.push(key);
+        } else if (editionScore(a.title) < editionScore(existing.title)) {
+          byKey.set(key, a); // a plainer edition of one we already have
+        }
       }
     }
+    // Return more than the 30 shown up front so the grid's "See more" has extra
+    // albums to reveal; bounded to keep the response reasonable.
+    const out = order.map((k) => byKey.get(k)!).slice(0, 48);
     return NextResponse.json(out);
   } catch {
     return NextResponse.json([], { status: 503 });
