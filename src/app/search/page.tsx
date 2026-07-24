@@ -30,14 +30,35 @@ interface BrowseAlbum {
 
 // Where each filter chip gets its albums. Genre hits the curated iTunes lists;
 // the rest rank on real review activity in our own database.
-function filterEndpoint(f: Filter): string {
+// Year and decade page through the Spotify catalog 10 at a time; the others
+// return a single batch, so only these drive the "See more" button.
+function filterPaginates(f: Filter): boolean {
+  return f.kind === "year" || f.kind === "decade";
+}
+
+function filterEndpoint(f: Filter, page = 0): string {
   switch (f.kind) {
     case "genre": return `/api/spotify/genre?genre=${encodeURIComponent(f.genre)}`;
     case "popular": return "/api/albums/browse?sort=popular";
     case "rating": return "/api/albums/browse?sort=rating";
-    case "decade": return `/api/albums/browse?decade=${f.decade}`;
-    case "year": return `/api/albums/browse?year=${f.year}`;
+    case "decade": return `/api/albums/browse?decade=${f.decade}&page=${page}`;
+    case "year": return `/api/albums/browse?year=${f.year}&page=${page}`;
   }
+}
+
+// The genre endpoint returns { id, ... }; our browse route returns { spotifyId,
+// ... }. Normalise either into a BrowseAlbum.
+function toBrowseAlbums(d: unknown): BrowseAlbum[] {
+  const list = Array.isArray(d) ? d : [];
+  return list.map((a: Record<string, unknown>) => ({
+    spotifyId: String(a.spotifyId ?? a.id ?? ""),
+    title: String(a.title ?? ""),
+    artist: String(a.artist ?? ""),
+    artwork: (a.artwork as string | null) ?? null,
+    year: (a.year as number | null) ?? null,
+    avgRating: (a.avgRating as number | null) ?? null,
+    reviewCount: (a.reviewCount as number | undefined) ?? undefined,
+  })).filter((a) => a.spotifyId && a.title);
 }
 
 function filterLabel(f: Filter): string {
@@ -74,8 +95,11 @@ export default function SearchPage() {
   // separate mode from text search: picking one takes over the idle area.
   const [filter, setFilter] = useState<Filter | null>(null);
   // Results are stored against the request they came from, so switching filters
-  // shows the skeleton again without an imperative reset.
-  const [browsed, setBrowsed] = useState<{ key: string; rows: BrowseAlbum[] } | null>(null);
+  // shows the skeleton again without an imperative reset. `page`/`hasMore` drive
+  // the "See more" button; `loadingMore` disables it mid-fetch.
+  const [browsed, setBrowsed] = useState<{
+    key: string; rows: BrowseAlbum[]; page: number; hasMore: boolean; loadingMore: boolean;
+  } | null>(null);
 
   // Once the search bar is focused (or has a query), hide the default trending
   // strip so the screen shows only search results.
@@ -145,34 +169,49 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  // Load albums for the active browse filter. The genre endpoint returns a
-  // different shape ({ id, ... }) than our own browse route, so normalise here.
-  const filterKey = filter ? filterEndpoint(filter) : null;
+  // Load the first page for the active browse filter. Keyed on the filter's
+  // base endpoint so switching filters (or clearing) reloads from page 0.
+  const filterKey = filter ? filterEndpoint(filter, 0) : null;
 
   useEffect(() => {
-    if (!filterKey) return;
+    if (!filter || !filterKey) return;
     let live = true;
-    fetch(filterKey)
+    fetch(filterEndpoint(filter, 0))
       .then((r) => r.json())
       .then((d) => {
         if (!live) return;
-        const list = Array.isArray(d) ? d : [];
+        const rows = toBrowseAlbums(d);
         setBrowsed({
           key: filterKey,
-          rows: list.map((a: Record<string, unknown>) => ({
-            spotifyId: String(a.spotifyId ?? a.id ?? ""),
-            title: String(a.title ?? ""),
-            artist: String(a.artist ?? ""),
-            artwork: (a.artwork as string | null) ?? null,
-            year: (a.year as number | null) ?? null,
-            avgRating: (a.avgRating as number | null) ?? null,
-            reviewCount: (a.reviewCount as number | undefined) ?? undefined,
-          })).filter((a) => a.spotifyId && a.title),
+          rows,
+          page: 0,
+          hasMore: filterPaginates(filter) && rows.length >= 10,
+          loadingMore: false,
         });
       })
-      .catch(() => { if (live) setBrowsed({ key: filterKey, rows: [] }); });
+      .catch(() => { if (live) setBrowsed({ key: filterKey, rows: [], page: 0, hasMore: false, loadingMore: false }); });
     return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey]);
+
+  // "See more": fetch the next page and append, deduping by album.
+  async function loadMoreBrowse() {
+    if (!filter || !filterKey || !browsed || browsed.key !== filterKey || browsed.loadingMore) return;
+    const nextPage = browsed.page + 1;
+    setBrowsed({ ...browsed, loadingMore: true });
+    try {
+      const d = await fetch(filterEndpoint(filter, nextPage)).then((r) => r.json());
+      const more = toBrowseAlbums(d);
+      setBrowsed((b) => {
+        if (!b || b.key !== filterKey) return b;
+        const seen = new Set(b.rows.map((a) => a.spotifyId));
+        const merged = [...b.rows, ...more.filter((a) => !seen.has(a.spotifyId))];
+        return { key: filterKey, rows: merged, page: nextPage, hasMore: more.length >= 10, loadingMore: false };
+      });
+    } catch {
+      setBrowsed((b) => (b && b.key === filterKey ? { ...b, loadingMore: false } : b));
+    }
+  }
 
   // Null while the active filter's results are still in flight.
   const filterRows = filterKey && browsed?.key === filterKey ? browsed.rows : null;
@@ -344,24 +383,39 @@ export default function SearchPage() {
           ) : filterRows.length === 0 ? (
             <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-5 py-8 text-center">
               <p className="text-sm text-[#a0a0a0]">
-                Nothing logged for {filterLabel(filter!)} yet.
+                {filter!.kind === "popular" || filter!.kind === "rating"
+                  ? `No ${filterLabel(filter!).toLowerCase()} albums yet — log some reviews to fill this in.`
+                  : `No albums found for ${filterLabel(filter!)}.`}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {filterRows.map((a) => (
-                <AlbumCard
-                  key={a.spotifyId}
-                  spotifyId={a.spotifyId}
-                  title={a.title}
-                  artist={a.artist}
-                  artwork={a.artwork}
-                  year={a.year}
-                  avgRating={a.avgRating}
-                  reviewCount={a.reviewCount}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {filterRows.map((a) => (
+                  <AlbumCard
+                    key={a.spotifyId}
+                    spotifyId={a.spotifyId}
+                    title={a.title}
+                    artist={a.artist}
+                    artwork={a.artwork}
+                    year={a.year}
+                    avgRating={a.avgRating}
+                    reviewCount={a.reviewCount}
+                  />
+                ))}
+              </div>
+              {browsed?.key === filterKey && browsed.hasMore && (
+                <div className="mt-4 flex justify-center">
+                  <button
+                    onClick={loadMoreBrowse}
+                    disabled={browsed.loadingMore}
+                    className="px-5 py-2 rounded-full text-xs uppercase tracking-[0.12em] border border-[#2e2e2e] text-[#a0a0a0] hover:border-[#c4a832] hover:text-[#f0f0f0] transition-colors disabled:opacity-50"
+                  >
+                    {browsed.loadingMore ? "Loading…" : "See more"}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

@@ -42,8 +42,8 @@ export interface SpotifyArtist {
 // One Spotify search call for a single result type. Spotify caps `limit` at 10
 // (higher values 400 with "Invalid limit"), and multi-type searches
 // (`type=album,artist`) also error — so callers query one type at a time, ≤10.
-async function searchOne(q: string, type: "album" | "artist", limit: number) {
-  const url = `https://api.spotify.com/v1/search?${new URLSearchParams({ q, type, limit: String(limit) })}`;
+async function searchOne(q: string, type: "album" | "artist", limit: number, offset = 0) {
+  const url = `https://api.spotify.com/v1/search?${new URLSearchParams({ q, type, limit: String(limit), offset: String(offset), market: "US" })}`;
   for (let attempt = 0; attempt < 2; attempt++) {
     const t = await token();
     const r = await fetch(url, { headers: { Authorization: `Bearer ${t}` }, next: { revalidate: 3600 } });
@@ -93,6 +93,20 @@ export async function searchAlbums(q: string): Promise<SpotifyAlbum[]> {
     return d.albums?.items ?? [];
   }
   return [];
+}
+
+// Popular albums released in a given year (e.g. "1994") or year range (e.g.
+// "1990-1999" for a whole decade), ordered by Spotify's relevance ranking —
+// which surfaces the era's big records first. Paginated via `page`: Spotify caps
+// search `limit` at 10, so each page is one API call at offset page*10. Callers
+// treat a full page of 10 as "there may be more".
+const YEAR_NOISE = /karaoke|tribute|\bcover(s)?\b|greatest hits|the best of|\bbest of\b|playlist|workout|lullab|8-?bit|instrumental versions?/i;
+
+export async function popularAlbumsByYear(spec: string, page = 0): Promise<SpotifyAlbum[]> {
+  const d = await searchOne(`year:${spec}`, "album", 10, Math.max(0, page) * 10);
+  const items: SpotifyAlbum[] = d?.albums?.items ?? [];
+  // Filter obvious non-canonical noise; keep real studio releases.
+  return items.filter((a) => a?.id && a?.name && !YEAR_NOISE.test(a.name));
 }
 
 export interface RecentAlbum { spotifyId: string; title: string; artist: string; artwork: string | null; year: number | null; releaseDate: string | null; spotifyUrl: string; popularity: number }

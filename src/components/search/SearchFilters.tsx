@@ -66,7 +66,7 @@ export default function SearchFilters({
         >
           {active?.kind === "year" ? active.year
             : active?.kind === "decade" ? `${active.decade}s`
-            : "Decade"} <span aria-hidden className="opacity-60">▾</span>
+            : "Years"} <span aria-hidden className="opacity-60">▾</span>
         </button>
 
         <button
