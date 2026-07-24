@@ -6,6 +6,7 @@ import { getAlbumMeta, formatReleaseDate, getBandMembers } from "@/lib/musicbrai
 import { getTracklist, collectContributors } from "@/lib/tracklist";
 import Link from "next/link";
 import AlbumClient from "./AlbumClient";
+import RecentlyViewedTracker from "@/components/album/RecentlyViewedTracker";
 import LogPanel from "./LogPanel";
 import AlbumPlayButton from "./AlbumPlayButton";
 import AlbumBackdrop from "./AlbumBackdrop";
@@ -344,6 +345,7 @@ export default async function AlbumPage({
 
   return (
     <>
+      <RecentlyViewedTracker spotifyId={spotifyId} title={title} artist={artist} artwork={artwork ?? null} year={year} />
       {artwork && <AlbumBackdrop artwork={artwork} />}
       <div className="max-w-4xl mx-auto px-5 py-12 relative z-10">
       <div className="flex items-center justify-between mb-6">

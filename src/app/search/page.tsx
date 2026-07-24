@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import AlbumRow from "@/components/album/AlbumRow";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
+import RecentlyViewed from "@/components/album/RecentlyViewed";
 import Avatar from "@/components/ui/Avatar";
 import AddFriendButton from "@/components/social/AddFriendButton";
 
@@ -247,17 +248,20 @@ export default function SearchPage() {
         </>
       )}
 
-      {/* Default: trending from real user activity — hidden once searching */}
+      {/* Default: your own history first, then trending — both hidden once searching */}
       {!searched && !searching && (
-        <TrendingAlbums
-          limit={9}
-          heading="Trending Now"
-          fallback={
-            <p className="text-center text-[#6b6b6b] text-sm py-10">
-              Search for an album to start exploring.
-            </p>
-          }
-        />
+        <>
+          <RecentlyViewed limit={6} />
+          <TrendingAlbums
+            limit={9}
+            heading="Trending Now"
+            fallback={
+              <p className="text-center text-[#6b6b6b] text-sm py-10">
+                Search for an album to start exploring.
+              </p>
+            }
+          />
+        </>
       )}
     </div>
   );
