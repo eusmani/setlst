@@ -8,8 +8,8 @@ export type Filter =
   | { kind: "popular" }
   | { kind: "rating" };
 
-// 1920s through 2020s.
-const DECADES = Array.from({ length: 11 }, (_, i) => 1920 + i * 10);
+// Newest first: 2020s down to 1920s.
+const DECADES = Array.from({ length: 11 }, (_, i) => 2020 - i * 10);
 
 // The years shown inside a decade, never running past the current year — so the
 // 2020s stops at today (2026) rather than offering empty future years, and rolls
@@ -17,8 +17,9 @@ const DECADES = Array.from({ length: 11 }, (_, i) => 1920 + i * 10);
 function yearsInDecade(decadeStart: number): number[] {
   const now = new Date().getFullYear();
   const end = Math.min(decadeStart + 9, now);
+  // Newest year first, to match the decades running 2020s → 1920s.
   const out: number[] = [];
-  for (let y = decadeStart; y <= end; y++) out.push(y);
+  for (let y = end; y >= decadeStart; y--) out.push(y);
   return out;
 }
 
