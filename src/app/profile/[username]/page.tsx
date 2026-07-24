@@ -112,7 +112,7 @@ export default async function ProfilePage({
           <img
             src={user.avatar}
             alt=""
-            className="w-full h-full object-cover scale-110 blur-2xl opacity-30"
+            className="w-full h-full object-cover scale-110 blur-2xl opacity-50"
             style={{
               maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0) 100%)",
               WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0) 100%)",
