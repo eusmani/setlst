@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { recentPopularAlbums } from "@/lib/spotify";
+import { isLikelyAI } from "@/lib/aiFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,7 @@ export async function GET() {
   const seen = new Set<string>();
   const thisWeek = merged
     .filter((a) => a.releaseDate >= monday)                       // out this week
+    .filter((a) => !isLikelyAI(a.artist, a.title))               // keep AI-generated acts off the radar
     .filter((a) => (seen.has(a.id) ? false : (seen.add(a.id), true)))
     .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));   // newest first
 
