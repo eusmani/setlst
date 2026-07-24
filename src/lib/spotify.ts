@@ -100,7 +100,7 @@ export async function searchAlbums(q: string): Promise<SpotifyAlbum[]> {
 // which surfaces the era's big records first. Paginated via `page`: Spotify caps
 // search `limit` at 10, so each page is one API call at offset page*10. Callers
 // treat a full page of 10 as "there may be more".
-const YEAR_NOISE = /karaoke|tribute|\bcover(s)?\b|greatest hits|the best of|\bbest of\b|playlist|workout|lullab|8-?bit|instrumental versions?/i;
+const YEAR_NOISE = /karaoke|tribute|\bcover(s)?\b|greatest hits|the best of|\bbest of\b|playlist|workout|lullab|8-?bit|instrumental versions?|rain sounds?|white noise|\bnoise\b|sleep|meditation|\basmr\b|nature sounds?|ocean sounds?|\d+\s*hours?\b|hours of|study music|focus music|ambient noise|live remix|deep sleep|relaxing/i;
 
 export async function popularAlbumsByYear(spec: string, page = 0): Promise<SpotifyAlbum[]> {
   const d = await searchOne(`year:${spec}`, "album", 10, Math.max(0, page) * 10);
