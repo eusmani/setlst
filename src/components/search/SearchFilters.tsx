@@ -11,6 +11,17 @@ export type Filter =
 // 1920s through 2020s.
 const DECADES = Array.from({ length: 11 }, (_, i) => 1920 + i * 10);
 
+// The years shown inside a decade, never running past the current year — so the
+// 2020s stops at today (2026) rather than offering empty future years, and rolls
+// forward on its own each January (client-evaluated, no code change needed).
+function yearsInDecade(decadeStart: number): number[] {
+  const now = new Date().getFullYear();
+  const end = Math.min(decadeStart + 9, now);
+  const out: number[] = [];
+  for (let y = decadeStart; y <= end; y++) out.push(y);
+  return out;
+}
+
 // The genre set the search page carried before the pill rail was removed. These
 // spellings are the keys /api/spotify/genre validates against — changing one
 // here silently 400s, so keep them in step with GENRE_QUERIES.
@@ -121,7 +132,7 @@ export default function SearchFilters({
 
           {openDecade !== null && (
             <div className="flex gap-2 overflow-x-auto pb-1 pl-1 border-l border-[#2e2e2e]">
-              {Array.from({ length: 10 }, (_, i) => openDecade + i).map((y) => (
+              {yearsInDecade(openDecade).map((y) => (
                 <button
                   key={y}
                   onClick={() => pick({ kind: "year", year: y })}
