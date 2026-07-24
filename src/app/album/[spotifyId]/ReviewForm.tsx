@@ -52,6 +52,22 @@ export default function ReviewForm({ album, trackNames, existing, onSaved, onClo
   const [err, setErr] = useState("");
   const [draftRestored, setDraftRestored] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  // When the page didn't hand us a tracklist (albums reached by link have none
+  // up front), fetch it so the favorite / least-favorite pickers still appear.
+  const [fetchedTracks, setFetchedTracks] = useState<string[]>([]);
+  const tracks = trackNames.length > 0 ? trackNames : fetchedTracks;
+
+  useEffect(() => {
+    if (isSingle || trackNames.length > 0) return;
+    let live = true;
+    const p = new URLSearchParams({ id: album.spotifyId, title: album.title, artist: album.artist });
+    fetch(`/api/album/tracks?${p.toString()}`)
+      .then((r) => r.json())
+      .then((d) => { if (live && Array.isArray(d.tracks)) setFetchedTracks(d.tracks); })
+      .catch(() => {});
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [album.spotifyId]);
 
   // One draft per album, kept locally. Only for new reviews (not when editing).
   const draftKey = `setlst-review-draft-${album.spotifyId}`;
@@ -153,20 +169,20 @@ export default function ReviewForm({ album, trackNames, existing, onSaved, onClo
         <p className="text-right text-xs text-[#6b6b6b] mt-1">{body.length}/2000</p>
       </div>
 
-      {!isSingle && trackNames.length > 0 && (
+      {!isSingle && tracks.length > 0 && (
         <>
           <div>
             <label className="block text-xs text-[#a0a0a0] mb-2">♥ Favorite song</label>
             <select value={favoriteSong} onChange={(e) => setFavoriteSong(e.target.value)} className={selectCls}>
               <option value="">— none —</option>
-              {trackNames.map((t) => <option key={t} value={t}>{t}</option>)}
+              {tracks.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-xs text-[#a0a0a0] mb-2">✕ Least favorite song</label>
             <select value={leastFavoriteSong} onChange={(e) => setLeastFavoriteSong(e.target.value)} className={selectCls}>
               <option value="">— none —</option>
-              {trackNames.map((t) => <option key={t} value={t}>{t}</option>)}
+              {tracks.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <label className="flex items-center gap-2 text-xs text-[#a0a0a0] cursor-pointer select-none">
