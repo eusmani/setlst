@@ -26,7 +26,50 @@ export interface SpotifyAlbum {
   release_date: string;
   genres?: string[];
   total_tracks: number;
+  album_type?: string;
   tracks?: { items: { name: string; duration_ms: number; track_number: number; preview_url: string | null; external_urls: { spotify: string } }[] };
+}
+
+export interface SpotifyArtist {
+  id: string;
+  name: string;
+  images?: { url: string }[];
+  popularity?: number;
+  followers?: { total: number };
+  genres?: string[];
+}
+
+// One Spotify search call for a single result type. Spotify caps `limit` at 10
+// (higher values 400 with "Invalid limit"), and multi-type searches
+// (`type=album,artist`) also error — so callers query one type at a time, ≤10.
+async function searchOne(q: string, type: "album" | "artist", limit: number) {
+  const url = `https://api.spotify.com/v1/search?${new URLSearchParams({ q, type, limit: String(limit) })}`;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const t = await token();
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${t}` }, next: { revalidate: 3600 } });
+    if (r.status === 429) {
+      const retry = Math.min(parseInt(r.headers.get("Retry-After") ?? "1") * 1000, 2000);
+      await new Promise((res) => setTimeout(res, retry));
+      continue;
+    }
+    const d = await r.json();
+    if (d.error) { console.error("[spotify] search error:", d.error); return null; }
+    return d;
+  }
+  return null;
+}
+
+// Matching artists (with `popularity` 0–100) and albums for the search bar —
+// runs the artist and album searches in parallel.
+export async function searchArtistsAndAlbums(q: string): Promise<{ artists: SpotifyArtist[]; albums: SpotifyAlbum[] }> {
+  const [artistRes, albumRes] = await Promise.all([
+    searchOne(q, "artist", 10),
+    searchOne(q, "album", 10),
+  ]);
+  return {
+    artists: artistRes?.artists?.items ?? [],
+    albums: albumRes?.albums?.items ?? [],
+  };
 }
 
 export async function searchAlbums(q: string): Promise<SpotifyAlbum[]> {
@@ -60,12 +103,16 @@ export interface RecentAlbum { spotifyId: string; title: string; artist: string;
 export async function recentPopularAlbums(limit = 20, sort: "popularity" | "date" = "date"): Promise<RecentAlbum[]> {
   try {
     const t = await token();
-    const search = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent("tag:new")}&type=album&limit=40&market=US`,
-      { headers: { Authorization: `Bearer ${t}` }, next: { revalidate: 3600 } }
+    // Spotify caps search limit at 10, so page through offsets to gather ~40.
+    const pages = await Promise.all(
+      [0, 10, 20, 30].map((offset) =>
+        fetch(
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent("tag:new")}&type=album&limit=10&offset=${offset}&market=US`,
+          { headers: { Authorization: `Bearer ${t}` }, next: { revalidate: 3600 } }
+        ).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      )
     );
-    if (!search.ok) return [];
-    const items: SpotifyAlbum[] = (await search.json()).albums?.items ?? [];
+    const items: SpotifyAlbum[] = pages.flatMap((p) => p?.albums?.items ?? []);
     const ids = [...new Set(items.map((a) => a.id))].slice(0, 20);
     if (ids.length === 0) return [];
 

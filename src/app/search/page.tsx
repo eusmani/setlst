@@ -1,11 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import AlbumCard from "@/components/album/AlbumCard";
+import AlbumRow from "@/components/album/AlbumRow";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
 import Avatar from "@/components/ui/Avatar";
 import AddFriendButton from "@/components/social/AddFriendButton";
-import { GENRE_TAXONOMY } from "@/lib/genres";
 
 interface SpotifyAlbum {
   id: string;
@@ -24,64 +23,72 @@ const TYPE_FILTERS = [
 ] as const;
 type TypeFilter = (typeof TYPE_FILTERS)[number]["key"];
 
-interface GenreAlbum {
-  id: string;
-  title: string;
-  artist: string;
-  artwork: string | null;
-  year: number | null;
-}
-
-const GENRES = [
-  "Hip-Hop", "Rap", "R&B", "Rock", "Alternative", "Indie",
-  "Metal", "Jazz", "Soul", "Electronic", "Pop", "Classical",
-  "Reggae", "Latin", "Blues", "Punk", "Shoegaze", "Lo-Fi",
-];
-
 export default function SearchPage() {
   const [q, setQ] = useState("");
   const [searchResults, setSearchResults] = useState<SpotifyAlbum[]>([]);
-  const [genreResults, setGenreResults] = useState<GenreAlbum[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [activeGenre, setActiveGenre] = useState<string | null>(null);
   const [noSpotify, setNoSpotify] = useState(false);
-  const [showAll, setShowAll] = useState(false);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [showSubgenres, setShowSubgenres] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [people, setPeople] = useState<{ id: string; username: string; avatar: string | null; bio: string | null }[]>([]);
+  const [artists, setArtists] = useState<{ id: string; name: string; image: string | null; popularity: number }[]>([]);
+  const [fetching, setFetching] = useState(false);
 
-  async function search(query: string) {
-    if (!query.trim()) return;
-    setLoading(true); setSearched(true); setActiveGenre(null); setGenreResults([]); setTypeFilter("all");
-    // Search albums and people in parallel.
-    const [albumsRes, peopleRes] = await Promise.all([
-      fetch(`/api/spotify/search?q=${encodeURIComponent(query)}`).then((r) => r.json()).catch(() => ({ error: true })),
-      fetch(`/api/users/search?q=${encodeURIComponent(query)}`).then((r) => r.json()).catch(() => []),
-    ]);
-    setLoading(false);
-    if (albumsRes.error) { setNoSpotify(true); setSearchResults([]); }
-    else { setNoSpotify(false); setSearchResults(albumsRes.results ?? []); }
-    setPeople(Array.isArray(peopleRes) ? peopleRes.slice(0, 6) : []);
+  // Once the search bar is focused (or has a query), hide the default trending
+  // strip so the screen shows only search results.
+  const searching = focused || q.trim().length > 0;
+
+  // Per-query result cache (instant repeat/back) + abort controller so a slower
+  // earlier request can't overwrite the results for what's now typed.
+  type SearchHit = { results: SpotifyAlbum[]; artists: typeof artists; people: typeof people; noSpotify: boolean };
+  const cacheRef = useRef<Map<string, SearchHit>>(new Map());
+  const abortRef = useRef<AbortController | null>(null);
+
+  function applyHit(h: SearchHit) {
+    setNoSpotify(h.noSpotify); setSearchResults(h.results); setArtists(h.artists); setPeople(h.people);
   }
 
-  async function handleGenre(genre: string) {
-    if (activeGenre === genre) {
-      setActiveGenre(null); setGenreResults([]); setSearched(false); setShowAll(false);
-      return;
+  async function search(query: string) {
+    const qn = query.trim();
+    if (!qn) return;
+    setSearched(true); setTypeFilter("all");
+
+    // Instant from cache — no spinner, no refetch.
+    const cached = cacheRef.current.get(qn.toLowerCase());
+    if (cached) { abortRef.current?.abort(); applyHit(cached); setLoading(false); setFetching(false); return; }
+
+    // Only show the full skeleton on a cold search (nothing already on screen);
+    // otherwise keep the current results visible and just show a subtle spinner.
+    setLoading(searchResults.length === 0 && people.length === 0 && artists.length === 0);
+    setFetching(true);
+
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+
+    try {
+      const [albumsRes, peopleRes] = await Promise.all([
+        fetch(`/api/spotify/search?q=${encodeURIComponent(qn)}`, { signal: ac.signal }).then((r) => r.json()).catch(() => ({ error: true })),
+        fetch(`/api/users/search?q=${encodeURIComponent(qn)}`, { signal: ac.signal }).then((r) => r.json()).catch(() => []),
+      ]);
+      if (ac.signal.aborted) return; // a newer query superseded this one
+      const noSp = !!albumsRes.error;
+      const hit: SearchHit = {
+        results: noSp ? [] : (albumsRes.results ?? []),
+        artists: noSp ? [] : (albumsRes.artists ?? []),
+        people: Array.isArray(peopleRes) ? peopleRes.slice(0, 6) : [],
+        noSpotify: noSp,
+      };
+      cacheRef.current.set(qn.toLowerCase(), hit);
+      applyHit(hit);
+    } finally {
+      if (!ac.signal.aborted) { setLoading(false); setFetching(false); }
     }
-    setActiveGenre(genre); setQ(""); setSearched(true); setLoading(true);
-    setSearchResults([]); setShowAll(false);
-    const res = await fetch(`/api/spotify/genre?genre=${encodeURIComponent(genre)}`);
-    const data = await res.json();
-    setLoading(false);
-    if (data.error) { setNoSpotify(true); setGenreResults([]); }
-    else { setNoSpotify(false); setGenreResults(Array.isArray(data) ? data : []); }
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setActiveGenre(null); setGenreResults([]);
     search(q);
   }
 
@@ -90,33 +97,33 @@ export default function SearchPage() {
   useEffect(() => {
     const query = q.trim();
     if (query.length < 2) return;
-    const t = setTimeout(() => search(query), 350);
+    // Cached queries resolve instantly; otherwise a short debounce.
+    const t = setTimeout(() => search(query), cacheRef.current.has(query.toLowerCase()) ? 0 : 180);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  const showGenreResults = activeGenre && genreResults.length > 0;
-  const showSearchResults = !activeGenre && searchResults.length > 0;
+  const showSearchResults = searchResults.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-5 pt-5 pb-12">
-      <h1 className="font-serif text-3xl text-[#f0f0f0] mb-6">Search Albums</h1>
-
-      {/* Search bar */}
-      <form onSubmit={handleSubmit} className="flex gap-2 mb-5">
-        <input
-          value={q}
-          onChange={(e) => { setQ(e.target.value); setActiveGenre(null); }}
-          placeholder="Search SETLST…"
-          className="flex-1 bg-[#1a1a1a] border border-[#2e2e2e] text-[#f0f0f0] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b] transition-colors"
-        />
-        <button
-          type="submit"
-          disabled={loading || !q.trim()}
-          className="bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-40 text-[#111111] px-6 py-3 rounded-lg text-sm transition-colors whitespace-nowrap"
-        >
-          {loading ? "…" : "Search"}
-        </button>
+    <div className="max-w-4xl mx-auto px-5 pt-3 pb-12">
+      {/* Search bar — pinned to the top; live results, no submit button */}
+      <form onSubmit={handleSubmit} className="mb-5">
+        <div className="relative">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder="Search SETLST…"
+            autoComplete="off"
+            autoCorrect="off"
+            className="w-full bg-[#1a1a1a] border border-[#2e2e2e] text-[#f0f0f0] rounded-lg px-4 py-3 pr-10 text-sm focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b] transition-colors"
+          />
+          {fetching && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border-2 border-[#3a3a3a] border-t-[#c4a832] animate-spin" aria-hidden />
+          )}
+        </div>
       </form>
 
       {/* Type filter — next to the search bar, shown when there are search results */}
@@ -144,53 +151,6 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* Genre pills */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        {GENRES.map((g) => (
-          <button
-            key={g}
-            onClick={() => handleGenre(g)}
-            className={`px-3 py-1.5 rounded-full text-xs transition-colors border ${
-              activeGenre === g
-                ? "bg-[#c4a832] border-[#c4a832] text-[#111111]"
-                : "bg-[#1a1a1a] border-[#2e2e2e] text-[#a0a0a0] hover:border-[#c4a832] hover:text-[#f0f0f0]"
-            }`}
-          >
-            {g}
-          </button>
-        ))}
-      </div>
-
-      {/* Browse all subgenres → dedicated genre pages */}
-      <div className="mb-8">
-        <button
-          onClick={() => setShowSubgenres((s) => !s)}
-          className="text-xl uppercase tracking-[0.15em] text-[#a0a0a0] hover:text-[#c4a832] transition-colors flex items-center gap-1.5"
-        >
-          {showSubgenres ? "Hide subgenres ↑" : "Browse all subgenres ↓"}
-        </button>
-        {showSubgenres && (
-          <div className="mt-4 space-y-4">
-            {Object.entries(GENRE_TAXONOMY).map(([parent, subs]) => (
-              <div key={parent}>
-                <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-2">{parent}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {subs.map((s) => (
-                    <Link
-                      key={`${parent}-${s}`}
-                      href={`/genre/${encodeURIComponent(s)}`}
-                      className="px-2.5 py-1 rounded-full text-xs border bg-[#1a1a1a] border-[#2e2e2e] text-[#a0a0a0] hover:border-[#c4a832] hover:text-[#f0f0f0] transition-colors"
-                    >
-                      {s}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {noSpotify && (
         <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-xl p-6 text-center">
           <p className="text-[#a0a0a0] text-sm mb-1">Spotify not configured</p>
@@ -199,19 +159,25 @@ export default function SearchPage() {
       )}
 
       {loading && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="rounded-lg bg-[#1a1a1a] border border-[#1f1f1f] aspect-square animate-pulse" />
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 rounded-lg bg-[#1a1a1a] border border-[#1f1f1f] p-2.5">
+              <div className="h-16 w-16 shrink-0 rounded-md bg-[#222222] animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-1/2 rounded bg-[#222222] animate-pulse" />
+                <div className="h-3 w-1/3 rounded bg-[#222222] animate-pulse" />
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      {searched && !loading && !noSpotify && !showSearchResults && !showGenreResults && people.length === 0 && (
+      {searched && !loading && !noSpotify && !showSearchResults && people.length === 0 && (
         <p className="text-[#6b6b6b] text-center py-10 text-sm">No results found</p>
       )}
 
       {/* People results — add friends right from search */}
-      {!loading && !activeGenre && searched && people.length > 0 && (
+      {!loading && searched && people.length > 0 && (
         <div className="mb-7">
           <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">People</p>
           <div className="space-y-2">
@@ -231,60 +197,31 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* Genre browse results */}
-      {!loading && showGenreResults && (
-        <>
-          <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-4">{activeGenre}</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {(showAll ? genreResults : genreResults.slice(0, 30)).map((a) => (
-              <AlbumCard key={a.id} spotifyId={a.id} title={a.title} artist={a.artist} artwork={a.artwork} year={a.year} />
-            ))}
-          </div>
-          {genreResults.length > 30 && (
-            <button
-              onClick={() => setShowAll(!showAll)}
-              className="mt-4 w-full py-2.5 text-xs text-[#a0a0a0] hover:text-[#c4a832] border border-[#2e2e2e] hover:border-[#c4a832] rounded-lg transition-colors"
-            >
-              {showAll ? "Show less ↑" : `See more (${genreResults.length - 30} more) ↓`}
-            </button>
-          )}
-        </>
-      )}
-
       {/* Text search results */}
       {!loading && showSearchResults && (
         <>
-          {(() => {
-            // Unique artist profiles drawn from the matching albums
-            const byArtist = new Map<string, string | undefined>();
-            for (const a of searchResults) {
-              const name = a.artists[0]?.name;
-              if (name && !byArtist.has(name)) byArtist.set(name, a.images[0]?.url);
-            }
-            const artists = Array.from(byArtist.entries()).slice(0, 8);
-            if (artists.length === 0) return null;
-            return (
-              <div className="mb-7">
-                <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">Artists</p>
-                <div className="flex gap-4 overflow-x-auto pb-1">
-                  {artists.map(([name, art]) => (
-                    <Link
-                      key={name}
-                      href={`/artist/${encodeURIComponent(name)}`}
-                      className="shrink-0 w-20 text-center group"
-                    >
-                      {art ? (
-                        <img src={art} alt={name} className="w-20 h-20 rounded-full object-cover mx-auto mb-1.5 group-hover:ring-2 ring-[#c4a832] transition-all" />
-                      ) : (
-                        <div className="w-20 h-20 rounded-full bg-[#222222] mx-auto mb-1.5" />
-                      )}
-                      <p className="text-xs text-[#a0a0a0] group-hover:text-[#c4a832] transition-colors truncate">{name}</p>
-                    </Link>
-                  ))}
-                </div>
+          {/* Most popular matching artists first (Spotify popularity-ranked) */}
+          {artists.length > 0 && (
+            <div className="mb-7">
+              <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">Artists</p>
+              <div className="flex gap-4 overflow-x-auto pb-1">
+                {artists.map((a) => (
+                  <Link
+                    key={a.id}
+                    href={`/artist/${encodeURIComponent(a.name)}`}
+                    className="shrink-0 w-20 text-center group"
+                  >
+                    {a.image ? (
+                      <img src={a.image} alt={a.name} className="w-20 h-20 rounded-full object-cover mx-auto mb-1.5 group-hover:ring-2 ring-[#c4a832] transition-all" />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-[#222222] mx-auto mb-1.5" />
+                    )}
+                    <p className="text-xs text-[#a0a0a0] group-hover:text-[#c4a832] transition-colors truncate">{a.name}</p>
+                  </Link>
+                ))}
               </div>
-            );
-          })()}
+            </div>
+          )}
           {(() => {
             const filtered = typeFilter === "all"
               ? searchResults
@@ -293,9 +230,9 @@ export default function SearchPage() {
               return <p className="text-[#6b6b6b] text-center py-10 text-sm">No {typeFilter}s found for this search.</p>;
             }
             return (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="space-y-2">
                 {filtered.map((a) => (
-                  <AlbumCard
+                  <AlbumRow
                     key={a.id}
                     spotifyId={a.id}
                     title={a.name}
@@ -310,14 +247,14 @@ export default function SearchPage() {
         </>
       )}
 
-      {/* Default: trending from real user activity only — no dummy albums */}
-      {!searched && (
+      {/* Default: trending from real user activity — hidden once searching */}
+      {!searched && !searching && (
         <TrendingAlbums
           limit={9}
           heading="Trending Now"
           fallback={
             <p className="text-center text-[#6b6b6b] text-sm py-10">
-              Search for an album or pick a genre to start exploring.
+              Search for an album to start exploring.
             </p>
           }
         />
