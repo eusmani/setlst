@@ -185,7 +185,9 @@ export default function SearchPage() {
           key: filterKey,
           rows,
           page: 0,
-          hasMore: filterPaginates(filter) && rows.length >= 10,
+          // Catalog pages keep coming until one comes back empty; the noise
+          // filter can shrink a page below 10, so don't gate on a full page.
+          hasMore: filterPaginates(filter) && rows.length > 0,
           loadingMore: false,
         });
       })
@@ -206,7 +208,8 @@ export default function SearchPage() {
         if (!b || b.key !== filterKey) return b;
         const seen = new Set(b.rows.map((a) => a.spotifyId));
         const merged = [...b.rows, ...more.filter((a) => !seen.has(a.spotifyId))];
-        return { key: filterKey, rows: merged, page: nextPage, hasMore: more.length >= 10, loadingMore: false };
+        // Stop only when a page comes back empty.
+        return { key: filterKey, rows: merged, page: nextPage, hasMore: more.length > 0, loadingMore: false };
       });
     } catch {
       setBrowsed((b) => (b && b.key === filterKey ? { ...b, loadingMore: false } : b));
