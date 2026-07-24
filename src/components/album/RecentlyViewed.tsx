@@ -27,9 +27,13 @@ interface Entry {
 export default function RecentlyViewed({
   limit = 6,
   heading = "Recently Viewed",
+  emptyMessage = "Albums you open or review will show up here.",
 }: {
   limit?: number;
   heading?: string;
+  // Shown in place of the grid before you've opened anything, so the section
+  // holds its spot under the search bar instead of appearing out of nowhere.
+  emptyMessage?: string;
 }) {
   const viewed = useSyncExternalStore(
     subscribeRecentAlbums,
@@ -62,7 +66,16 @@ export default function RecentlyViewed({
 
   const rows = [...byAlbum.values()].sort((a, b) => b.at - a.at).slice(0, limit);
 
-  if (rows.length === 0) return null;
+  if (rows.length === 0) {
+    return (
+      <div className="mb-8">
+        <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-4">{heading}</p>
+        <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-5 py-8 text-center">
+          <p className="text-sm text-[#a0a0a0]">{emptyMessage}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-8">
