@@ -56,7 +56,13 @@ export default function Crates({ username, isOwner, showAll = false }: { usernam
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em]">{isOwner ? "Your crates" : "Crates"}</h2>
         {isOwner && (
-          <button onClick={createCrate} className="text-xs text-[#c4a832] hover:underline">+ New crate</button>
+          <button onClick={createCrate} aria-label="New crate"
+            className="flex items-center gap-1.5 text-xs text-[#c4a832] border border-[#2e2e2e] hover:border-[#c4a832] rounded-full pl-2 pr-3 py-1.5 transition-colors">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            New crate
+          </button>
         )}
       </div>
 
