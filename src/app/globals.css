@@ -227,11 +227,10 @@ html.theme-mono [class*="text-xl"][class*="uppercase"][class*="tracking-["] {
 /* SETLST Pro turntable icons: white art → black in light mode */
 html.theme-mono .pro-turntable { filter: invert(1); }
 
-/* ---- Desktop only: invert the top navbar in light mode ----
-   Mobile keeps the eggshell bar with black text. On desktop the whole bar and its
-   dropdown render in the original dark palette so it reads as a distinct dark header. */
-@media (min-width: 640px) {
-  html.theme-mono nav.top-nav { background-color: rgba(17,17,17,0.96) !important; border-bottom-color: #1f1f1f !important; }
+/* ---- Top navbar stays dark in light mode, at every width ----
+   The whole bar and its dropdown render in the original dark palette on mobile and
+   desktop alike, so the logo + menu row reads as a distinct dark header. */
+html.theme-mono nav.top-nav { background-color: rgba(17,17,17,0.96) !important; border-bottom-color: #1f1f1f !important; }
 
   html.theme-mono .top-nav .bg-\[\#111111\] { background-color: #111111 !important; }
   html.theme-mono .top-nav .bg-\[\#1a1a1a\] { background-color: #1a1a1a !important; }
@@ -258,7 +257,6 @@ html.theme-mono .pro-turntable { filter: invert(1); }
   html.theme-mono .top-nav .app-logo { color: #f0f0f0 !important; background: transparent !important; }
   html.theme-mono .top-nav .app-logo:hover { color: #c4a832 !important; }
   html.theme-mono .top-nav .app-logo img { filter: none !important; }
-}
 
 /* Native-style page slide on navigation is driven imperatively by the Web
    Animations API in app/template.tsx (element.animate), not CSS — see the note
