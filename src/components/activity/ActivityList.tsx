@@ -10,7 +10,7 @@ export default function ActivityList({ items, isLoggedIn }: { items: ActivityIte
     <>
       {items.map((it) =>
         it.kind === "review" ? (
-          <ReviewCard key={`r-${it.review.id}`} review={it.review as ReviewData} isLoggedIn={isLoggedIn} />
+          <ReviewCard key={`r-${it.review.id}`} review={it.review as ReviewData} isLoggedIn={isLoggedIn} clampBody />
         ) : it.kind === "thread" ? (
           <ThreadCard key={`t-${it.thread.id}`} thread={it.thread} />
         ) : (

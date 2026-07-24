@@ -2,6 +2,7 @@ import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
 import { ratingTier } from "@/lib/rating";
 import ReviewVotes from "./ReviewVotes";
+import ClampedBody from "./ClampedBody";
 
 export interface ReviewData {
   id: string;
@@ -24,6 +25,7 @@ interface Props {
   review: ReviewData;
   showAlbum?: boolean;
   isLoggedIn?: boolean;
+  clampBody?: boolean; // activity feed: show 2 lines, tap to expand
 }
 
 // Opens YouTube with the song queued so the top result (usually the official track) plays.
@@ -32,7 +34,7 @@ function youtubeUrl(artist: string, track: string) {
   return `https://www.youtube.com/results?search_query=${q}`;
 }
 
-export default function ReviewCard({ review, showAlbum = true, isLoggedIn = false }: Props) {
+export default function ReviewCard({ review, showAlbum = true, isLoggedIn = false, clampBody = false }: Props) {
   const date = new Date(review.createdAt).toLocaleDateString("en-US", {
     month: "short", day: "numeric", year: "numeric",
   });
@@ -117,7 +119,9 @@ export default function ReviewCard({ review, showAlbum = true, isLoggedIn = fals
         </div>
 
         {review.body && (
-          <p className="text-[15px] text-[#bbbbbb] leading-relaxed mt-2.5 break-words whitespace-pre-wrap">{review.body}</p>
+          clampBody
+            ? <ClampedBody text={review.body} />
+            : <p className="text-[15px] text-[#bbbbbb] leading-relaxed mt-2.5 break-words whitespace-pre-wrap">{review.body}</p>
         )}
 
         <div className="flex items-center gap-2 mt-4">
