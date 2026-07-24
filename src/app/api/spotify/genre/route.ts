@@ -640,11 +640,25 @@ async function fetchAlbums(q: string, max = 1): Promise<GenreAlbum[]> {
         if (!qWantsVariant && VARIANT.test(x.collectionName as string)) s -= 1;
         return s;
       };
+      // How many query words land in the candidate's *artist* specifically. A
+      // wrong album that merely has the band's name in its title (a soundtrack
+      // named "My Bloody Valentine", a covers comp) scores on title words but
+      // has an artist that matches nothing here.
+      const artistHits = (x: ItunesAlbum) => {
+        const hay = norm(x.artistName as string);
+        return qWords.reduce((n, w) => n + (hay.includes(" " + w + " ") ? 1 : 0), 0);
+      };
       const ranked = valid
-        .map((x) => ({ x, s: scoreOf(x) }))
+        .map((x) => ({ x, s: scoreOf(x), a: artistHits(x) }))
         .filter((e) => e.s > 0) // no real match — don't surface a wrong album
         .sort((p, r) => r.s - p.s);
-      for (const { x } of ranked) {
+      // Prefer candidates whose artist actually matches the query, which drops
+      // same-named albums by unrelated artists. Fall back to the unfiltered set
+      // only when nothing matches — e.g. queries that name the artist by an
+      // alias iTunes doesn't use ("…ATCQ" vs "A Tribe Called Quest").
+      const withArtist = ranked.filter((e) => e.a > 0);
+      const finalRanked = withArtist.length > 0 ? withArtist : ranked;
+      for (const { x } of finalRanked) {
         const id = String(x.collectionId);
         if (ids.has(id)) continue;
         ids.add(id);
