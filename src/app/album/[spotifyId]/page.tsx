@@ -366,6 +366,8 @@ export default async function AlbumPage({
             body: myReview.body ?? null,
             username: myReview.user.username,
           } : null}
+          avgRating={avgRating}
+          reviewCount={reviews.length}
         />
       </div>
 

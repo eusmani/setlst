@@ -81,6 +81,10 @@ export async function GET(req: NextRequest) {
   const subject = (sp.get("subject") ?? "").slice(0, 90);
   const body = (sp.get("body") ?? "").slice(0, 200);
   const username = (sp.get("username") ?? "").slice(0, 40);
+  // Present when `rating` is the album's community average rather than the
+  // viewer's own review; the value is how many reviews it averages.
+  const avgCount = Number(sp.get("avg") ?? "");
+  const isAverage = Number.isFinite(avgCount) && (sp.get("avg") ?? "") !== "";
 
   // An album can be shared without having been reviewed, in which case there's
   // no grade to draw and the card falls back to the app's amber.
@@ -90,7 +94,11 @@ export async function GET(req: NextRequest) {
   const grad = storyGradient(rating);
   const cardH = cardHeight(hasGrade, Boolean(subject || body));
   // Ratings are 1–10 in half steps; the app prints them to one decimal.
-  const score = hasGrade ? `${rating.toFixed(1)} / 10` : "";
+  const score = hasGrade
+    ? isAverage
+      ? `${rating.toFixed(1)} / 10 · ${avgCount} rating${avgCount === 1 ? "" : "s"}`
+      : `${rating.toFixed(1)} / 10`
+    : "";
   // Google subsets the font to exactly the characters asked for, so every glyph
   // the card draws has to be listed here or it silently falls back mid-word.
   const prose = `${title}${artist}${subject}${body}${username}${hasGrade ? tier.letter + tier.word.toUpperCase() + score : ""}SETLST@·setlst.dev“”`;

@@ -12,7 +12,9 @@ interface Album { spotifyId: string; title: string; artist: string; artwork: str
 /** The viewer's own review of this album, when they've written one. */
 export interface MyReview { rating: number; subject: string | null; body: string | null; username: string }
 
-export default function SendAlbum({ album, isLoggedIn, review }: { album: Album; isLoggedIn: boolean; review?: MyReview | null }) {
+export default function SendAlbum({ album, isLoggedIn, review, avgRating, reviewCount }: {
+  album: Album; isLoggedIn: boolean; review?: MyReview | null; avgRating?: number | null; reviewCount?: number;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [friends, setFriends] = useState<Friend[] | null>(null);
@@ -28,14 +30,20 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
   // artwork and title, with no grade and nothing quoted. The viewer's handle
   // comes from their review when they have one, else from /api/me on open.
   const username = review?.username ?? viewerName;
+  // Your own grade when you've reviewed it, otherwise the album's community
+  // average — labelled as such on the card, so a story never implies you gave
+  // a grade you didn't.
+  const usingAverage = !review && typeof avgRating === "number" && avgRating > 0;
   const storyPayload: StoryPayload = {
     title: album.title,
     artist: album.artist,
     artwork: album.artwork,
-    rating: review?.rating ?? 0,
+    rating: review?.rating ?? (usingAverage ? Math.round(avgRating! * 2) / 2 : 0),
     subject: review?.subject ?? null,
     body: review?.body ?? null,
     username,
+    ratingIsAverage: usingAverage,
+    ratingCount: usingAverage ? reviewCount ?? 0 : undefined,
     path: `/album/${album.spotifyId}`,
   };
 
@@ -152,7 +160,7 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
                       {storyBusy ? "Opening Instagram…" : "Share to Instagram Story"}
                     </button>
                     <p className="mt-1.5 text-[11px] text-[#6b6b6b] leading-snug">
-                      {storyNote ?? (review ? "Posts your review as a story card." : "Posts this album as a story card.")}
+                      {storyNote ?? (review ? "Posts your review as a story card." : usingAverage ? "Posts this album and its SETLST score." : "Posts this album as a story card.")}
                     </p>
                   </div>
                 </div>

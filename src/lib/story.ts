@@ -11,6 +11,10 @@ export interface StoryPayload {
   subject?: string | null;
   body?: string | null;
   username?: string | null;
+  /** True when `rating` is the album's community average, not the viewer's own. */
+  ratingIsAverage?: boolean;
+  /** How many reviews the average is drawn from. */
+  ratingCount?: number;
   /** Album page the story links back to, e.g. "/album/4aawyAB9vmqN3uQ7FjRGTy". */
   path?: string | null;
 }
@@ -25,7 +29,7 @@ const LIMITS = { title: 80, artist: 80, subject: 90, body: 200, username: 40 } a
 // `immutable`, so without a token in the URL a client that already fetched a
 // card keeps showing the old artwork — the URL is otherwise identical, and
 // there's nothing to tell the browser to look again.
-const CARD_VERSION = "3";
+const CARD_VERSION = "4";
 
 export function storyImageUrl(p: StoryPayload, variant: StoryVariant = "story"): string {
   const q = new URLSearchParams({
@@ -38,6 +42,7 @@ export function storyImageUrl(p: StoryPayload, variant: StoryVariant = "story"):
     subject: (p.subject ?? "").slice(0, LIMITS.subject),
     body: (p.body ?? "").slice(0, LIMITS.body),
     username: (p.username ?? "").slice(0, LIMITS.username),
+    avg: p.ratingIsAverage ? String(p.ratingCount ?? 0) : "",
   });
   return `/api/review/story?${q.toString()}`;
 }
