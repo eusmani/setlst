@@ -25,7 +25,7 @@ const LIMITS = { title: 80, artist: 80, subject: 90, body: 200, username: 40 } a
 // `immutable`, so without a token in the URL a client that already fetched a
 // card keeps showing the old artwork — the URL is otherwise identical, and
 // there's nothing to tell the browser to look again.
-const CARD_VERSION = "2";
+const CARD_VERSION = "3";
 
 export function storyImageUrl(p: StoryPayload, variant: StoryVariant = "story"): string {
   const q = new URLSearchParams({

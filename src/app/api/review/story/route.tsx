@@ -89,9 +89,11 @@ export async function GET(req: NextRequest) {
   const accent = storyAccent(rating);
   const grad = storyGradient(rating);
   const cardH = cardHeight(hasGrade, Boolean(subject || body));
+  // Ratings are 1–10 in half steps; the app prints them to one decimal.
+  const score = hasGrade ? `${rating.toFixed(1)} / 10` : "";
   // Google subsets the font to exactly the characters asked for, so every glyph
   // the card draws has to be listed here or it silently falls back mid-word.
-  const prose = `${title}${artist}${subject}${body}${username}${hasGrade ? tier.letter + tier.word.toUpperCase() : ""}SETLST@·setlst.dev“”`;
+  const prose = `${title}${artist}${subject}${body}${username}${hasGrade ? tier.letter + tier.word.toUpperCase() + score : ""}SETLST@·setlst.dev“”`;
 
   // One family throughout, the same one the app uses. The wordmark is 700 to
   // match the top bar exactly: Navbar renders it `font-serif ... font-bold
@@ -176,8 +178,11 @@ export async function GET(req: NextRequest) {
         >
           <div style={{ fontSize: "54px", fontWeight: 800, color: tier.color }}>{tier.letter}</div>
         </div>
-        <div style={{ fontSize: "38px", fontWeight: 800, letterSpacing: "4px", color: tier.color }}>
-          {tier.word.toUpperCase()}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
+          <div style={{ fontSize: "38px", fontWeight: 800, letterSpacing: "4px", color: tier.color }}>
+            {tier.word.toUpperCase()}
+          </div>
+          <div style={{ fontSize: "28px", color: "#9a9aa2" }}>{score}</div>
         </div>
       </div>
       ) : null}
