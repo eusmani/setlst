@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Portal from "@/components/ui/Portal";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { RatingInput } from "@/components/ui/RatingMeter";
@@ -214,7 +215,8 @@ export default function ReviewForm({ album, trackNames, existing, onSaved, onClo
 
       {/* Save-draft prompt on Cancel */}
       {confirmCancel && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6" onClick={() => setConfirmCancel(false)}>
+        <Portal>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 px-6" onClick={() => setConfirmCancel(false)}>
           <div className="w-full max-w-xs bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <p className="text-sm text-[#f0f0f0] font-medium mb-1">Save this draft?</p>
             <p className="text-xs text-[#6b6b6b] mb-4">You can come back and finish your review later. Only one draft is kept per album.</p>
@@ -225,6 +227,7 @@ export default function ReviewForm({ album, trackNames, existing, onSaved, onClo
             </div>
           </div>
         </div>
+        </Portal>
       )}
     </form>
   );

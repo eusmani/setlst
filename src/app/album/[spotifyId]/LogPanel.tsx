@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Portal from "@/components/ui/Portal";
 import ReviewForm from "./ReviewForm";
 import type { ReviewDraft } from "./AlbumClient";
 
@@ -67,7 +68,8 @@ export default function LogPanel({ album, trackNames, initialReview, isLoggedIn,
 
       {/* Review composer — pop-up modal for a roomier writing space */}
       {editing && isLoggedIn && (
-        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center px-4 py-8 bg-black/70 overflow-y-auto" onClick={() => setEditing(false)}>
+        <Portal>
+        <div className="fixed inset-0 z-[70] flex items-start sm:items-center justify-center px-4 py-8 bg-black/70 overflow-y-auto" onClick={() => setEditing(false)}>
           <div className="w-full max-w-xl bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-6 shadow-2xl my-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg text-[#f0f0f0]">{myReview ? "Edit your review" : `Review ${album.title}`}</h2>
@@ -78,6 +80,7 @@ export default function LogPanel({ album, trackNames, initialReview, isLoggedIn,
             <ReviewForm album={album} trackNames={trackNames} existing={myReview} onSaved={onSaved} onClose={() => setEditing(false)} />
           </div>
         </div>
+        </Portal>
       )}
     </>
   );
