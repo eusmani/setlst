@@ -167,6 +167,13 @@ export async function recentPopularAlbums(limit = 20, sort: "popularity" | "date
 // modes of loose text search (and of the iTunes-backed /spotify/search route,
 // whose catalog is missing many of these albums entirely).
 export async function resolveAlbumCover(title: string, artist: string): Promise<string | null> {
+  const best = await findAlbum(title, artist);
+  return best?.images?.[0]?.url ?? null;
+}
+
+// Shared by every "find this album on Spotify by name" flow. Returns the single
+// best search hit, or null when nothing clears the artist/title bar.
+async function findAlbum(title: string, artist: string): Promise<SpotifyAlbum | null> {
   const items = await searchAlbums(`album:${title} artist:${artist}`);
   if (!items.length) return null;
 
@@ -200,7 +207,28 @@ export async function resolveAlbumCover(title: string, artist: string): Promise<
     .map((a) => ({ a, s: score(a) }))
     .filter((x) => x.s >= 0)
     .sort((x, y) => y.s - x.s)[0];
-  return best?.a.images?.[0]?.url ?? null;
+  return best?.a ?? null;
+}
+
+// Every track of an album, found by name — for tracklists sourced from iTunes,
+// which carry no Spotify IDs of their own. Two calls (search, then the album, as
+// search results don't include tracks); callers cache the result. Resolves to an
+// empty list on any failure so a missing album or unconfigured credentials just
+// leaves the caller's existing links alone.
+export async function resolveAlbumTracks(
+  title: string,
+  artist: string,
+): Promise<{ name: string; url: string }[]> {
+  try {
+    const match = await findAlbum(title, artist);
+    if (!match) return [];
+    const full = await getAlbum(match.id);
+    return (full?.tracks?.items ?? [])
+      .map((t) => ({ name: t.name, url: t.external_urls?.spotify }))
+      .filter((t): t is { name: string; url: string } => !!t.name && !!t.url);
+  } catch {
+    return [];
+  }
 }
 
 export async function getAlbum(id: string): Promise<SpotifyAlbum | null> {

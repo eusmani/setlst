@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAlbum } from "@/lib/spotify";
 import { getAlbumDescription } from "@/lib/wikipedia";
 import { getAlbumMeta, formatReleaseDate, getBandMembers } from "@/lib/musicbrainz";
-import { getTracklist, collectContributors } from "@/lib/tracklist";
+import { getTracklist, collectContributors, linkTracksToSpotify } from "@/lib/tracklist";
 import Link from "next/link";
 import AlbumClient from "./AlbumClient";
 import RecentlyViewedTracker from "@/components/album/RecentlyViewedTracker";
@@ -93,10 +93,15 @@ async function getOembed(spotifyId: string): Promise<{ title: string | null; art
 // iTunes tracklist, cached a week. For slug albums (no real Spotify ID) this is
 // the source of the tracklist; it's streamed via <Suspense>, NOT awaited on the
 // render path — so the page shell can flush before iTunes responds.
+//
+// iTunes gives us names and previews but no Spotify IDs, so a second pass looks
+// the album up on Spotify and swaps each song's placeholder search link for the
+// real track URL. Both the extra calls sit behind this same weekly cache.
 type TrackItem = { name: string; duration_ms: number; track_number: number; preview_url: string | null; external_urls: { spotify: string } };
 const getTracklistCached = unstable_cache(
-  async (title: string, artist: string): Promise<TrackItem[]> => getTracklist(title, artist),
-  ["album-tracklist-v1"],
+  async (title: string, artist: string): Promise<TrackItem[]> =>
+    linkTracksToSpotify(await getTracklist(title, artist), title, artist),
+  ["album-tracklist-v2"],
   { revalidate: 604800 }
 );
 

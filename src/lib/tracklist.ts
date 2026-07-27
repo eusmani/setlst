@@ -1,5 +1,7 @@
 // Tracklist + 30s preview snippets from the iTunes Search API (free, works server-side),
-// with each track linked to Spotify via a search URL.
+// with each track linked to the same song on Spotify.
+import { resolveAlbumTracks } from "./spotify";
+
 export interface TrackItem {
   name: string;
   artist: string;
@@ -28,11 +30,50 @@ export function collectContributors(
   return [...set.values()];
 }
 
+// Last-resort link for a song Spotify's catalog didn't match — pinned to the
+// /tracks tab so it lands on the song list rather than the mixed top-results page.
 function spotifySearch(track: string, artist: string) {
-  return `https://open.spotify.com/search/${encodeURIComponent(`${track} ${artist}`)}`;
+  return `https://open.spotify.com/search/${encodeURIComponent(`${track} ${artist}`)}/tracks`;
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+// A track name reduced to what the two catalogs agree on. iTunes and Spotify
+// disagree constantly about feature credits and version suffixes — "Pink +
+// White (feat. …)" vs "Pink + White", "Nikes - Remastered 2016" vs "Nikes" — so
+// both are stripped before comparing.
+const trackKey = (s: string) =>
+  norm(
+    s
+      .replace(/[([]\s*(?:feat|ft|with)\.?[^)\]]*[)\]]/gi, " ")
+      .replace(/\s-\s.*$/, " ")
+  );
+
+// Upgrade an iTunes tracklist's placeholder search links to the real Spotify
+// track URLs, so tapping a song opens that song. Anything that fails to match
+// keeps its search link, and a failed lookup leaves the whole list untouched.
+export async function linkTracksToSpotify(
+  tracks: TrackItem[],
+  title: string,
+  artist: string
+): Promise<TrackItem[]> {
+  if (!tracks.length) return tracks;
+
+  const found = await resolveAlbumTracks(title, artist);
+  if (!found.length) return tracks;
+
+  // First occurrence wins, so a "… - Live" variant can't displace the original.
+  const byName = new Map<string, string>();
+  for (const t of found) {
+    const k = trackKey(t.name);
+    if (k && !byName.has(k)) byName.set(k, t.url);
+  }
+
+  return tracks.map((t) => {
+    const url = byName.get(trackKey(t.name));
+    return url ? { ...t, external_urls: { spotify: url } } : t;
+  });
+}
 
 export async function getTracklist(title: string, artist: string): Promise<TrackItem[]> {
   try {
