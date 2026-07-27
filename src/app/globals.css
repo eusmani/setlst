@@ -326,6 +326,45 @@ html.theme-mono nav.top-nav { background-color: #000000 !important; border-botto
   .page-transition { animation: none; }
 }
 
+/* Shared-element morph — tapping an album card expands its cover into the album
+   page's hero, the way iOS hands a thumbnail off to a detail view. The pairing
+   is declared in React (<ViewTransition name="album-cover-…">) on AlbumCard,
+   AlbumRow and the album page; this only shapes the motion.
+
+   The whole-page slide above would fight the morph — the cover would travel
+   while the page it's landing on slides underneath it — so it stands down for
+   the duration. Browsers without the View Transitions API never match
+   :active-view-transition and keep the slide exactly as before. */
+html:active-view-transition .page-transition { animation: none; }
+
+::view-transition-group(.album-cover) {
+  /* Long enough to read as one object moving, short enough to stay responsive. */
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Above the arriving page so the cover leads the transition. */
+  z-index: 20;
+}
+::view-transition-image-pair(.album-cover) {
+  animation-name: cover-morph;
+  animation-duration: 420ms;
+}
+/* A touch of blur mid-flight hides the pixel interpolation between a small
+   thumbnail and a full-size hero, which is otherwise visible as shimmer. */
+@keyframes cover-morph {
+  35% { filter: blur(2.5px); }
+}
+
+/* Positional motion is the usual motion-sensitivity trigger; drop it wholesale
+   and the browser falls back to an instant swap. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
 /* Onboarding slideshow. */
 .onb-overlay {
   background:

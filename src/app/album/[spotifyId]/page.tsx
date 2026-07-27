@@ -19,7 +19,7 @@ import SimilarAlbums from "./SimilarAlbums";
 import Discussion from "./Discussion";
 import { RatingMeter } from "@/components/ui/RatingMeter";
 import { unstable_cache } from "next/cache";
-import { Suspense, type ComponentProps } from "react";
+import { Suspense, ViewTransition, type ComponentProps } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -373,7 +373,10 @@ export default async function AlbumPage({
         <div className="sm:col-span-1">
           <div className="relative group/cover">
             {artwork ? (
-              <img src={artwork} alt={title} className="w-full rounded-xl shadow-xl aspect-square object-cover" />
+              // Receives the morph from whichever card was tapped to get here.
+              <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover" default="none">
+                <img src={artwork} alt={title} className="w-full rounded-xl shadow-xl aspect-square object-cover" />
+              </ViewTransition>
             ) : (
               <div className="w-full aspect-square rounded-xl bg-[#1a1a1a] border border-[#1f1f1f] flex items-center justify-center">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2e2e2e" strokeWidth="1">

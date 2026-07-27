@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ViewTransition } from "react";
 import { coverOverride } from "@/lib/coverOverrides";
 import { ratingTier } from "@/lib/rating";
 
@@ -51,12 +51,16 @@ export default function AlbumCard({ spotifyId, title, artist, artwork, year, avg
       <div className="rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#1f1f1f] group-hover:border-[#2e2e2e] transition-all duration-200">
         <div className="aspect-square overflow-hidden">
           {src ? (
-            <img
-              src={src}
-              alt={title}
-              onError={heal}
-              className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
-            />
+            // Named so the cover morphs into the album page's hero on tap —
+            // the same object moving, not two images swapping.
+            <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover" default="none">
+              <img
+                src={src}
+                alt={title}
+                onError={heal}
+                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+              />
+            </ViewTransition>
           ) : (
             <div className="w-full h-full bg-[#222222] flex items-center justify-center">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="1.2">

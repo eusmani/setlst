@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ViewTransition } from "react";
 import { coverOverride } from "@/lib/coverOverrides";
 import { ratingTier } from "@/lib/rating";
 
@@ -54,12 +54,16 @@ export default function AlbumRow({ spotifyId, title, artist, artwork, year, avgR
       {/* Cover — left */}
       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md">
         {src ? (
-          <img
-            src={src}
-            alt={title}
-            onError={heal}
-            className="h-full w-full object-cover"
-          />
+          // Shares its identity with the album page hero, so the cover expands
+          // into place instead of the two images swapping.
+          <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover" default="none">
+            <img
+              src={src}
+              alt={title}
+              onError={heal}
+              className="h-full w-full object-cover"
+            />
+          </ViewTransition>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[#222222]">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="1.2">
