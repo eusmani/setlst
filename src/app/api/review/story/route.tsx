@@ -81,17 +81,19 @@ export async function GET(req: NextRequest) {
   // the card draws has to be listed here or it silently falls back mid-word.
   const prose = `${title}${artist}${subject}${body}${username}${tier.letter}${tier.word.toUpperCase()}SETLST@·setlst.dev“”`;
 
-  // All three weights are the same family the app itself uses. The wordmark is
-  // 700 to match Navbar's `font-serif ... font-bold` — which, despite the class
-  // name, globals.css maps to Plus Jakarta Sans.
-  const [regular, semibold, bold] = await Promise.all([
+  // Body copy stays on the app's own family; the wordmark is set in Arimo Bold.
+  // Helvetica itself is proprietary and can't be fetched or embedded here, and
+  // Arimo is its metric-compatible open equivalent (same widths as Arial, which
+  // is itself drawn to Helvetica's metrics) — so it sets like Helvetica Bold.
+  const [regular, bold, display] = await Promise.all([
     googleFont("Plus Jakarta Sans", 400, prose),
-    googleFont("Plus Jakarta Sans", 700, prose),
     googleFont("Plus Jakarta Sans", 800, prose),
+    googleFont("Arimo", 700, "SETLST"),
   ]);
-  const fonts = [regular, semibold, bold].filter((f) => f !== null);
+  const fonts = [regular, bold, display].filter((f) => f !== null);
 
-  const sans = fonts.length ? "Plus Jakarta Sans" : "sans-serif";
+  const sans = regular || bold ? "Plus Jakarta Sans" : "sans-serif";
+  const wordmarkFont = display ? "Arimo" : sans;
 
   const card = (
     <div
@@ -110,11 +112,10 @@ export async function GET(req: NextRequest) {
         fontFamily: sans,
       }}
     >
-      {/* Wordmark — same family, weight and tracking as the app's top bar
-          (Navbar: text-3xl font-bold tracking-wide), scaled up for the card. */}
+      {/* Wordmark — Helvetica Bold (via Arimo, see above). */}
       <div
         style={{
-          fontFamily: sans,
+          fontFamily: wordmarkFont,
           fontSize: "46px",
           fontWeight: 700,
           letterSpacing: "1.2px",
