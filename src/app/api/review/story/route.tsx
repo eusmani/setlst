@@ -241,8 +241,14 @@ export async function GET(req: NextRequest) {
       ...size,
       fonts: fonts.length ? fonts : undefined,
       headers: {
-        // Every pixel is derived from the query string, so the CDN can hold onto it.
-        "Cache-Control": "public, max-age=3600, s-maxage=31536000, immutable",
+        // The CDN can hold a card indefinitely — every pixel derives from the
+        // query string, and a deploy busts it when the design changes.
+        //
+        // Browsers deliberately get a short window and no `immutable`. The card
+        // is drawn from live review data at a URL that doesn't change when the
+        // design does, so `immutable` meant a device that had seen a card was
+        // pinned to it for an hour with no way to find out it was stale.
+        "Cache-Control": "public, max-age=60, s-maxage=31536000, stale-while-revalidate=86400",
       },
     });
   } catch (e) {
