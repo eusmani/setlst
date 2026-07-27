@@ -36,7 +36,7 @@ export function storyImageUrl(p: StoryPayload, variant: StoryVariant = "story"):
 }
 
 // Blend two #rrggbb colors. `amount` is how much of `a` survives.
-export function mixHex(a: string, b: string, amount: number): string {
+function mixHex(a: string, b: string, amount: number): string {
   const parse = (h: string) => {
     const n = parseInt(h.replace("#", ""), 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
