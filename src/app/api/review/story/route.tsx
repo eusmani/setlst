@@ -44,7 +44,7 @@ function safeArtwork(raw: string): string {
 // Satori only takes ttf/otf/woff — Google serves woff2 to anything modern, hence
 // the vintage user agent. Returns null so a font outage degrades to the built-in
 // sans instead of failing the whole image.
-async function googleFont(family: string, weight: 400 | 800, text: string) {
+async function googleFont(family: string, weight: 400 | 700 | 800, text: string) {
   try {
     const css = await fetch(
       `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&text=${encodeURIComponent(text)}`,
@@ -79,17 +79,19 @@ export async function GET(req: NextRequest) {
   const grad = storyGradient(rating);
   // Google subsets the font to exactly the characters asked for, so every glyph
   // the card draws has to be listed here or it silently falls back mid-word.
-  const prose = `${title}${artist}${subject}${body}${username}${tier.letter}${tier.word.toUpperCase()}@·setlst.dev“”`;
+  const prose = `${title}${artist}${subject}${body}${username}${tier.letter}${tier.word.toUpperCase()}SETLST@·setlst.dev“”`;
 
-  const [display, regular, bold] = await Promise.all([
-    googleFont("Wallpoet", 400, "SETLST"),
+  // All three weights are the same family the app itself uses. The wordmark is
+  // 700 to match Navbar's `font-serif ... font-bold` — which, despite the class
+  // name, globals.css maps to Plus Jakarta Sans.
+  const [regular, semibold, bold] = await Promise.all([
     googleFont("Plus Jakarta Sans", 400, prose),
+    googleFont("Plus Jakarta Sans", 700, prose),
     googleFont("Plus Jakarta Sans", 800, prose),
   ]);
-  const fonts = [display, regular, bold].filter((f) => f !== null);
+  const fonts = [regular, semibold, bold].filter((f) => f !== null);
 
-  const sans = regular || bold ? "Plus Jakarta Sans" : "sans-serif";
-  const wordmark = display ? "Wallpoet" : sans;
+  const sans = fonts.length ? "Plus Jakarta Sans" : "sans-serif";
 
   const card = (
     <div
@@ -108,12 +110,14 @@ export async function GET(req: NextRequest) {
         fontFamily: sans,
       }}
     >
-      {/* Wordmark */}
+      {/* Wordmark — same family, weight and tracking as the app's top bar
+          (Navbar: text-3xl font-bold tracking-wide), scaled up for the card. */}
       <div
         style={{
-          fontFamily: wordmark,
-          fontSize: "40px",
-          letterSpacing: display ? "8px" : "12px",
+          fontFamily: sans,
+          fontSize: "46px",
+          fontWeight: 700,
+          letterSpacing: "1.2px",
           color: "#f0f0f0",
         }}
       >
