@@ -374,7 +374,7 @@ export default async function AlbumPage({
           <div className="relative group/cover">
             {artwork ? (
               // Receives the morph from whichever card was tapped to get here.
-              <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover" default="none">
+              <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover">
                 <img src={artwork} alt={title} className="w-full rounded-xl shadow-xl aspect-square object-cover" />
               </ViewTransition>
             ) : (

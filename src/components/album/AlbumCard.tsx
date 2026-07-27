@@ -53,7 +53,7 @@ export default function AlbumCard({ spotifyId, title, artist, artwork, year, avg
           {src ? (
             // Named so the cover morphs into the album page's hero on tap —
             // the same object moving, not two images swapping.
-            <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover" default="none">
+            <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover">
               <img
                 src={src}
                 alt={title}

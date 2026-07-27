@@ -56,7 +56,7 @@ export default function AlbumRow({ spotifyId, title, artist, artwork, year, avgR
         {src ? (
           // Shares its identity with the album page hero, so the cover expands
           // into place instead of the two images swapping.
-          <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover" default="none">
+          <ViewTransition name={`album-cover-${spotifyId}`} share="album-cover">
             <img
               src={src}
               alt={title}
