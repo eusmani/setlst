@@ -357,7 +357,16 @@ export default async function AlbumPage({
         <Link href="/search" transitionTypes={["nav-back"]} className="text-sm text-[#6b6b6b] hover:text-[#c4a832] transition-colors">
           ← Back to search
         </Link>
-        <SendAlbum album={{ spotifyId, title, artist, artwork: artwork ?? null }} isLoggedIn={!!session} />
+        <SendAlbum
+          album={{ spotifyId, title, artist, artwork: artwork ?? null }}
+          isLoggedIn={!!session}
+          review={myReview ? {
+            rating: myReview.rating,
+            subject: myReview.subject ?? null,
+            body: myReview.body ?? null,
+            username: myReview.user.username,
+          } : null}
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-7 mb-10">

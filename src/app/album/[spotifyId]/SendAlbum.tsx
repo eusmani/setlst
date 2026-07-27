@@ -2,11 +2,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
+import { storyImageUrl, type StoryPayload } from "@/lib/story";
+import { shareReviewToInstagramStory } from "@/lib/instagramStory";
+import { tapHaptic } from "@/lib/native";
 
 interface Friend { id: string; username: string; avatar: string | null }
 interface Album { spotifyId: string; title: string; artist: string; artwork: string | null }
+/** The viewer's own review of this album, when they've written one. */
+export interface MyReview { rating: number; subject: string | null; body: string | null; username: string }
 
-export default function SendAlbum({ album, isLoggedIn }: { album: Album; isLoggedIn: boolean }) {
+export default function SendAlbum({ album, isLoggedIn, review }: { album: Album; isLoggedIn: boolean; review?: MyReview | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [friends, setFriends] = useState<Friend[] | null>(null);
@@ -14,6 +19,33 @@ export default function SendAlbum({ album, isLoggedIn }: { album: Album; isLogge
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(0);
+  const [storyBusy, setStoryBusy] = useState(false);
+  const [storyNote, setStoryNote] = useState<string | null>(null);
+
+  const storyPayload: StoryPayload | null = review
+    ? {
+        title: album.title,
+        artist: album.artist,
+        artwork: album.artwork,
+        rating: review.rating,
+        subject: review.subject,
+        body: review.body,
+        username: review.username,
+        path: `/album/${album.spotifyId}`,
+      }
+    : null;
+
+  async function toStory() {
+    if (!storyPayload) return;
+    setStoryBusy(true);
+    setStoryNote(null);
+    tapHaptic();
+    const outcome = await shareReviewToInstagramStory(storyPayload);
+    setStoryBusy(false);
+    if (outcome === "instagram" || outcome === "shared") setOpen(false);
+    else if (outcome === "opened") setStoryNote("Opened the card — save it, then add it to your story.");
+    else setStoryNote("Couldn't build the story card. Try again.");
+  }
 
   function openModal() {
     if (!isLoggedIn) { router.push("/login"); return; }
@@ -38,9 +70,12 @@ export default function SendAlbum({ album, isLoggedIn }: { album: Album; isLogge
 
   return (
     <>
-      <button onClick={openModal} aria-label="Send to a friend"
-        className="p-1.5 -mr-1.5 rounded-full text-[#a0a0a0] hover:text-[#c4a832] hover:bg-[#1a1a1a] transition-colors">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+      {/* Share entry point for the whole album — friends, or your Instagram story.
+          Carries the accent colour rather than muted grey so it reads as the
+          page's one action instead of disappearing next to the back link. */}
+      <button onClick={openModal} aria-label="Share this album"
+        className="p-1.5 -mr-1.5 rounded-full text-[#c4a832] hover:text-[#e0c751] hover:bg-[#2a2412] transition-colors">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
       </button>
 
       {open && (
@@ -88,6 +123,37 @@ export default function SendAlbum({ album, isLoggedIn }: { album: Album; isLogge
                 </button>
               </>
             )}
+
+            {/* The album's other outbound share: straight to an Instagram story. */}
+            <div className="mt-5 pt-4 border-t border-[#2e2e2e]">
+              {storyPayload ? (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={storyImageUrl(storyPayload, "story")}
+                    alt="Preview of the story card"
+                    className="h-20 w-auto rounded-md border border-[#2e2e2e] bg-[#0b0b0b] shrink-0"
+                    loading="lazy"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <button onClick={toStory} disabled={storyBusy}
+                      className="w-full flex items-center justify-center gap-2 bg-[#222222] border border-[#2e2e2e] hover:border-[#c4a832] text-[#f0f0f0] text-sm py-2.5 rounded-lg transition-colors disabled:opacity-50">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" />
+                        <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none" />
+                      </svg>
+                      {storyBusy ? "Opening Instagram…" : "Share to Instagram Story"}
+                    </button>
+                    <p className="mt-1.5 text-[11px] text-[#6b6b6b] leading-snug">
+                      {storyNote ?? "Posts your review as a story card."}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-[#6b6b6b] text-center">
+                  Review this album to share it to your Instagram story.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
