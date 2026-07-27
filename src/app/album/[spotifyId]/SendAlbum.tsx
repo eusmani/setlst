@@ -124,9 +124,11 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
               </>
             )}
 
-            {/* The album's other outbound share: straight to an Instagram story. */}
-            <div className="mt-5 pt-4 border-t border-[#2e2e2e]">
-              {storyPayload ? (
+            {/* The album's other outbound share: straight to an Instagram story.
+                Only once there's a review to put on the card — the card is built
+                around a grade, so there's nothing to show without one. */}
+            {storyPayload && (
+              <div className="mt-5 pt-4 border-t border-[#2e2e2e]">
                 <div className="flex items-center gap-3">
                   <img
                     src={storyImageUrl(storyPayload, "story")}
@@ -148,12 +150,8 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
                     </p>
                   </div>
                 </div>
-              ) : (
-                <p className="text-xs text-[#6b6b6b] text-center">
-                  Review this album to share it to your Instagram story.
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
