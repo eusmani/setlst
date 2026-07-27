@@ -21,7 +21,11 @@
 
 * { box-sizing: border-box; }
 
-html { background: #000000; color: #f0f0f0; scroll-behavior: smooth; font-size: 17px; overflow-x: clip; overscroll-behavior: none; }
+/* No `scroll-behavior: smooth` here on purpose. Nothing in the app scrolls
+   programmatically, so its only effect was to make the jump-to-top on every
+   route change an animated scroll — which ran underneath the page slide and
+   made navigation feel like it was catching up with itself. */
+html { background: #000000; color: #f0f0f0; font-size: 17px; overflow-x: clip; overscroll-behavior: none; }
 /* Stop the iOS webview's elastic overscroll bounce, which otherwise drags the
    fixed top bar up/down when you scroll past the top or bottom. */
 body { overscroll-behavior: none; }
@@ -340,10 +344,12 @@ html.theme-mono nav.top-nav { background-color: #000000 !important; border-botto
   /* 'backwards' (not 'both'/'forwards') so no transform is retained after the
      animation — a lingering transform would make this a containing block for
      any position:fixed descendant (modals, action bars) and mis-anchor them. */
-  animation: page-slide 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  /* Short and sharply eased — at 260ms the 22px nudge had already visually
+     finished while the fade was still running, which read as lag on arrival. */
+  animation: page-slide 190ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
 }
 @keyframes page-slide {
-  from { opacity: 0; transform: translate3d(22px, 0, 0); }
+  from { opacity: 0; transform: translate3d(14px, 0, 0); }
   to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 @media (prefers-reduced-motion: reduce) {

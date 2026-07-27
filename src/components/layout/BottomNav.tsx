@@ -66,7 +66,11 @@ export default function BottomNav() {
 
   return (
     <nav className="bottom-nav sm:hidden fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50">
-      <div className="flex items-stretch justify-around h-14 rounded-2xl border border-[#2e2e2e] bg-[#1a1a1a]/95 backdrop-blur-md shadow-2xl shadow-black/60 px-1">
+      {/* Opaque rather than translucent-with-blur: at 95% opacity the blur was
+          invisible, but it forced the webview to re-composite the region behind
+          the bar on every scroll frame — the main source of scroll stutter on
+          phones, where this bar is always on screen. */}
+      <div className="flex items-stretch justify-around h-14 rounded-2xl border border-[#2e2e2e] bg-[#161616] shadow-2xl shadow-black/60 px-1">
         {NAV.map(({ href, label, icon, plus, profile }) => {
           // Profile tab points at the current user (or login when signed out).
           if (profile) href = username ? `/profile/${username}` : "/login";
