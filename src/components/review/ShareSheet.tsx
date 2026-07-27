@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Portal from "@/components/ui/Portal";
 import { storyImageUrl, type StoryPayload } from "@/lib/story";
 import { instagramStoryAvailable, shareReviewToInstagramStory, shareStoryImage } from "@/lib/instagramStory";
 import { tapHaptic } from "@/lib/native";
@@ -67,8 +68,9 @@ export default function ShareSheet({ payload, link, shareText, onClose }: Props)
   }
 
   return (
+    <Portal>
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 px-0 sm:px-4"
+      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/70 px-0 sm:px-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -139,5 +141,6 @@ export default function ShareSheet({ payload, link, shareText, onClose }: Props)
         <p className="mt-3 text-center text-xs text-[#6b6b6b] min-h-[1rem]">{note ?? shareText}</p>
       </div>
     </div>
+    </Portal>
   );
 }

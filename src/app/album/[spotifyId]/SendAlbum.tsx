@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
+import Portal from "@/components/ui/Portal";
 import { storyImageUrl, type StoryPayload } from "@/lib/story";
 import { shareReviewToInstagramStory } from "@/lib/instagramStory";
 import { tapHaptic } from "@/lib/native";
@@ -79,6 +80,7 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
       </button>
 
       {open && (
+        <Portal>
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/70 px-4 py-8" onClick={() => setOpen(false)}>
           <div className="w-full max-w-md max-h-[80vh] overflow-y-auto bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
@@ -154,6 +156,7 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
             )}
           </div>
         </div>
+        </Portal>
       )}
     </>
   );
