@@ -34,6 +34,30 @@ body {
   font-size: 1rem;
 }
 
+/* ---- Touch feel ----
+   The webview's default touch behaviours are what make a wrapped web app read
+   as a web page: a grey flash on every tap, a delay before taps register while
+   the browser waits to see if a double-tap is coming, and a long-press callout
+   on anything image-like. None of them belong in a tab-bar app. */
+* { -webkit-tap-highlight-color: transparent; }
+
+a, button, [role="button"], summary, label {
+  /* Skip the browser's wait-and-see for double-tap zoom, so taps land at once. */
+  touch-action: manipulation;
+  /* No long-press "Copy / Share" sheet on covers, tabs and buttons. Body copy
+     is deliberately left alone so reviews stay selectable. */
+  -webkit-touch-callout: none;
+}
+
+/* Press feedback: the same weight iOS gives a tappable row. Pointer-based so a
+   held finger dims immediately, and only where there's no hover to lean on. */
+@media (hover: none) {
+  a:active, button:active, [role="button"]:active {
+    opacity: 0.72;
+    transition: opacity 60ms linear;
+  }
+}
+
 ::selection { background: #c4a83240; color: #f0f0f0; }
 
 ::-webkit-scrollbar { width: 5px; }
