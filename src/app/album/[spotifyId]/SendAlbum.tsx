@@ -22,22 +22,24 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
   const [sent, setSent] = useState(0);
   const [storyBusy, setStoryBusy] = useState(false);
   const [storyNote, setStoryNote] = useState<string | null>(null);
+  const [viewerName, setViewerName] = useState<string | null>(null);
 
-  const storyPayload: StoryPayload | null = review
-    ? {
-        title: album.title,
-        artist: album.artist,
-        artwork: album.artwork,
-        rating: review.rating,
-        subject: review.subject,
-        body: review.body,
-        username: review.username,
-        path: `/album/${album.spotifyId}`,
-      }
-    : null;
+  // Every album is shareable, reviewed or not — an unreviewed card is just the
+  // artwork and title, with no grade and nothing quoted. The viewer's handle
+  // comes from their review when they have one, else from /api/me on open.
+  const username = review?.username ?? viewerName;
+  const storyPayload: StoryPayload = {
+    title: album.title,
+    artist: album.artist,
+    artwork: album.artwork,
+    rating: review?.rating ?? 0,
+    subject: review?.subject ?? null,
+    body: review?.body ?? null,
+    username,
+    path: `/album/${album.spotifyId}`,
+  };
 
   async function toStory() {
-    if (!storyPayload) return;
     setStoryBusy(true);
     setStoryNote(null);
     tapHaptic();
@@ -53,6 +55,9 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
     setOpen(true); setSent(0); setSelected(new Set()); setMessage("");
     if (friends === null) {
       fetch("/api/threads/share").then((r) => r.json()).then((d) => setFriends(Array.isArray(d) ? d : [])).catch(() => setFriends([]));
+    }
+    if (!review && viewerName === null) {
+      fetch("/api/me").then((r) => r.json()).then((d) => { if (d?.username) setViewerName(d.username); }).catch(() => {});
     }
   }
   function toggle(username: string) {
@@ -129,8 +134,7 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
             {/* The album's other outbound share: straight to an Instagram story.
                 Only once there's a review to put on the card — the card is built
                 around a grade, so there's nothing to show without one. */}
-            {storyPayload && (
-              <div className="mt-5 pt-4 border-t border-[#2e2e2e]">
+            <div className="mt-5 pt-4 border-t border-[#2e2e2e]">
                 <div className="flex items-center gap-3">
                   <img
                     src={storyImageUrl(storyPayload, "story")}
@@ -148,12 +152,11 @@ export default function SendAlbum({ album, isLoggedIn, review }: { album: Album;
                       {storyBusy ? "Opening Instagram…" : "Share to Instagram Story"}
                     </button>
                     <p className="mt-1.5 text-[11px] text-[#6b6b6b] leading-snug">
-                      {storyNote ?? "Posts your review as a story card."}
+                      {storyNote ?? (review ? "Posts your review as a story card." : "Posts this album as a story card.")}
                     </p>
                   </div>
                 </div>
               </div>
-            )}
           </div>
         </div>
         </Portal>

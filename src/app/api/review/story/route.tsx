@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { ratingTier } from "@/lib/rating";
-import { STORY_BG, storyGradient } from "@/lib/story";
+import { STORY_BG, storyAccent, storyGradient } from "@/lib/story";
 
 export const runtime = "edge";
 
@@ -15,7 +15,14 @@ export const runtime = "edge";
 //               can be dragged and resized over a grade-tinted gradient, the
 //               way Spotify's "share to story" behaves.
 const CARD_W = 900;
-const CARD_H = 1500;
+
+// The card hugs whatever it actually holds. Sized for the worst case of each
+// shape rather than computed per-render — a wrong estimate clips content, and
+// centred content absorbs the slack.
+function cardHeight(hasGrade: boolean, hasProse: boolean): number {
+  if (hasProse) return 1500; // subject + up to 200 chars of body
+  return hasGrade ? 1140 : 1000;
+}
 
 const ART_HOSTS = [
   "i.scdn.co",
@@ -75,31 +82,35 @@ export async function GET(req: NextRequest) {
   const body = (sp.get("body") ?? "").slice(0, 200);
   const username = (sp.get("username") ?? "").slice(0, 40);
 
+  // An album can be shared without having been reviewed, in which case there's
+  // no grade to draw and the card falls back to the app's amber.
+  const hasGrade = rating > 0;
   const tier = ratingTier(rating || 1);
+  const accent = storyAccent(rating);
   const grad = storyGradient(rating);
+  const cardH = cardHeight(hasGrade, Boolean(subject || body));
   // Google subsets the font to exactly the characters asked for, so every glyph
   // the card draws has to be listed here or it silently falls back mid-word.
-  const prose = `${title}${artist}${subject}${body}${username}${tier.letter}${tier.word.toUpperCase()}SETLST@·setlst.dev“”`;
+  const prose = `${title}${artist}${subject}${body}${username}${hasGrade ? tier.letter + tier.word.toUpperCase() : ""}SETLST@·setlst.dev“”`;
 
-  // Body copy stays on the app's own family; the wordmark is set in Arimo Bold.
-  // Helvetica itself is proprietary and can't be fetched or embedded here, and
-  // Arimo is its metric-compatible open equivalent (same widths as Arial, which
-  // is itself drawn to Helvetica's metrics) — so it sets like Helvetica Bold.
-  const [regular, bold, display] = await Promise.all([
+  // One family throughout, the same one the app uses. The wordmark is 700 to
+  // match the top bar exactly: Navbar renders it `font-serif ... font-bold
+  // tracking-wide`, and globals.css maps .font-serif to Plus Jakarta Sans
+  // (overriding Tailwind's own font-serif, which is why the name misleads).
+  const [regular, semibold, bold] = await Promise.all([
     googleFont("Plus Jakarta Sans", 400, prose),
+    googleFont("Plus Jakarta Sans", 700, prose),
     googleFont("Plus Jakarta Sans", 800, prose),
-    googleFont("Arimo", 700, "SETLST"),
   ]);
-  const fonts = [regular, bold, display].filter((f) => f !== null);
+  const fonts = [regular, semibold, bold].filter((f) => f !== null);
 
-  const sans = regular || bold ? "Plus Jakarta Sans" : "sans-serif";
-  const wordmarkFont = display ? "Arimo" : sans;
+  const sans = fonts.length ? "Plus Jakarta Sans" : "sans-serif";
 
   const card = (
     <div
       style={{
         width: `${CARD_W}px`,
-        height: `${CARD_H}px`,
+        height: `${cardH}px`,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -107,18 +118,19 @@ export async function GET(req: NextRequest) {
         gap: "34px",
         padding: "64px 60px",
         borderRadius: "56px",
-        border: `2px solid ${tier.color}33`,
+        border: `2px solid ${accent}33`,
         background: `linear-gradient(170deg, #17171a 0%, #0e0e10 100%)`,
         fontFamily: sans,
       }}
     >
-      {/* Wordmark — Helvetica Bold (via Arimo, see above). */}
+      {/* Wordmark — same family, weight and tracking as the app's top bar
+          (Navbar: text-3xl font-bold tracking-wide = 0.025em), scaled up. */}
       <div
         style={{
-          fontFamily: wordmarkFont,
+          fontFamily: sans,
           fontSize: "46px",
           fontWeight: 700,
-          letterSpacing: "1.2px",
+          letterSpacing: "1.15px",
           color: "#f0f0f0",
         }}
       >
@@ -147,7 +159,8 @@ export async function GET(req: NextRequest) {
         <div style={{ fontSize: "36px", color: "#9a9aa2", textAlign: "center", lineHeight: 1.2 }}>{artist}</div>
       </div>
 
-      {/* Grade */}
+      {/* Grade — only when the album has actually been reviewed. */}
+      {hasGrade ? (
       <div style={{ display: "flex", alignItems: "center", gap: "22px" }}>
         <div
           style={{
@@ -167,6 +180,7 @@ export async function GET(req: NextRequest) {
           {tier.word.toUpperCase()}
         </div>
       </div>
+      ) : null}
 
       {/* The review itself */}
       {subject || body ? (
@@ -187,7 +201,7 @@ export async function GET(req: NextRequest) {
       {/* Byline */}
       <div style={{ display: "flex", alignItems: "center", gap: "14px", marginTop: "6px" }}>
         {username ? (
-          <div style={{ fontSize: "32px", fontWeight: 800, color: tier.color }}>{`@${username}`}</div>
+          <div style={{ fontSize: "32px", fontWeight: 800, color: accent }}>{`@${username}`}</div>
         ) : null}
         {username ? <div style={{ fontSize: "28px", color: "#4d4d55" }}>·</div> : null}
         <div style={{ fontSize: "28px", color: "#6b6b73" }}>setlst.dev</div>
@@ -196,7 +210,7 @@ export async function GET(req: NextRequest) {
   );
 
   const size =
-    variant === "sticker" ? { width: CARD_W, height: CARD_H } : { width: 1080, height: 1920 };
+    variant === "sticker" ? { width: CARD_W, height: cardH } : { width: 1080, height: 1920 };
 
   const image =
     variant === "sticker" ? (

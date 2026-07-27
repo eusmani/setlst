@@ -21,9 +21,16 @@ export type StoryVariant = "story" | "sticker";
 // would silently truncate differently.
 const LIMITS = { title: 80, artist: 80, subject: 90, body: 200, username: 40 } as const;
 
+// Bump whenever the card's design changes. The rendered PNG is served
+// `immutable`, so without a token in the URL a client that already fetched a
+// card keeps showing the old artwork — the URL is otherwise identical, and
+// there's nothing to tell the browser to look again.
+const CARD_VERSION = "2";
+
 export function storyImageUrl(p: StoryPayload, variant: StoryVariant = "story"): string {
   const q = new URLSearchParams({
     v: variant,
+    r: CARD_VERSION,
     title: (p.title ?? "").slice(0, LIMITS.title),
     artist: (p.artist ?? "").slice(0, LIMITS.artist),
     artwork: p.artwork ?? "",
@@ -50,9 +57,13 @@ function mixHex(a: string, b: string, amount: number): string {
 
 export const STORY_BG = "#0b0b0b";
 
+/** The card's accent: the grade's colour, or the app's amber when unreviewed. */
+export function storyAccent(rating: number): string {
+  return rating > 0 ? ratingTier(rating).color : "#c4a832";
+}
+
 // The two-stop gradient Instagram paints behind the sticker. Tinted by the
 // grade so an S-tier story reads gold and an F reads red, like the app does.
 export function storyGradient(rating: number): { top: string; bottom: string } {
-  const tier = ratingTier(rating || 1);
-  return { top: mixHex(tier.color, STORY_BG, 0.28), bottom: STORY_BG };
+  return { top: mixHex(storyAccent(rating), STORY_BG, 0.28), bottom: STORY_BG };
 }
