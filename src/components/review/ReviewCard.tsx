@@ -145,6 +145,16 @@ export default function ReviewCard({ review, showAlbum = true, isLoggedIn = fals
             isLoggedIn={isLoggedIn}
             shareUrl={`/album/${review.album.spotifyId}`}
             shareText={`${review.user.username} gave ${review.album.title} a ${tier.letter} — ${tier.word} on SETLST`}
+            story={{
+              title: review.album.title,
+              artist: review.album.artist,
+              artwork: review.album.artwork,
+              rating: review.rating,
+              subject: review.subject,
+              body: review.body,
+              username: review.user.username,
+              path: `/album/${review.album.spotifyId}`,
+            }}
           />
         </div>
       </div>

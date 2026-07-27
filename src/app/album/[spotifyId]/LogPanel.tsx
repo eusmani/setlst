@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import ReviewForm from "./ReviewForm";
+import ShareStoryButton from "./ShareStoryButton";
 import type { ReviewDraft } from "./AlbumClient";
 
 interface Album {
@@ -49,12 +50,15 @@ export default function LogPanel({ album, trackNames, initialReview, isLoggedIn,
         {!isLoggedIn ? (
           <ReviewForm album={album} trackNames={trackNames} existing={myReview} onSaved={onSaved} />
         ) : myReview ? (
-          <div className="flex items-center gap-3">
-            <button onClick={() => setEditing(true)} className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors">Edit review</button>
-            <button onClick={onDelete} disabled={deleting} className="text-xs text-[#6b6b6b] hover:text-red-400 transition-colors disabled:opacity-50">
-              {deleting ? "Deleting…" : "Delete"}
-            </button>
-          </div>
+          <>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setEditing(true)} className="text-xs text-[#6b6b6b] hover:text-[#c4a832] transition-colors">Edit review</button>
+              <button onClick={onDelete} disabled={deleting} className="text-xs text-[#6b6b6b] hover:text-red-400 transition-colors disabled:opacity-50">
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+            <ShareStoryButton album={album} review={myReview} />
+          </>
         ) : (
           <button
             onClick={() => setEditing(true)}

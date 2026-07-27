@@ -54,6 +54,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 // Main.storyboard (customClass "MainViewController"). Defined here in the already-
 // compiled AppDelegate.swift so it's part of the app target without a project edit.
 class MainViewController: CAPBridgeViewController {
+    // Plugins that live in the app target aren't listed in the generated
+    // capacitor.config.json, so they have to be handed to the bridge by hand.
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(InstagramStoryPlugin())
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         webView?.allowsBackForwardNavigationGestures = true
