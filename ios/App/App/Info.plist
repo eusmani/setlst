@@ -26,6 +26,9 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Surfaced by App Store Connect on the app's listing. -->
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Ebaad Usmani. All rights reserved.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<!-- Lets the app ask whether Instagram is installed before offering

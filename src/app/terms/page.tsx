@@ -79,6 +79,17 @@ export default function TermsPage() {
         </section>
 
         <section>
+          <h2 className="text-[#f0f0f0] font-semibold mb-2">Our content</h2>
+          <p>
+            SETLST — the app, its source code, design, and the SETLST name and logo — is owned by
+            Ebaad Usmani and protected by copyright and trademark law. Using the service gives you
+            a personal, non-transferable right to use it as intended; it does not transfer any
+            ownership. You may not copy, modify, reverse-engineer, or redistribute any part of
+            SETLST without written permission.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-[#f0f0f0] font-semibold mb-2">Third-party content</h2>
           <p>
             Album, artist, and release information is sourced from third-party music catalogs and
