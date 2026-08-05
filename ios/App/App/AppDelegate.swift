@@ -1,4 +1,5 @@
 import UIKit
+import SwiftUI
 import Capacitor
 import WebKit
 
@@ -14,6 +15,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let shortcut = launchOptions?[.shortcutItem] as? UIApplicationShortcutItem {
             QuickActionsPlugin.pendingType = shortcut.type
         }
+
+        // The app's root is now the native SwiftUI shell (RootView) rather than
+        // the storyboard's bare web view. The web view still exists — WebScreen
+        // embeds it for the screens not yet rewritten — but the tab bar,
+        // navigation, and migrated screens are native.
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = UIHostingController(rootView: RootView())
+        window.backgroundColor = UIColor(red: 0.067, green: 0.067, blue: 0.067, alpha: 1)
+        window.makeKeyAndVisible()
+        self.window = window
+
         return true
     }
 
