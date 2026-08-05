@@ -34,10 +34,15 @@ enum Theme {
         return .custom(face, size: size)
     }
 
-    /// The SETLST wordmark: bold Jakarta with the wide tracking the nav bar uses
-    /// (`tracking-wide` == 0.025em).
-    static func wordmark(_ size: CGFloat) -> Font {
-        .custom("PlusJakartaSans-ExtraBold", size: size)
+    /// The SETLST wordmark, matching the web nav bar exactly:
+    /// `font-serif text-3xl font-bold tracking-wide` — i.e. Plus Jakarta Sans at
+    /// weight 700 (Bold, *not* ExtraBold), 30pt, 0.025em tracking.
+    static let wordmarkSize: CGFloat = 30
+    static let wordmarkLogoSize: CGFloat = 48   // w-12 h-12
+    static let wordmarkGap: CGFloat = 8         // gap-2
+
+    static func wordmark(_ size: CGFloat = wordmarkSize) -> Font {
+        .custom("PlusJakartaSans-Bold", size: size)
     }
 
     /// Matching tracking for `wordmark(_:)`, in points for a given size.

@@ -81,10 +81,7 @@ struct RootView: View {
 private struct LaunchPlaceholder: View {
     var body: some View {
         VStack(spacing: 16) {
-            Text("SETLST")
-                .font(Theme.wordmark(30))
-                .tracking(Theme.wordmarkTracking(30))
-                .foregroundStyle(Theme.accent)
+            Wordmark(color: Theme.accent)
             ProgressView().tint(Theme.accent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

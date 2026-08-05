@@ -16,10 +16,7 @@ struct SignInView: View {
         VStack(spacing: 0) {
             Spacer()
 
-            Text("SETLST")
-                .font(Theme.wordmark(38))
-                .tracking(Theme.wordmarkTracking(38))
-                .foregroundStyle(Theme.primary)
+            Wordmark()
             Text("Track, rate & discuss the music you love.")
                 .font(.system(size: 14))
                 .foregroundStyle(Theme.secondary)
