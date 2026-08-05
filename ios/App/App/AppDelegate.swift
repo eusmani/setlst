@@ -77,5 +77,35 @@ class MainViewController: CAPBridgeViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         webView?.allowsBackForwardNavigationGestures = true
+        addPullToRefresh()
+        // Long-pressing a button or album cover popped the system "Copy / Look Up"
+        // callout, which is a web-page behaviour that reads as broken in an app.
+        webView?.evaluateJavaScript(
+            "document.documentElement.style.webkitTouchCallout = 'none'",
+            completionHandler: nil
+        )
+    }
+
+    /// Native pull-to-refresh on the web view's scroll view.
+    ///
+    /// Attached to the scroll view rather than implemented in JavaScript so it's
+    /// the real UIKit control — same rubber-band, same spinner, same haptic as
+    /// every other iOS app — and it works on every screen at once.
+    private func addPullToRefresh() {
+        guard let scrollView = webView?.scrollView else { return }
+        let control = UIRefreshControl()
+        control.tintColor = UIColor(red: 0.77, green: 0.66, blue: 0.20, alpha: 1) // #C4A832
+        control.addTarget(self, action: #selector(reloadFromPull(_:)), for: .valueChanged)
+        scrollView.refreshControl = control
+        // Let taps on the status bar scroll back to the top, as iOS users expect.
+        scrollView.scrollsToTop = true
+    }
+
+    @objc private func reloadFromPull(_ control: UIRefreshControl) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        webView?.reload()
+        // The bridge doesn't report load completion here, so end the refresh once
+        // the spinner has been seen rather than leaving it turning forever.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { control.endRefreshing() }
     }
 }

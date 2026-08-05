@@ -10,6 +10,7 @@ import RegisterSW from "@/components/layout/RegisterSW";
 import UpcomingBanner from "@/components/layout/UpcomingBanner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import NativeBridge from "@/components/layout/NativeBridge";
+import NativeLinks from "@/components/layout/NativeLinks";
 import OfflineNotice from "@/components/layout/OfflineNotice";
 import SuspensionBanner from "@/components/layout/SuspensionBanner";
 import OnboardingSlideshow from "@/components/layout/OnboardingSlideshow";
@@ -80,6 +81,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <NavProgress />
           <RegisterSW />
           <NativeBridge />
+          <NativeLinks />
           <OfflineNotice />
           <SuspensionBanner />
           <OnboardingSlideshow />

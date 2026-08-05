@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches capacitor.config.ts backgroundColor and the iOS shell, so the
+         system bars read as part of the app instead of a white border. -->
+    <color name="setlstBackground">#111111</color>
+</resources>

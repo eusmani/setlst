@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SETLST</string>
+    <string name="title_activity_main">SETLST</string>
+    <!-- Android package. Deliberately NOT the iOS bundle ID (app.setlst.native):
+         "native" is a reserved Java keyword, so it is illegal as an Android
+         package name and Play rejects it. See docs/ANDROID_RELEASE.md. -->
+    <string name="package_name">dev.setlst.app</string>
+    <string name="custom_url_scheme">dev.setlst.app</string>
+</resources>

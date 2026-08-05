@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+        <!-- Without these the system bars render white, which puts the app's
+             light status-bar icons on a white background — an invisible clock.
+             (The web side asks for light icons via StatusBar.setStyle(Style.Dark)
+             in NativeBridge.tsx; this is the matching native half.)
+             statusBarColor/navigationBarColor are ignored under the enforced
+             edge-to-edge of targetSdk 35+, so windowBackground is what actually
+             paints behind the bars there — all three are set to cover both. -->
+        <item name="android:windowBackground">@color/setlstBackground</item>
+        <item name="android:statusBarColor">@color/setlstBackground</item>
+        <item name="android:navigationBarColor">@color/setlstBackground</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:background">@drawable/splash</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- Hand off to the dark theme once the splash finishes, otherwise the
+             activity keeps the splash theme (and its white bars) for its whole life. -->
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+</resources>
