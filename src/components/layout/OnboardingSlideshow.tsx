@@ -54,12 +54,15 @@ const SLIDES: Slide[] = [
 const SIGNUP_STEPS = [
   { key: "name", title: "What's your name?", sub: "This is how you'll show up on SETLST." },
   { key: "login", title: "Pick a username & password", sub: "Your username is your handle. Password is 8+ characters." },
-  { key: "phone", title: "Your phone number", sub: "Used to help friends find you and to secure your account." },
+  // Optional: SETLST works fine without a number, so this step can be passed
+  // through empty (App Store guideline 5.1.1 — don't require data you don't need).
+  { key: "phone", title: "Your phone number", sub: "Optional — only used to help friends find you and to recover your account. You can skip this." },
   { key: "email", title: "Your email", sub: "We'll send a verification link to confirm it's you." },
 ] as const;
 
 export default function OnboardingSlideshow() {
   const [show, setShow] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [i, setI] = useState(0);
   const [album, setAlbum] = useState<RandomAlbum | null>(null);
   const [discover, setDiscover] = useState<DiscoverAlbum[]>([]);
@@ -175,8 +178,13 @@ export default function OnboardingSlideshow() {
       if (usernameStatus === "taken") return "That username is already taken";
       if (form.password.length < 8) return "Password must be at least 8 characters";
     }
-    if (key === "phone" && !form.phone.trim()) return "Enter your phone number";
-    if (key === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return "Enter a valid email";
+    // No check for "phone": it's optional and may be left blank.
+    if (key === "email") {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return "Enter a valid email";
+      // The EULA is accepted on the final step, immediately before the account
+      // is created (App Store guideline 1.2).
+      if (!acceptedTerms) return "Please accept the Terms of Use and Privacy Policy to continue";
+    }
     return null;
   };
 
@@ -193,6 +201,7 @@ export default function OnboardingSlideshow() {
           email: form.email,
           phone: form.phone,
           password: form.password,
+          acceptedTerms,
         }),
       });
       if (!res.ok) {
@@ -367,10 +376,34 @@ export default function OnboardingSlideshow() {
               </>
             )}
             {cur.key === "phone" && (
-              <input autoFocus className={inputClass} type="tel" value={form.phone} onChange={(e) => setField("phone")(e.target.value)} placeholder="(555) 123-4567" />
+              <>
+                <input autoFocus className={inputClass} type="tel" value={form.phone} onChange={(e) => setField("phone")(e.target.value)} placeholder="(555) 123-4567 — optional" />
+                <button type="button" onClick={() => { setAuthError(""); setStep((n) => n + 1); }} className="w-full py-2 text-sm text-[#8a8a8a] transition-colors hover:text-[#c4a832]">
+                  Skip for now
+                </button>
+              </>
             )}
             {cur.key === "email" && (
-              <input autoFocus className={inputClass} type="email" value={form.email} onChange={(e) => setField("email")(e.target.value)} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="you@example.com" />
+              <>
+                <input autoFocus className={inputClass} type="email" value={form.email} onChange={(e) => setField("email")(e.target.value)} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="you@example.com" />
+                {/* Guideline 1.2: explicit agreement before an account that can
+                    post user-generated content exists. */}
+                <label className="flex cursor-pointer items-start gap-2.5 pt-1">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[#c4a832]"
+                  />
+                  <span className="text-xs leading-relaxed text-[#a0a0a0]">
+                    I agree to the{" "}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#c4a832] underline">Terms of Use</a>{" "}
+                    and{" "}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[#c4a832] underline">Privacy Policy</a>.
+                    SETLST has zero tolerance for objectionable content or abusive behaviour.
+                  </span>
+                </label>
+              </>
             )}
 
             <button
