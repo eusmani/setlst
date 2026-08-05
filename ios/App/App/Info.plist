@@ -50,6 +50,14 @@
 	<string>SETLST accesses your photo library only when you pick an image for your profile picture, a crate cover, or a discussion post. Nothing is uploaded until you post it.</string>
 	<!-- Home Screen quick actions (long-press the app icon). Routed to the app's
 	     matching screens by QuickActionsPlugin. -->
+	<!-- Plus Jakarta Sans (SIL Open Font License 1.1) — the same family the web
+	     app loads from Google Fonts, bundled so the native screens use the real
+	     SETLST wordmark rather than an approximation. -->
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fonts/PlusJakartaSans-Bold.ttf</string>
+		<string>Fonts/PlusJakartaSans-ExtraBold.ttf</string>
+	</array>
 	<key>UIApplicationShortcutItems</key>
 	<array>
 		<dict>

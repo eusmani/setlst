@@ -147,6 +147,47 @@ actor APIClient {
         try await get("/api/reviews?albumId=\(albumId)", as: [Review].self)
     }
 
+    // MARK: Search
+
+    /// `/api/spotify/search` answers in the catalogue provider's own shape
+    /// (`name`, `artists[]`, `images[]`, `release_date`), not our Album shape,
+    /// so it's decoded separately and mapped. These results aren't in our
+    /// database yet — a row is created when someone first reviews the album —
+    /// so `id` is set to the catalogue id.
+    private struct AlbumSearchResponse: Decodable {
+        struct Hit: Decodable {
+            struct Artist: Decodable { let name: String }
+            struct Image: Decodable { let url: String }
+            let id: String
+            let name: String
+            let artists: [Artist]?
+            let images: [Image]?
+            let release_date: String?
+        }
+        let results: [Hit]
+    }
+
+    func searchAlbums(_ term: String) async throws -> [Album] {
+        let encoded = term.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? term
+        let response = try await get("/api/spotify/search?q=\(encoded)", as: AlbumSearchResponse.self)
+        return response.results.map { hit in
+            Album(
+                id: hit.id,
+                spotifyId: hit.id,
+                title: hit.name,
+                artist: hit.artists?.first?.name ?? "Unknown artist",
+                artwork: hit.images?.first?.url,
+                // release_date is "1997-05-28" or just "1997".
+                year: hit.release_date.flatMap { Int($0.prefix(4)) }
+            )
+        }
+    }
+
+    func searchPeople(_ term: String) async throws -> [UserLite] {
+        let encoded = term.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? term
+        return try await get("/api/users/search?q=\(encoded)", as: [UserLite].self)
+    }
+
     /// Files a report (guideline 1.2). Mirrors `POST /api/report`.
     func report(contentType: String, contentId: String, reason: String, details: String?) async throws {
         struct Ack: Decodable { let ok: Bool? }

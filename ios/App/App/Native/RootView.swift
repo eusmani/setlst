@@ -48,12 +48,11 @@ struct RootView: View {
                 .tabItem { Label("Home", systemImage: "house") }
                 .tag(Tab.home)
 
-            // Not yet migrated — still the web app, inside a native tab.
-            WebScreen(path: "/search")
-                .ignoresSafeArea()
+            SearchView()
                 .tabItem { Label("Albums", systemImage: "opticaldisc") }
                 .tag(Tab.albums)
 
+            // Not yet migrated — still the web app, inside a native tab.
             WebScreen(path: "/log")
                 .ignoresSafeArea()
                 .tabItem { Label("Log", systemImage: "plus.circle.fill") }
@@ -81,7 +80,8 @@ private struct LaunchPlaceholder: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("SETLST")
-                .font(Theme.serif(30))
+                .font(Theme.wordmark(30))
+                .tracking(Theme.wordmarkTracking(30))
                 .foregroundStyle(Theme.accent)
             ProgressView().tint(Theme.accent)
         }

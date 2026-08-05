@@ -21,10 +21,27 @@ enum Theme {
     static let accentBright = Color(hex: 0xD4BA44)
     static let danger = Color(hex: 0xEF4444)
 
-    /// Serif display face used for headlines on the web app.
+    /// Display face for headlines and the wordmark.
+    ///
+    /// Named `serif` because that's the web app's class name, but the web
+    /// overrides `.font-serif` to Plus Jakarta Sans — a geometric sans, not a
+    /// serif at all (see `globals.css`). Using an actual serif here is what made
+    /// the native wordmark look wrong, so this loads the same bundled family.
     static func serif(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        .system(size: size, weight: weight, design: .serif)
+        // Font.Weight isn't Comparable, so match the heavy end explicitly.
+        let heavy: Set<Font.Weight> = [.heavy, .black]
+        let face = heavy.contains(weight) ? "PlusJakartaSans-ExtraBold" : "PlusJakartaSans-Bold"
+        return .custom(face, size: size)
     }
+
+    /// The SETLST wordmark: bold Jakarta with the wide tracking the nav bar uses
+    /// (`tracking-wide` == 0.025em).
+    static func wordmark(_ size: CGFloat) -> Font {
+        .custom("PlusJakartaSans-ExtraBold", size: size)
+    }
+
+    /// Matching tracking for `wordmark(_:)`, in points for a given size.
+    static func wordmarkTracking(_ size: CGFloat) -> CGFloat { size * 0.025 }
 
     /// Rating tiers — mirrors `src/lib/rating.ts` so a score reads the same on
     /// both platforms.

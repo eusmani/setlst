@@ -17,7 +17,8 @@ struct SignInView: View {
             Spacer()
 
             Text("SETLST")
-                .font(Theme.serif(38))
+                .font(Theme.wordmark(38))
+                .tracking(Theme.wordmarkTracking(38))
                 .foregroundStyle(Theme.primary)
             Text("Track, rate & discuss the music you love.")
                 .font(.system(size: 14))
