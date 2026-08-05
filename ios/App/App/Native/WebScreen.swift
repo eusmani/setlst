@@ -20,6 +20,21 @@ final class WebHost {
         return storyboard.instantiateInitialViewController() ?? CAPBridgeViewController()
     }()
 
+    /// Read a localStorage value out of the embedded web app.
+    ///
+    /// The onboarding wizard lives on the web and records completion in
+    /// localStorage (`setlst_onboarded_v1`), so that flag is the source of truth
+    /// for whether onboarding has been seen — reading it here avoids the native
+    /// and web halves disagreeing about first-launch state.
+    @MainActor
+    func localStorageValue(_ key: String) async -> String? {
+        guard let bridgeVC = controller as? CAPBridgeViewController,
+              let webView = bridgeVC.webView else { return nil }
+        let escaped = key.replacingOccurrences(of: "'", with: "\\'")
+        let result = try? await webView.evaluateJavaScript("localStorage.getItem('\(escaped)')")
+        return result as? String
+    }
+
     /// Navigate the embedded web app without reloading the whole bridge.
     func navigate(to path: String) {
         guard let bridgeVC = controller as? CAPBridgeViewController,

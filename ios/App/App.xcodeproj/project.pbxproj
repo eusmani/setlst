@@ -25,6 +25,7 @@
 		1A5E7E102A9F41D000C0FFEE /* AlbumDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E7E112A9F41D000C0FFEE /* AlbumDetailView.swift */; };
 		1A5E7E122A9F41D000C0FFEE /* ReviewComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E7E132A9F41D000C0FFEE /* ReviewComposer.swift */; };
 		1A5E7F102A9F41D000C0FFEE /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E7F112A9F41D000C0FFEE /* SearchView.swift */; };
+		1A5E80102A9F41D000C0FFEE /* OnboardingGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E80112A9F41D000C0FFEE /* OnboardingGate.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
@@ -51,6 +52,7 @@
 		1A5E7E112A9F41D000C0FFEE /* AlbumDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AlbumDetailView.swift; path = Native/AlbumDetailView.swift; sourceTree = "<group>"; };
 		1A5E7E132A9F41D000C0FFEE /* ReviewComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewComposer.swift; path = Native/ReviewComposer.swift; sourceTree = "<group>"; };
 		1A5E7F112A9F41D000C0FFEE /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SearchView.swift; path = Native/SearchView.swift; sourceTree = "<group>"; };
+		1A5E80112A9F41D000C0FFEE /* OnboardingGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OnboardingGate.swift; path = Native/OnboardingGate.swift; sourceTree = "<group>"; };
 		504EC30C1FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -108,6 +110,7 @@
 				1A5E7E112A9F41D000C0FFEE /* AlbumDetailView.swift */,
 				1A5E7E132A9F41D000C0FFEE /* ReviewComposer.swift */,
 				1A5E7F112A9F41D000C0FFEE /* SearchView.swift */,
+				1A5E80112A9F41D000C0FFEE /* OnboardingGate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -217,6 +220,7 @@
 				1A5E7E102A9F41D000C0FFEE /* AlbumDetailView.swift in Sources */,
 				1A5E7E122A9F41D000C0FFEE /* ReviewComposer.swift in Sources */,
 				1A5E7F102A9F41D000C0FFEE /* SearchView.swift in Sources */,
+				1A5E80102A9F41D000C0FFEE /* OnboardingGate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

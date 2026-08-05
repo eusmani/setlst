@@ -19,7 +19,9 @@ struct RootView: View {
             case .unknown:
                 LaunchPlaceholder()
             case .signedOut:
-                SignInView().environmentObject(auth)
+                // First launch shows the web onboarding wizard (slides + sign-up,
+                // where EULA acceptance is recorded); afterwards, native sign-in.
+                OnboardingGate().environmentObject(auth)
             case .signedIn:
                 tabs
             }
