@@ -22,7 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // navigation, and migrated screens are native.
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UIHostingController(rootView: RootView())
-        window.backgroundColor = UIColor(red: 0.067, green: 0.067, blue: 0.067, alpha: 1)
+        window.backgroundColor = .black
         window.makeKeyAndVisible()
         self.window = window
 

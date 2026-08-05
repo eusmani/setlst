@@ -5,7 +5,8 @@ import SwiftUI
 /// the migration.
 enum Theme {
     // Backgrounds
-    static let background = Color(hex: 0x111111)
+    // Pitch black, not the web's #111111 — true black on OLED.
+    static let background = Color(hex: 0x000000)
     static let surface = Color(hex: 0x1A1A1A)
     static let surfaceRaised = Color(hex: 0x222222)
     static let hairline = Color(hex: 0x1F1F1F)

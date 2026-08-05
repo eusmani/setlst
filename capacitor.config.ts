@@ -15,9 +15,9 @@ const config: CapacitorConfig = {
   appId: "app.setlst.native",
   appName: "SETLST",
   webDir: "mobile-shell",
-  // Dark native background so the iPhone safe areas (notch / home indicator)
-  // match the app instead of showing white borders.
-  backgroundColor: "#111111",
+  // Pitch black so the iPhone safe areas (notch / home indicator) match the
+  // native screens instead of showing a lighter band against them.
+  backgroundColor: "#000000",
   server: {
     url: "https://setlst.dev",
     // Shown when the shell can't reach the network on launch. Without it
@@ -27,10 +27,10 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: "always",
-    backgroundColor: "#111111",
+    backgroundColor: "#000000",
   },
   android: {
-    backgroundColor: "#111111",
+    backgroundColor: "#000000",
     // The shell only ever loads https://setlst.dev, so plain-HTTP traffic is
     // never needed — leaving this false keeps Play's cleartext check happy.
     allowMixedContent: false,

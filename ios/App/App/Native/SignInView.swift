@@ -16,7 +16,7 @@ struct SignInView: View {
         VStack(spacing: 0) {
             Spacer()
 
-            Wordmark()
+            Wordmark(size: 44)
             Text("Track, rate & discuss the music you love.")
                 .font(.system(size: 14))
                 .foregroundStyle(Theme.secondary)
