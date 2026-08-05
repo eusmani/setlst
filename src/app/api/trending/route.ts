@@ -30,7 +30,7 @@ export async function GET() {
       },
     }),
     prisma.savedAlbum.findMany({ select: { spotifyId: true, title: true, artist: true, artwork: true, year: true, createdAt: true } }),
-    prisma.comment.findMany({ select: { albumSpotifyId: true, createdAt: true } }),
+    prisma.comment.findMany({ where: { removedAt: null }, select: { albumSpotifyId: true, createdAt: true } }),
   ]);
 
   const map = new Map<string, Row>();

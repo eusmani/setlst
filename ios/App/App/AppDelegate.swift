@@ -8,8 +8,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // A Home Screen quick action can launch the app outright. The web layer
+        // isn't listening yet, so stash it — QuickActionsPlugin replays it once
+        // JavaScript registers.
+        if let shortcut = launchOptions?[.shortcutItem] as? UIApplicationShortcutItem {
+            QuickActionsPlugin.pendingType = shortcut.type
+        }
         return true
+    }
+
+    // A quick action used while the app is already running or suspended.
+    func application(_ application: UIApplication,
+                     performActionFor shortcutItem: UIApplicationShortcutItem,
+                     completionHandler: @escaping (Bool) -> Void) {
+        QuickActionsPlugin.handle(shortcutItem.type)
+        completionHandler(true)
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -58,6 +71,7 @@ class MainViewController: CAPBridgeViewController {
     // capacitor.config.json, so they have to be handed to the bridge by hand.
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(InstagramStoryPlugin())
+        bridge?.registerPluginInstance(QuickActionsPlugin())
     }
 
     override func viewDidLoad() {

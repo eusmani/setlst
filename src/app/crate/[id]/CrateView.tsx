@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CrateCover from "@/components/crate/CrateCover";
+import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
 
 interface Album {
   id: string;
@@ -91,6 +92,15 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
     await patch({ cover: dataUrl });
   }
 
+  // Native camera / photo picker inside the app; the file input stays for web.
+  async function chooseNativeCover() {
+    tapHaptic();
+    const dataUrl = await pickPhoto("prompt");
+    if (!dataUrl) return;
+    setCover(dataUrl);
+    await patch({ cover: dataUrl });
+  }
+
   async function removeCover() {
     setCover(null);
     await patch({ cover: null });
@@ -175,7 +185,7 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
 
           {isOwner && (
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs">
-              <button onClick={() => fileRef.current?.click()} className="text-[#c4a832] hover:underline">
+              <button onClick={() => (canUseNativeCamera() ? chooseNativeCover() : fileRef.current?.click())} className="text-[#c4a832] hover:underline">
                 {cover ? "Change photo" : "Add custom photo"}
               </button>
               {cover && <button onClick={removeCover} className="text-[#6b6b6b] hover:text-[#f0f0f0]">Use album collage</button>}

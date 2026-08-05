@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/ui/Avatar";
+import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
 
 interface Props {
   username: string;
@@ -65,6 +66,14 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
     }
   }
 
+  // Inside the app, go through the native camera / photo picker instead of the
+  // web file input — iOS offers "Take Photo" as well as the photo library.
+  async function chooseNativePhoto() {
+    tapHaptic();
+    const dataUrl = await pickPhoto("prompt");
+    if (dataUrl) { setAvatar(dataUrl); setErr(""); }
+  }
+
   async function save() {
     setSaving(true); setErr("");
     const res = await fetch("/api/user/profile", {
@@ -113,10 +122,10 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
           <div className="flex flex-col gap-1.5">
             <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
             <button
-              onClick={() => fileRef.current?.click()}
+              onClick={() => (canUseNativeCamera() ? chooseNativePhoto() : fileRef.current?.click())}
               className="text-xs text-[#f0f0f0] bg-[#222222] border border-[#2e2e2e] hover:border-[#c4a832] px-3 py-1.5 rounded-lg transition-colors"
             >
-              Upload picture
+              {canUseNativeCamera() ? "Take or choose photo" : "Upload picture"}
             </button>
             {avatar && (
               <button onClick={() => setAvatar(null)} className="text-xs text-[#6b6b6b] hover:text-red-400 transition-colors">

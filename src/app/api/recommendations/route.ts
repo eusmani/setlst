@@ -122,7 +122,7 @@ export async function GET() {
   // --- Build the taste profile from the user's own history ---
   const [reviewed, topArtists, user] = await Promise.all([
     prisma.review.findMany({
-      where: { userId },
+      where: { userId, removedAt: null },
       select: { rating: true, album: { select: { artist: true, genres: true, spotifyId: true } } },
     }),
     getTopArtists(userId, 20).catch(() => []),
@@ -174,7 +174,7 @@ export async function GET() {
   const followed = await prisma.follow.findMany({ where: { followerId: userId }, select: { followingId: true } });
   const followedIds = followed.map((f) => f.followingId);
   if (followedIds.length > 0) {
-    const myAlbumRows = await prisma.review.findMany({ where: { userId }, select: { albumId: true } });
+    const myAlbumRows = await prisma.review.findMany({ where: { userId, removedAt: null }, select: { albumId: true } });
     const myAlbumIds = myAlbumRows.map((r) => r.albumId);
     const recs = await prisma.review.groupBy({
       by: ["albumId"],
@@ -182,6 +182,7 @@ export async function GET() {
         userId: { in: followedIds },
         albumId: { notIn: myAlbumIds.length ? myAlbumIds : ["__none__"] },
         rating: { gte: 4 },
+        removedAt: null,
       },
       _avg: { rating: true },
       _count: { rating: true },
@@ -210,6 +211,8 @@ export async function GET() {
 async function topRatedFallback() {
   const top = await prisma.review.groupBy({
     by: ["albumId"],
+    // Moderator-removed reviews must not skew album ratings.
+    where: { removedAt: null },
     _avg: { rating: true },
     _count: { rating: true },
     having: { rating: { _count: { gte: 1 } } },

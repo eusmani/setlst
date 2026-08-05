@@ -41,6 +41,52 @@
 	<!-- No NSContactsUsageDescription: the iOS app never reads your address book.
 	     Find-your-friends is search- and invite-based here, so declaring a
 	     contacts purpose string would be asking for data the app doesn't use. -->
+	<!-- Native camera / photo library, used for profile pictures, crate covers,
+	     and photos attached to discussion posts. Purpose strings name the exact
+	     use (App Store guideline 5.1.1). -->
+	<key>NSCameraUsageDescription</key>
+	<string>SETLST uses the camera when you choose to take a new photo for your profile picture, a crate cover, or a discussion post.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SETLST accesses your photo library only when you pick an image for your profile picture, a crate cover, or a discussion post. Nothing is uploaded until you post it.</string>
+	<!-- Home Screen quick actions (long-press the app icon). Routed to the app's
+	     matching screens by QuickActionsPlugin. -->
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>setlst.log</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Log an album</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Rate what you just heard</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeAdd</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>setlst.search</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Search albums</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeSearch</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>setlst.diary</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Your diary</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeBookmark</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>setlst.inbox</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Messages</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeCompose</string>
+		</dict>
+	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>SETLST uses your location only when you tap “Find concerts near me”, to list upcoming shows in your area. Your location is used for that search and is never stored or shared.</string>
 	<key>UIBackgroundModes</key>

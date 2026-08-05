@@ -55,6 +55,8 @@ export async function GET(req: NextRequest) {
   try {
     const grouped = await prisma.review.groupBy({
       by: ["albumId"],
+      // Moderator-removed reviews must not skew album ratings.
+      where: { removedAt: null },
       _avg: { rating: true },
       _count: { rating: true },
       having: { rating: { _count: { gte: 1 } } },

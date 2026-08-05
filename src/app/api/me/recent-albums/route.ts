@@ -15,7 +15,8 @@ export async function GET() {
   if (!session?.user?.id) return NextResponse.json([]);
   try {
     const reviews = await prisma.review.findMany({
-      where: { userId: session.user.id },
+      // Removed by moderation stays removed, even for its author.
+      where: { userId: session.user.id, removedAt: null },
       // updatedAt, not createdAt — editing a review counts as recent activity.
       orderBy: { updatedAt: "desc" },
       take: 12,

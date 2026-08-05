@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/ui/Avatar";
 import { hashPhones } from "@/lib/phone";
+import { shareNative } from "@/lib/native";
 
 interface Member {
   id: string;
@@ -79,13 +80,15 @@ export default function FriendsPage() {
   // Cross-platform invite (iOS + Android) via the native share sheet, copy fallback.
   async function inviteFriends() {
     const url = typeof window !== "undefined" ? window.location.origin : "";
-    const data = { title: "SETLST", text: "Join me on SETLST — log and rate the music you love.", url };
-    const navAny = navigator as Navigator & { share?: (d: typeof data) => Promise<void> };
-    if (navAny.share) {
-      try { await navAny.share(data); setInvited("shared"); } catch { /* cancelled */ }
-    } else {
-      try { await navigator.clipboard.writeText(url); setInvited("copied"); setTimeout(() => setInvited(""), 2500); } catch {}
-    }
+    // Native iOS share sheet inside the app; Web Share, then clipboard, on web.
+    const outcome = await shareNative({
+      title: "SETLST",
+      text: "Join me on SETLST — log and rate the music you love.",
+      url,
+      dialogTitle: "Invite friends to SETLST",
+    });
+    if (outcome === "shared") setInvited("shared");
+    else if (outcome === "copied") { setInvited("copied"); setTimeout(() => setInvited(""), 2500); }
   }
   useEffect(() => { loadFriends(); }, [loadFriends]);
 

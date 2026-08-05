@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Portal from "@/components/ui/Portal";
 import { storyImageUrl, type StoryPayload } from "@/lib/story";
 import { instagramStoryAvailable, shareReviewToInstagramStory, shareStoryImage } from "@/lib/instagramStory";
-import { tapHaptic } from "@/lib/native";
+import { tapHaptic, shareNative, isNative } from "@/lib/native";
 
 interface Props {
   payload: StoryPayload;
@@ -56,14 +56,20 @@ export default function ShareSheet({ payload, link, shareText, onClose }: Props)
     else onClose();
   }
 
-  async function copyLink() {
+  // Inside the app this opens the real iOS share sheet (Messages, AirDrop, any
+  // installed app) rather than silently copying to the clipboard.
+  async function shareLink() {
     setBusy("link");
-    try {
-      await navigator.clipboard.writeText(fullLink);
-      setNote("Link copied.");
-    } catch {
-      setNote(fullLink);
-    }
+    tapHaptic();
+    const outcome = await shareNative({
+      title: "SETLST",
+      text: shareText,
+      url: fullLink,
+      dialogTitle: "Share this review",
+    });
+    if (outcome === "copied") setNote("Link copied.");
+    else if (outcome === "cancelled" && !isNative()) setNote(fullLink);
+    else if (outcome === "shared") onClose();
     setBusy(null);
   }
 
@@ -126,7 +132,7 @@ export default function ShareSheet({ payload, link, shareText, onClose }: Props)
           </button>
 
           <button
-            onClick={copyLink}
+            onClick={shareLink}
             disabled={busy !== null}
             className="w-full flex items-center justify-center gap-2 bg-transparent text-[#a0a0a0] hover:text-[#f0f0f0] text-sm py-2.5 rounded-lg transition-colors disabled:opacity-50"
           >
@@ -134,7 +140,7 @@ export default function ShareSheet({ payload, link, shareText, onClose }: Props)
               <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
               <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
             </svg>
-            {busy === "link" ? "Copying…" : "Copy link"}
+            {busy === "link" ? "Sharing…" : isNative() ? "Share…" : "Copy link"}
           </button>
         </div>
 

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { resizeToDataUrl, moderateImage } from "@/lib/photo";
+import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
 
 interface Album { spotifyId: string; title: string; artist: string; artwork: string | null }
 
@@ -82,6 +83,26 @@ export default function NewThread({ album }: { album: Album }) {
     setChecking(false);
   }
 
+  // Native camera / photo picker. Routed through the SAME SFW moderation gate as
+  // the web file input — a native path that skipped it would be a hole in the
+  // guideline 1.2 controls, not a feature.
+  async function addNativePhoto() {
+    if (images.length >= 4) { setPhotoErr("Up to 4 photos."); return; }
+    tapHaptic();
+    const raw = await pickPhoto("prompt");
+    if (!raw) return;
+    setPhotoErr("");
+    setChecking(true);
+    try {
+      const { safe } = await moderateImage(raw); // SFW gate — fails closed
+      if (!safe) setPhotoErr("That image looks explicit and can't be attached. SETLST is SFW only.");
+      else setImages((xs) => (xs.length < 4 ? [...xs, raw] : xs));
+    } catch {
+      setPhotoErr("Couldn't verify that image — please try another.");
+    }
+    setChecking(false);
+  }
+
   async function post() {
     if (!title.trim() || !body.trim() || saving || checking) return;
     setSaving(true);
@@ -139,7 +160,7 @@ export default function NewThread({ album }: { album: Album }) {
         <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFiles} className="hidden" />
         <div className="flex items-center gap-2 mb-3">
           <button
-            onClick={() => fileRef.current?.click()}
+            onClick={() => (canUseNativeCamera() ? addNativePhoto() : fileRef.current?.click())}
             disabled={checking || images.length >= 4}
             className="inline-flex items-center gap-1.5 text-sm text-[#a0a0a0] hover:text-[#c4a832] bg-[#1a1a1a] border border-[#2e2e2e] hover:border-[#c4a832] rounded-full px-3.5 py-1.5 disabled:opacity-40 transition-colors"
           >

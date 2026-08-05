@@ -1,5 +1,7 @@
 "use client";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { quickActionRoute } from "@/lib/native";
 
 // Must match OnboardingSlideshow's SEEN_KEY.
 const SEEN_KEY = "setlst_onboarded_v1";
@@ -7,6 +9,45 @@ const SEEN_KEY = "setlst_onboarded_v1";
 // Runs only inside the native iOS/Android shell. Styles the status bar, hides the
 // splash screen once loaded, and registers for push notifications.
 export default function NativeBridge() {
+  const router = useRouter();
+
+  // Home Screen quick actions (long-press the app icon). A shortcut can launch
+  // the app cold, so we drain any pending one on mount as well as listening for
+  // shortcuts used while the app is already running.
+  useEffect(() => {
+    let remove: (() => void) | null = null;
+
+    (async () => {
+      const { Capacitor, registerPlugin } = await import("@capacitor/core");
+      if (!Capacitor.isNativePlatform()) return;
+
+      interface QuickActionsAPI {
+        consumePending(): Promise<{ type: string | null }>;
+        addListener(
+          event: "quickAction",
+          fn: (data: { type: string }) => void
+        ): Promise<{ remove: () => void }>;
+      }
+      const QuickActions = registerPlugin<QuickActionsAPI>("QuickActions");
+
+      try {
+        const pending = await QuickActions.consumePending();
+        const route = quickActionRoute(pending?.type);
+        if (route) router.push(route);
+      } catch { /* plugin unavailable */ }
+
+      try {
+        const handle = await QuickActions.addListener("quickAction", ({ type }) => {
+          const route = quickActionRoute(type);
+          if (route) router.push(route);
+        });
+        remove = () => handle.remove();
+      } catch { /* plugin unavailable */ }
+    })();
+
+    return () => { remove?.(); };
+  }, [router]);
+
   useEffect(() => {
     let removeListener: (() => void) | null = null;
 
