@@ -27,7 +27,10 @@ struct FeedView: View {
                     } else {
                         List {
                             ForEach(reviews) { review in
-                                ReviewRow(review: review) { reportTarget = review }
+                                NavigationLink(value: review.album) {
+                                    ReviewRow(review: review) { reportTarget = review }
+                                }
+                                .buttonStyle(.plain)
                                     .listRowBackground(Theme.background)
                                     .listRowSeparatorTint(Theme.hairline)
                                     .listRowInsets(.init(top: 12, leading: 16, bottom: 12, trailing: 16))
@@ -39,6 +42,9 @@ struct FeedView: View {
                 }
             }
             .background(Theme.background)
+            .navigationDestination(for: Album.self) { album in
+                AlbumDetailView(album: album)
+            }
             .navigationTitle("SETLST")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(Theme.background, for: .navigationBar)
