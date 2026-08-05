@@ -441,3 +441,53 @@ html.onb-pending body { overflow: hidden; }
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-9px); }
 }
+
+/* ---------------------------------------------------------------------------
+   Touch feedback
+   ---------------------------------------------------------------------------
+   The app was styled entirely with :hover states, which a finger never fires,
+   so on a phone nothing acknowledged a tap — the single biggest reason it read
+   as a website rather than an app. (Tailwind v4 already scopes `hover:` to
+   pointer devices, so stuck-hover was never the problem; the gap was press
+   feedback.)
+
+   Scoped to coarse pointers so desktop hover behaviour is untouched, and done
+   with `transform`, which is composited and can't reflow the page. */
+@media (pointer: coarse) {
+  a, button, [role="button"], summary {
+    /* iOS paints a grey box over anything tappable; the scale below replaces it. */
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.13s ease-out, opacity 0.13s ease-out;
+  }
+
+  a:active, button:active, [role="button"]:active, summary:active {
+    transform: scale(0.97);
+    opacity: 0.86;
+  }
+
+  /* Chrome that shouldn't shrink: shrinking a fixed bar or a full-bleed row
+     looks like a glitch rather than a press. */
+  .bottom-nav a:active,
+  .bottom-nav button:active,
+  .top-nav a:active,
+  .top-nav button:active,
+  nav a:active,
+  nav button:active,
+  .no-press:active {
+    transform: none;
+    opacity: 0.7;
+  }
+
+  /* Album art and cards take a gentler press — they're large, so 0.97 reads as
+     a lurch at that size. */
+  .press-soft:active {
+    transform: scale(0.985);
+    opacity: 0.92;
+  }
+}
+
+/* Horizontal rails behave like native carousels: the bounce stays inside the
+   rail instead of dragging the whole page sideways. */
+.snap-x {
+  overscroll-behavior-x: contain;
+}

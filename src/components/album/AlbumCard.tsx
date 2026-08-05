@@ -47,7 +47,7 @@ export default function AlbumCard({ spotifyId, title, artist, artwork, year, avg
   const href = `/album/${spotifyId}?${params.toString()}`;
 
   return (
-    <Link href={href} className="group block">
+    <Link href={href} className="press-soft group block">
       <div className="rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#1f1f1f] group-hover:border-[#2e2e2e] transition-all duration-200">
         <div className="aspect-square overflow-hidden">
           {src ? (
