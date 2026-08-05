@@ -20,7 +20,7 @@ export default function PrivacyPage() {
 
       <div className="space-y-6 text-sm text-[#c8c8c8] leading-relaxed">
         <p>
-          SETLST (&ldquo;we,&rdquo; &ldquo;us&rdquo;) is a music journaling app where you log,
+          SETLST is a music journaling app where you log,
           rate, and discuss the albums you listen to. It is operated by Ebaad Usmani. This policy
           explains exactly what we collect, why we collect it, who it goes to, and how to get rid
           of it. We do not sell your personal data, and we do not use it for advertising or

@@ -16,7 +16,7 @@ export default function TermsPage() {
 
       <div className="space-y-6 text-sm text-[#c8c8c8] leading-relaxed">
         <p>
-          Welcome to SETLST (&ldquo;SETLST,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;), a music
+          Welcome to SETLST, a music
           journaling app where you log, rate, and discuss the albums you listen to. By creating an
           account or using the app you agree to these Terms of Use and to our{" "}
           <Link href="/privacy" className="text-[#c4a832] hover:underline">Privacy Policy</Link>. If
