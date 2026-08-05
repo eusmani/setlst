@@ -147,6 +147,11 @@ actor APIClient {
         try await get("/api/reviews?albumId=\(albumId)", as: [Review].self)
     }
 
+    /// Home-screen release rail. `path` already carries the range query.
+    func releases(path: String) async throws -> [Release] {
+        try await get(path, as: [Release].self)
+    }
+
     // MARK: Search
 
     /// `/api/spotify/search` answers in the catalogue provider's own shape

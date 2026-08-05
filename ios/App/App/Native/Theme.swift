@@ -46,6 +46,23 @@ enum Theme {
         .custom("PlusJakartaSans-Bold", size: size)
     }
 
+    /// Body and UI text. The whole web app runs on Plus Jakarta Sans
+    /// (`globals.css` sets it on `body`), so native screens use it too rather
+    /// than falling back to San Francisco — mixing the two is what made the
+    /// native screens read as a different app.
+    static func text(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        switch weight {
+        case .bold, .semibold, .heavy, .black:
+            return .custom("PlusJakartaSans-Bold", size: size)
+        default:
+            return .custom("PlusJakartaSans-Regular", size: size)
+        }
+    }
+
+    /// Section heading: `text-xl uppercase tracking-[0.15em]` in the web app.
+    static func sectionHeading() -> Font { text(15, weight: .bold) }
+    static let sectionTracking: CGFloat = 2.2
+
     /// Matching tracking for `wordmark(_:)`, in points for a given size.
     static func wordmarkTracking(_ size: CGFloat) -> CGFloat { size * 0.025 }
 

@@ -55,6 +55,7 @@
 	     SETLST wordmark rather than an approximation. -->
 	<key>UIAppFonts</key>
 	<array>
+		<string>Fonts/PlusJakartaSans-Regular.ttf</string>
 		<string>Fonts/PlusJakartaSans-Bold.ttf</string>
 		<string>Fonts/PlusJakartaSans-ExtraBold.ttf</string>
 	</array>

@@ -12,6 +12,7 @@ struct SearchView: View {
     @State private var scope: Scope = .albums
     @State private var searching = false
     @State private var searchTask: Task<Void, Never>?
+    @State private var selectedGenre: String?
 
     enum Scope: String, CaseIterable, Identifiable {
         case albums = "Albums"
@@ -19,11 +20,18 @@ struct SearchView: View {
         var id: String { rawValue }
     }
 
+    /// Same list as `src/components/search/SearchFilters.tsx`.
+    private static let genres = [
+        "Hip-Hop", "Rap", "R&B", "Rock", "Alternative", "Indie",
+        "Metal", "Jazz", "Soul", "Electronic", "Pop", "Classical",
+        "Reggae", "Latin", "Blues", "Punk", "Shoegaze", "Lo-Fi",
+    ]
+
     var body: some View {
         NavigationStack {
             Group {
                 if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                    SearchPrompt()
+                    browse
                 } else if searching && albums.isEmpty && people.isEmpty {
                     ProgressView().tint(Theme.accent)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -39,6 +47,35 @@ struct SearchView: View {
         .tint(Theme.accent)
         .searchable(text: $query, prompt: "Albums, artists, people")
         .onChange(of: query) { _, value in scheduleSearch(value) }
+    }
+
+    /// Empty-query state: the genre pills the web search screen shows, so the
+    /// tab is browsable rather than a blank box.
+    private var browse: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("BROWSE BY GENRE")
+                    .font(Theme.sectionHeading())
+                    .tracking(Theme.sectionTracking)
+                    .foregroundStyle(Theme.secondary)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+
+                // Flowing pill rows, like the web's wrapped flex layout.
+                FlowLayout(spacing: 8) {
+                    ForEach(Self.genres, id: \.self) { genre in
+                        Pill(label: genre, selected: genre == selectedGenre) {
+                            selectedGenre = genre == selectedGenre ? nil : genre
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            query = genre == selectedGenre ? genre : ""
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+
+                SearchPrompt().padding(.top, 24)
+            }
+        }
     }
 
     @ViewBuilder private var results: some View {

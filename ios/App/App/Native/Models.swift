@@ -51,6 +51,28 @@ struct Review: Codable, Identifiable, Hashable {
     }
 }
 
+/// A catalogue release from `/api/releases` — the home screen's Recent /
+/// This week / Upcoming rail. Not a database row, so it carries no review data.
+struct Release: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let artist: String
+    let artwork: String?
+    let releaseDate: String?
+
+    var artworkURL: URL? {
+        guard let artwork, !artwork.isEmpty else { return nil }
+        return URL(string: artwork)
+    }
+
+    /// Releases and albums are the same thing to the album screen, which keys
+    /// off the catalogue id.
+    var asAlbum: Album {
+        Album(id: id, spotifyId: id, title: title, artist: artist,
+              artwork: artwork, year: releaseDate.flatMap { Int($0.prefix(4)) })
+    }
+}
+
 /// The signed-in user, from `/api/me`.
 struct Me: Codable {
     let username: String?
