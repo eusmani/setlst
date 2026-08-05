@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { autoReport, blockedIds, canPost, notFromBlocked, screenText } from "@/lib/moderation";
 
 const userSelect = { id: true, username: true, avatar: true } as const;
 
@@ -12,20 +13,31 @@ export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
   const username = req.nextUrl.searchParams.get("user");
 
+  // Blocked authors and moderator-removed posts are filtered out of every read.
+  const session = await auth();
+  const hidden = await blockedIds(session?.user.id);
+
   if (id) {
     const thread = await prisma.thread.findUnique({
       where: { id },
       include: {
         user: { select: userSelect },
-        replies: { orderBy: { createdAt: "asc" }, include: { user: { select: userSelect } } },
+        replies: {
+          where: { removedAt: null, ...notFromBlocked(hidden) },
+          orderBy: { createdAt: "asc" },
+          include: { user: { select: userSelect } },
+        },
       },
     });
+    if (thread && (thread.removedAt || hidden.includes(thread.userId))) {
+      return NextResponse.json(null, { status: 404 });
+    }
     return NextResponse.json(thread);
   }
 
   if (album) {
     const threads = await prisma.thread.findMany({
-      where: { albumSpotifyId: album },
+      where: { albumSpotifyId: album, removedAt: null, ...notFromBlocked(hidden) },
       orderBy: { createdAt: "desc" },
       include: { user: { select: userSelect }, _count: { select: { replies: true } } },
     });
@@ -34,13 +46,17 @@ export async function GET(req: NextRequest) {
 
   if (username) {
     const u = await prisma.user.findUnique({ where: { username }, select: { id: true } });
-    if (!u) return NextResponse.json([]);
+    if (!u || hidden.includes(u.id)) return NextResponse.json([]);
     const repliedIds = await prisma.threadReply.findMany({
       where: { userId: u.id }, select: { threadId: true },
     });
     const ids = [...new Set(repliedIds.map((r) => r.threadId))];
     const threads = await prisma.thread.findMany({
-      where: { OR: [{ userId: u.id }, { id: { in: ids } }] },
+      where: {
+        removedAt: null,
+        ...notFromBlocked(hidden),
+        OR: [{ userId: u.id }, { id: { in: ids } }],
+      },
       orderBy: { createdAt: "desc" },
       include: { user: { select: userSelect }, _count: { select: { replies: true } } },
     });
@@ -56,6 +72,9 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const posting = await canPost(session.user.id);
+  if (!posting.allowed) return NextResponse.json({ error: posting.reason }, { status: 403 });
+
   const { albumSpotifyId, albumTitle, albumArtist, albumArtwork, title, body, images } = await req.json();
   const t = String(title ?? "").trim();
   const b = String(body ?? "").trim();
@@ -64,6 +83,21 @@ export async function POST(req: NextRequest) {
   }
   if (t.length > 140) return NextResponse.json({ error: "Title too long" }, { status: 400 });
   if (b.length > 5000) return NextResponse.json({ error: "Post too long" }, { status: 400 });
+
+  // Guideline 1.2: screen the title and body together before storing.
+  const screened = screenText(`${t}\n${b}`);
+  if (!screened.ok) {
+    if (screened.escalate) {
+      await autoReport({
+        reporterId: session.user.id,
+        contentType: "thread",
+        contentId: `blocked:${Date.now()}`,
+        category: screened.category!,
+        snapshot: `${t}\n${b}`,
+      });
+    }
+    return NextResponse.json({ error: screened.message }, { status: 422 });
+  }
 
   // Attached photos — up to 4 resized JPEG/PNG/WebP data URLs (SFW-checked client-side).
   let imagesJson: string | null = null;

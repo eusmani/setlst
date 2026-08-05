@@ -38,10 +38,11 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSContactsUsageDescription</key>
-	<string>SETLST can find friends already on the app by matching your contacts.</string>
+	<!-- No NSContactsUsageDescription: the iOS app never reads your address book.
+	     Find-your-friends is search- and invite-based here, so declaring a
+	     contacts purpose string would be asking for data the app doesn't use. -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>SETLST uses your location to show concerts and shows happening near you.</string>
+	<string>SETLST uses your location only when you tap “Find concerts near me”, to list upcoming shows in your area. Your location is used for that search and is never stored or shared.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

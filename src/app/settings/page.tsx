@@ -86,8 +86,12 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState<Theme>("amber");
   const [notif, setNotif] = useState({ newFollowers: true, friendReviews: true, newReleases: true, likes: false });
   const [privacy, setPrivacy] = useState({ privateProfile: false, hideActivity: false, hideSongPicks: false });
+  // Blocks are server-side (App Store guideline 1.2) — a localStorage list
+  // wouldn't survive a reinstall and couldn't stop DMs or follows.
   const [blocked, setBlocked] = useState<string[]>([]);
   const [blockInput, setBlockInput] = useState("");
+  const [blockBusy, setBlockBusy] = useState(false);
+  const [blockError, setBlockError] = useState("");
   const [tab, setTab] = useState<"general" | "account">("general");
 
   // load
@@ -97,8 +101,12 @@ export default function SettingsPage() {
       setTheme(document.documentElement.classList.contains("theme-mono") ? "mono" : "amber");
       const n = localStorage.getItem("setlst-notif"); if (n) setNotif(JSON.parse(n));
       const p = localStorage.getItem("setlst-privacy"); if (p) setPrivacy(JSON.parse(p));
-      const b = localStorage.getItem("setlst-blocked"); if (b) setBlocked(JSON.parse(b));
     } catch {}
+    // Blocked accounts come from the server.
+    fetch("/api/block")
+      .then((r) => r.json())
+      .then((d) => setBlocked((d.blocked ?? []).map((u: { username: string }) => u.username)))
+      .catch(() => {});
     // Source of truth for the private account flag is the server.
     fetch("/api/user/privacy")
       .then((r) => r.json())
@@ -129,16 +137,36 @@ export default function SettingsPage() {
       }).catch(() => {});
     }
   }
-  function addBlock() {
-    const u = blockInput.trim().replace(/^@/, "");
+  async function addBlock() {
+    const u = blockInput.trim().replace(/^@/, "").toLowerCase();
     if (!u || blocked.includes(u)) { setBlockInput(""); return; }
-    const next = [...blocked, u];
-    setBlocked(next); localStorage.setItem("setlst-blocked", JSON.stringify(next));
-    setBlockInput("");
+    setBlockBusy(true); setBlockError("");
+    try {
+      const res = await fetch("/api/block", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: u }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setBlockError(d.error ?? "Couldn't block that account.");
+        return;
+      }
+      setBlocked((prev) => [...prev, u]);
+      setBlockInput("");
+    } catch {
+      setBlockError("Couldn't block that account. Check your connection.");
+    } finally {
+      setBlockBusy(false);
+    }
   }
-  function removeBlock(u: string) {
-    const next = blocked.filter((x) => x !== u);
-    setBlocked(next); localStorage.setItem("setlst-blocked", JSON.stringify(next));
+  async function removeBlock(u: string) {
+    setBlocked((prev) => prev.filter((x) => x !== u));
+    try {
+      await fetch(`/api/block?username=${encodeURIComponent(u)}`, { method: "DELETE" });
+    } catch {
+      setBlocked((prev) => [...prev, u]); // put it back if the unblock failed
+    }
   }
   if (status !== "loading" && !session) {
     return (
@@ -254,10 +282,18 @@ export default function SettingsPage() {
             placeholder="username to block…"
             className="flex-1 bg-[#222222] border border-[#2e2e2e] text-[#f0f0f0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b]"
           />
-          <button onClick={addBlock} className="bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111] px-4 py-2 rounded-lg text-sm transition-colors">
-            Block
+          <button onClick={addBlock} disabled={blockBusy}
+            className="bg-[#c4a832] hover:bg-[#d4ba44] disabled:opacity-50 text-[#111111] px-4 py-2 rounded-lg text-sm transition-colors">
+            {blockBusy ? "Blocking…" : "Block"}
           </button>
         </div>
+        {blockError && <p className="text-xs text-red-400 mb-2">{blockError}</p>}
+        <p className="text-xs text-[#6b6b6b] mb-3 leading-relaxed">
+          Blocked people can&apos;t message you, follow you, or reply to you, and you won&apos;t see
+          each other anywhere in the app. You can also block someone from the ··· menu on any
+          post, or report content that breaks our{" "}
+          <Link href="/terms" className="text-[#c4a832] hover:underline">Terms of Use</Link>.
+        </p>
         {blocked.length === 0 ? (
           <p className="text-xs text-[#6b6b6b]">No blocked members.</p>
         ) : (
@@ -270,6 +306,25 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Legal + safety. App Review looks for these to be reachable in-app, and
+          members need somewhere to go that isn't a report on a specific post. */}
+      <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl p-4 mb-5">
+        <h2 className="text-[10px] text-[#6b6b6b] uppercase tracking-[0.15em] mb-3">Legal &amp; safety</h2>
+        <div className="space-y-2">
+          {[
+            { href: "/terms", label: "Terms of Use", sub: "Including our zero-tolerance content rules" },
+            { href: "/privacy", label: "Privacy Policy", sub: "What we collect, and who it's shared with" },
+            { href: "/copyright", label: "Copyright policy", sub: "Attribution and takedown requests" },
+            { href: "/support", label: "Contact support", sub: "Report a problem or appeal a decision" },
+          ].map(({ href, label, sub }) => (
+            <Link key={href} href={href} className="block group">
+              <p className="text-sm text-[#d8d8d8] group-hover:text-[#c4a832] transition-colors">{label} →</p>
+              <p className="text-xs text-[#6b6b6b]">{sub}</p>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Account management — delete lives on its own page so it's not one tap away */}

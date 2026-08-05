@@ -5,7 +5,7 @@ export const metadata = {
   description: "The terms and conditions for using SETLST.",
 };
 
-const UPDATED = "July 10, 2026";
+const UPDATED = "August 4, 2026";
 
 export default function TermsPage() {
   return (
@@ -22,6 +22,15 @@ export default function TermsPage() {
           <Link href="/privacy" className="text-[#c4a832] hover:underline">Privacy Policy</Link>. If
           you do not agree, please do not use SETLST.
         </p>
+
+        <section>
+          <h2 className="text-[#f0f0f0] font-semibold mb-2">Agreement to these terms</h2>
+          <p>
+            These Terms of Use are the end-user licence agreement between you and SETLST. You accept
+            them when you create an account, and we record which version you accepted. If we change
+            them materially, we&rsquo;ll ask you to accept the new version.
+          </p>
+        </section>
 
         <section>
           <h2 className="text-[#f0f0f0] font-semibold mb-2">Eligibility</h2>
@@ -51,17 +60,47 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-[#f0f0f0] font-semibold mb-2">Acceptable use</h2>
-          <p className="mb-2">You agree not to:</p>
+          <h2 className="text-[#f0f0f0] font-semibold mb-2">Acceptable use &mdash; zero tolerance</h2>
+          <p className="mb-2">
+            <span className="text-[#f0f0f0]">
+              SETLST has zero tolerance for objectionable content and abusive behaviour.
+            </span>{" "}
+            You agree not to post, send, or link to:
+          </p>
           <ul className="list-disc pl-5 space-y-1.5">
-            <li>Post unlawful, hateful, harassing, or infringing content, or content that is not safe for work.</li>
-            <li>Impersonate others or misrepresent your affiliation with any person or entity.</li>
-            <li>Abuse, spam, or attempt to disrupt or reverse-engineer the service.</li>
-            <li>Upload images or media you do not have the right to share.</li>
+            <li>Hate speech, slurs, or content attacking people based on race, ethnicity, national origin, religion, disability, sex, gender identity, or sexual orientation.</li>
+            <li>Harassment, bullying, stalking, or threats against anyone.</li>
+            <li>Sexually explicit or pornographic material, and&mdash;absolutely&mdash;any content that sexualises minors.</li>
+            <li>Content encouraging violence, self-harm, or suicide.</li>
+            <li>Unlawful content, or content that infringes anyone&rsquo;s copyright, trademark, or privacy.</li>
+            <li>Impersonation of another person, artist, or organisation.</li>
+            <li>Spam, scams, malware, or attempts to disrupt or reverse-engineer the service.</li>
+            <li>Images or media you do not have the right to share.</li>
           </ul>
-          <p className="mt-2">
-            There is zero tolerance for objectionable content or abusive behavior. We may remove
-            content and suspend or terminate accounts that violate these terms.
+        </section>
+
+        <section>
+          <h2 className="text-[#f0f0f0] font-semibold mb-2">Reporting, blocking, and moderation</h2>
+          <p className="mb-2">
+            Every review, discussion, reply, message, and profile in SETLST has a{" "}
+            <span className="text-[#f0f0f0]">···</span> menu with{" "}
+            <span className="text-[#f0f0f0]">Report</span> and{" "}
+            <span className="text-[#f0f0f0]">Block</span>. Blocking someone stops them from
+            messaging you, following you, or replying to you, and hides you from each other
+            everywhere in the app. You can manage blocked accounts in Settings.
+          </p>
+          <p className="mb-2">
+            We commit to reviewing every report and{" "}
+            <span className="text-[#f0f0f0]">removing offending content within 24 hours</span>,
+            and to ejecting the users who posted it. Posts are also screened automatically as they
+            are submitted, and content matching our prohibited categories is rejected before it is
+            ever published.
+          </p>
+          <p>
+            We may remove content and suspend or permanently terminate accounts that violate these
+            terms, with or without notice. To report something outside the app, or to appeal a
+            suspension, email{" "}
+            <a href="mailto:support@setlst.dev" className="text-[#c4a832] hover:underline">support@setlst.dev</a>.
           </p>
         </section>
 
@@ -90,11 +129,25 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-[#f0f0f0] font-semibold mb-2">Third-party content</h2>
+          <h2 className="text-[#f0f0f0] font-semibold mb-2">Third-party music content</h2>
+          <p className="mb-2">
+            Album titles, artist names, release dates, cover artwork, and preview clips are supplied
+            by third-party catalogue APIs &mdash; Apple Music, Spotify, MusicBrainz, and Wikipedia
+            &mdash; and are used under the terms of each provider&rsquo;s public developer
+            programme. That material remains the property of its respective rights holders: the
+            artists, labels, and publishers who own it.
+          </p>
+          <p className="mb-2">
+            SETLST does not host, stream, or sell music. Cover artwork is displayed at catalogue
+            scale purely to identify the release being discussed, links point back to the rights
+            holder&rsquo;s own service, and we do not claim ownership of any of it.
+          </p>
           <p>
-            Album, artist, and release information is sourced from third-party music catalogs and
-            belongs to their respective owners. SETLST is not affiliated with or endorsed by those
-            providers.
+            SETLST is an independent app. It is not affiliated with, sponsored by, or endorsed by
+            Apple, Spotify, MusicBrainz, SeatGeek, or any artist or label whose work appears in the
+            catalogue. All trademarks belong to their owners. If you are a rights holder and want
+            something removed, see our{" "}
+            <Link href="/copyright" className="text-[#c4a832] hover:underline">Copyright policy</Link>.
           </p>
         </section>
 

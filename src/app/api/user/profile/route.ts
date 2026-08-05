@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { normalizePhone } from "@/lib/phone";
+import { normalizePhone, hashPhone } from "@/lib/phone";
+import { screenText } from "@/lib/moderation";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -15,6 +16,9 @@ export async function POST(req: NextRequest) {
   if (bio && bio.length > 300) {
     return NextResponse.json({ error: "Bio must be 300 characters or fewer" }, { status: 400 });
   }
+  // Guideline 1.2: profile text is user-generated content too.
+  const screenedBio = screenText(bio);
+  if (!screenedBio.ok) return NextResponse.json({ error: screenedBio.message }, { status: 422 });
   // avatar is a data URL or image URL; cap size to keep the row small
   if (avatar != null && typeof avatar !== "string") {
     return NextResponse.json({ error: "Invalid avatar" }, { status: 400 });
@@ -31,6 +35,10 @@ export async function POST(req: NextRequest) {
     const cleanUsername = String(username).trim().toLowerCase();
     if (!/^[a-z0-9_]{3,20}$/.test(cleanUsername)) {
       return NextResponse.json({ error: "Username: 3–20 chars, lowercase letters/numbers/underscores" }, { status: 400 });
+    }
+    const screenedName = screenText(cleanUsername);
+    if (!screenedName.ok) {
+      return NextResponse.json({ error: "That username isn't allowed." }, { status: 422 });
     }
     const current = await prisma.user.findUnique({ where: { id: session.user.id }, select: { username: true } });
     if (cleanUsername !== current?.username) {
@@ -55,6 +63,14 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Keep phoneHash in lockstep with phone — contact matching compares digests.
+  const phoneFields =
+    phone === undefined
+      ? {}
+      : phone
+        ? { phone: normalizePhone(phone), phoneHash: await hashPhone(phone) }
+        : { phone: null, phoneHash: null };
+
   try {
     await prisma.user.update({
       where: { id: session.user.id },
@@ -62,7 +78,7 @@ export async function POST(req: NextRequest) {
         bio: bio?.trim() || null,
         ...(avatar !== undefined ? { avatar: avatar || null } : {}),
         ...(nextUsername ? { username: nextUsername } : {}),
-        ...(phone !== undefined ? { phone: phone ? normalizePhone(phone) : null } : {}),
+        ...phoneFields,
         ...(nextEmail ? { email: nextEmail } : {}),
       },
     });

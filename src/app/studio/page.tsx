@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export const metadata = {
   title: "SETLST — Track, rate & discuss the music you love",
@@ -15,7 +17,19 @@ const FEATURES: { title: string; body: string }[] = [
   { title: "SETLST Pro", body: "Go ad-free and unlock review analytics, monthly recaps, your personal Diary timeline, and more." },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Moderators get a link into the report queue from here; everyone else never
+  // sees that it exists.
+  const session = await auth();
+  const isModerator = session
+    ? !!(
+        await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { isModerator: true },
+        })
+      )?.isModerator
+    : false;
+
   return (
     <div className="max-w-4xl mx-auto px-5 pt-10 pb-20">
       {/* Hero */}
@@ -61,7 +75,15 @@ export default function AboutPage() {
           <span className="mx-2 text-[#2e2e2e]">·</span>
           <Link href="/terms" className="hover:text-[#c4a832] transition-colors">Terms</Link>
           <span className="mx-2 text-[#2e2e2e]">·</span>
+          <Link href="/copyright" className="hover:text-[#c4a832] transition-colors">Copyright</Link>
+          <span className="mx-2 text-[#2e2e2e]">·</span>
           <Link href="/support" className="hover:text-[#c4a832] transition-colors">Support</Link>
+          {isModerator && (
+            <>
+              <span className="mx-2 text-[#2e2e2e]">·</span>
+              <Link href="/studio/moderation" className="text-[#c4a832] hover:underline">Moderation queue</Link>
+            </>
+          )}
         </p>
       </div>
     </div>

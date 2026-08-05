@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/ui/Avatar";
+import { hashPhones } from "@/lib/phone";
 
 interface Member {
   id: string;
@@ -65,7 +66,12 @@ export default function FriendsPage() {
   }, [me]);
 
   useEffect(() => {
-    try { const b = localStorage.getItem("setlst-blocked"); if (b) setBlocked(JSON.parse(b)); } catch {}
+    // Blocks are server-side; the API already filters blocked people out of
+    // search and friend lists, this just keeps the client copy in sync.
+    fetch("/api/block")
+      .then((r) => r.json())
+      .then((d) => setBlocked((d.blocked ?? []).map((u: { username: string }) => u.username)))
+      .catch(() => {});
     // Contact Picker API exists only on Android Chrome; iOS Safari has none.
     setCanPickContacts(typeof navigator !== "undefined" && "contacts" in navigator && "ContactsManager" in window);
   }, []);
@@ -90,13 +96,16 @@ export default function FriendsPage() {
   }
   useEffect(() => { if (tab === "find") search(""); /* eslint-disable-next-line */ }, [tab]);
 
+  // Numbers are hashed on the device — only digests leave the phone, and the
+  // server keeps none of them (App Store guideline 5.1.2).
   async function matchPhones(phones: string[]) {
     setContactStatus("loading");
     try {
+      const hashes = await hashPhones(phones);
       const r = await fetch("/api/users/by-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phones }),
+        body: JSON.stringify({ hashes }),
       });
       const d = await r.json();
       setContactMatches(Array.isArray(d) ? d : []);

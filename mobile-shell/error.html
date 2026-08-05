@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SETLST — No connection</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body {
+        margin: 0; height: 100%;
+        background: #111111; color: #f0f0f0;
+        font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        height: 100%;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        text-align: center;
+        padding: 2rem max(2rem, env(safe-area-inset-left)) calc(2rem + env(safe-area-inset-bottom));
+        box-sizing: border-box;
+      }
+      .mark {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.75rem; font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #c4a832;
+        margin-bottom: 1.75rem;
+      }
+      h1 { font-size: 1.0625rem; font-weight: 600; margin: 0 0 0.5rem; }
+      p { font-size: 0.875rem; line-height: 1.6; color: #a0a0a0; margin: 0 0 1.75rem; max-width: 20rem; }
+      button {
+        font: inherit; font-size: 0.875rem;
+        background: #c4a832; color: #111111;
+        border: 0; border-radius: 0.625rem;
+        padding: 0.75rem 1.75rem;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      button:active { background: #d4ba44; }
+      .hint { margin-top: 1.5rem; font-size: 0.75rem; color: #6b6b6b; }
+    </style>
+  </head>
+  <body>
+    <!--
+      Shown by the native shell (server.errorPath in capacitor.config.ts) when
+      the app can't reach the network on launch. Without it, WKWebView renders a
+      blank white page or a raw browser error, which is both broken-looking and
+      exactly the kind of thing App Review flags under guideline 4.2.
+    -->
+    <div class="wrap">
+      <div class="mark">SETLST</div>
+      <h1>You&rsquo;re offline</h1>
+      <p>
+        SETLST needs a connection to load your feed, reviews, and messages.
+        Check your Wi-Fi or mobile data and try again.
+      </p>
+      <button id="retry" type="button">Try again</button>
+      <p class="hint" id="hint"></p>
+    </div>
+
+    <script>
+      var retry = document.getElementById("retry");
+      var hint = document.getElementById("hint");
+
+      function reload() {
+        retry.textContent = "Reconnecting…";
+        // Go back to the live app rather than reloading this local error page.
+        window.location.replace("https://setlst.dev/");
+      }
+
+      retry.addEventListener("click", reload);
+
+      // Reconnect on its own the moment the device is back online.
+      window.addEventListener("online", reload);
+
+      if (navigator.onLine) {
+        hint.textContent = "Your device says it's online — SETLST may be temporarily unreachable.";
+      }
+    </script>
+  </body>
+</html>

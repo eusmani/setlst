@@ -3,8 +3,9 @@ import bcrypt from "bcryptjs";
 import { resolveMx } from "dns/promises";
 import { prisma } from "@/lib/prisma";
 import { checkLimit, clientIp } from "@/lib/rateLimit";
-import { normalizePhone } from "@/lib/phone";
+import { normalizePhone, hashPhone } from "@/lib/phone";
 import { sendVerificationEmail } from "@/lib/verification";
+import { screenText, TERMS_VERSION } from "@/lib/moderation";
 
 // Confirm the email's domain can actually receive mail (has MX records).
 async function emailDomainIsReal(email: string): Promise<boolean> {
@@ -23,19 +24,36 @@ export async function POST(req: NextRequest) {
   const limited = checkLimit("register", clientIp(req), 5, 60 * 60 * 1000);
   if (limited) return limited;
 
-  const { username, email, password, phone, name } = await req.json();
-  if (!username || !email || !password || !phone)
-    return NextResponse.json({ error: "All fields required" }, { status: 400 });
+  const { username, email, password, phone, name, acceptedTerms } = await req.json();
+  if (!username || !email || !password)
+    return NextResponse.json({ error: "Username, email, and password are required" }, { status: 400 });
+
+  // Guideline 1.2: every account must accept the EULA + privacy policy, and the
+  // acceptance is recorded against the version they agreed to.
+  if (acceptedTerms !== true) {
+    return NextResponse.json(
+      { error: "You must accept the Terms of Use and Privacy Policy to create an account." },
+      { status: 400 }
+    );
+  }
+
   // Optional display name — stored in the profile bio for now (no dedicated
   // column). Kept short and sanitized.
   const cleanName = typeof name === "string" ? name.trim().slice(0, 60) : "";
   const cleanUsername = String(username).trim().toLowerCase();
   if (!/^[a-z0-9_]{3,20}$/.test(cleanUsername))
     return NextResponse.json({ error: "Username: 3–20 chars, lowercase letters/numbers/underscores" }, { status: 400 });
+  if (!screenText(cleanUsername).ok || !screenText(cleanName).ok)
+    return NextResponse.json({ error: "That username or name isn't allowed." }, { status: 422 });
   if (password.length < 8)
     return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
-  const normalizedPhone = normalizePhone(phone);
-  if (!normalizedPhone)
+
+  // Guideline 5.1.1(v): a phone number isn't required to use SETLST — it's
+  // optional, and only powers account recovery and find-your-friends matching.
+  // Supplying one that's malformed is still an error.
+  const hasPhone = phone !== undefined && phone !== null && String(phone).trim() !== "";
+  const normalizedPhone = hasPhone ? normalizePhone(phone) : null;
+  if (hasPhone && !normalizedPhone)
     return NextResponse.json({ error: "Enter a valid phone number" }, { status: 400 });
 
   const cleanEmail = String(email).trim().toLowerCase();
@@ -56,6 +74,9 @@ export async function POST(req: NextRequest) {
         email: cleanEmail,
         password: hash,
         phone: normalizedPhone,
+        phoneHash: normalizedPhone ? await hashPhone(normalizedPhone) : null,
+        termsAcceptedAt: new Date(),
+        termsVersion: TERMS_VERSION,
         ...(cleanName ? { bio: cleanName } : {}),
       },
     });

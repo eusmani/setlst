@@ -36,37 +36,32 @@ export async function getCoords(): Promise<Coords | null> {
   });
 }
 
-// Returns the phone numbers found in the user's contacts (native), or null when
-// not available so callers can fall back to a share-invite.
-export async function readContactPhones(): Promise<string[] | null> {
+// Location, but only if the user has *already* granted it — never prompts.
+//
+// Background personalization must not be the thing that triggers a permission
+// dialog: iOS shows the system prompt with no context, which reads as an app
+// asking for location it hasn't justified (App Store guideline 5.1.1). Features
+// that need a fresh prompt call getCoords() from an explicit user action.
+export async function getCoordsIfAllowed(): Promise<Coords | null> {
   if (isNative()) {
     try {
-      const { Contacts } = await import("@capacitor-community/contacts");
-      const perm = await Contacts.requestPermissions();
-      if (perm.contacts !== "granted") return null;
-      const res = await Contacts.getContacts({ projection: { phones: true } });
-      const nums: string[] = [];
-      for (const c of res.contacts ?? []) {
-        for (const p of c.phones ?? []) if (p.number) nums.push(p.number);
-      }
-      return nums;
+      const { Geolocation } = await import("@capacitor/geolocation");
+      const perm = await Geolocation.checkPermissions();
+      if (perm.location !== "granted") return null;
+      const p = await Geolocation.getCurrentPosition({ timeout: 10000, enableHighAccuracy: false });
+      return { lat: p.coords.latitude, lon: p.coords.longitude };
     } catch {
       return null;
     }
   }
-  // Web: try the Contact Picker API
+  // Web: the Permissions API tells us whether asking would show a prompt.
   try {
-    const nav = navigator as Navigator & {
-      contacts?: { select: (p: string[], o: { multiple: boolean }) => Promise<Array<{ tel?: string[] }>> };
-    };
-    if (nav.contacts?.select) {
-      const picked = await nav.contacts.select(["tel"], { multiple: true });
-      return picked.flatMap((c) => c.tel ?? []);
-    }
+    const state = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
+    if (state?.state !== "granted") return null;
   } catch {
-    /* cancelled */
+    return null; // no Permissions API — don't risk an unprompted dialog
   }
-  return null;
+  return getCoords();
 }
 
 // Light haptic tap (no-op on web).

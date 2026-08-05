@@ -52,18 +52,60 @@ export default function SupportPage() {
 
         <Q q="How do I delete my account?">
           <p>
-            You can delete your content from within the app at any time. To permanently delete your
-            account and associated data, email{" "}
+            Go to{" "}
+            <Link href="/settings/delete" className="text-[#c4a832] hover:underline">
+              Settings → Delete account
+            </Link>{" "}
+            and confirm. That permanently removes your profile, reviews, ratings, comments,
+            discussions, crates, messages, and follows &mdash; immediately, and for good. You can
+            also delete individual posts at any time. If you&apos;d rather we did it, email{" "}
             <a href={`mailto:${CONTACT}`} className="text-[#c4a832] hover:underline">{CONTACT}</a>{" "}
-            from the address on your account and we&apos;ll remove it.
+            from the address on your account.
           </p>
         </Q>
 
         <Q q="How do I report content or a user?">
+          <p className="mb-2">
+            SETLST has zero tolerance for objectionable content and abusive behaviour. Tap the{" "}
+            <span className="text-[#f0f0f0]">···</span> menu on any review, discussion, reply,
+            message, or profile and choose <span className="text-[#f0f0f0]">Report</span>. Pick a
+            reason and send &mdash; that&apos;s it.
+          </p>
           <p>
-            SETLST has zero tolerance for objectionable content and abusive behavior. Email{" "}
+            Every report is reviewed and offending content is removed{" "}
+            <span className="text-[#f0f0f0]">within 24 hours</span>, along with the accounts
+            responsible. If you can&apos;t use the in-app flow, email{" "}
             <a href={`mailto:${CONTACT}`} className="text-[#c4a832] hover:underline">{CONTACT}</a>{" "}
-            with a link or screenshot and we&apos;ll review it promptly.
+            with a link or screenshot.
+          </p>
+        </Q>
+
+        <Q q="How do I block someone?">
+          <p>
+            Use the same <span className="text-[#f0f0f0]">···</span> menu and choose{" "}
+            <span className="text-[#f0f0f0]">Block</span>, or add them by username under{" "}
+            <span className="text-[#f0f0f0]">Settings → Blocked accounts</span>. Blocked people
+            can&apos;t message you, follow you, or reply to you, and you won&apos;t see each other
+            anywhere in the app. Unblock from the same place whenever you like.
+          </p>
+        </Q>
+
+        <Q q="My account was suspended — can I appeal?">
+          <p>
+            Yes. Email{" "}
+            <a href={`mailto:${CONTACT}`} className="text-[#c4a832] hover:underline">{CONTACT}</a>{" "}
+            from the address on your account and we&apos;ll take another look. You can still sign in
+            to a suspended account to export or delete your data.
+          </p>
+        </Q>
+
+        <Q q="I'm a rights holder and want something taken down">
+          <p>
+            See our{" "}
+            <Link href="/copyright" className="text-[#c4a832] hover:underline">Copyright policy</Link>{" "}
+            for what to include, and email{" "}
+            <a href="mailto:copyright@setlst.dev" className="text-[#c4a832] hover:underline">copyright@setlst.dev</a>.
+            Infringing material is removed within 24 hours.
           </p>
         </Q>
 
@@ -77,8 +119,9 @@ export default function SupportPage() {
 
         <p className="text-[#6b6b6b] pt-2">
           See also our{" "}
-          <Link href="/privacy" className="text-[#c4a832] hover:underline">Privacy Policy</Link> and{" "}
-          <Link href="/terms" className="text-[#c4a832] hover:underline">Terms of Use</Link>.
+          <Link href="/privacy" className="text-[#c4a832] hover:underline">Privacy Policy</Link>,{" "}
+          <Link href="/terms" className="text-[#c4a832] hover:underline">Terms of Use</Link>, and{" "}
+          <Link href="/copyright" className="text-[#c4a832] hover:underline">Copyright policy</Link>.
         </p>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isBlockedBetween } from "@/lib/moderation";
 
 // GET /api/messages/[username] → the full conversation with a user (marks incoming
 // messages read). Returns partner info + messages (oldest first) with reactions.
@@ -13,8 +14,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
   const partner = await prisma.user.findUnique({ where: { username: username.toLowerCase() }, select: { id: true, username: true, avatar: true } });
   if (!partner) return NextResponse.json(null, { status: 404 });
 
+  // Blocked in either direction: the thread is inaccessible, not just hidden.
+  if (await isBlockedBetween(me, partner.id)) {
+    return NextResponse.json({ error: "This conversation is unavailable." }, { status: 403 });
+  }
+
   const messages = await prisma.directMessage.findMany({
     where: {
+      removedAt: null,
       OR: [
         { fromId: me, toId: partner.id },
         { fromId: partner.id, toId: me },

@@ -39,8 +39,10 @@ export default function SpotifyForYou() {
       try {
         let geo = "";
         try {
-          const { getCoords } = await import("@/lib/native");
-          const c = await getCoords();
+          // Only uses location the user already granted — this runs on page load,
+          // so it must never be what triggers the permission prompt.
+          const { getCoordsIfAllowed } = await import("@/lib/native");
+          const c = await getCoordsIfAllowed();
           if (c) geo = `?lat=${c.lat}&lon=${c.lon}`;
         } catch { /* no location */ }
         const cc = await fetch(`/api/spotify/concerts${geo}`).then((r) => r.json());

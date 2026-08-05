@@ -12,9 +12,17 @@ export async function GET() {
   try {
     const u = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { username: true, avatar: true },
+      // suspendedAt drives the banner telling a suspended member why posting
+      // is failing, and how to appeal (App Store guideline 1.2).
+      select: { username: true, avatar: true, suspendedAt: true, suspendedReason: true },
     });
-    return NextResponse.json(u ?? null);
+    if (!u) return NextResponse.json(null);
+    return NextResponse.json({
+      username: u.username,
+      avatar: u.avatar,
+      suspended: !!u.suspendedAt,
+      suspendedReason: u.suspendedReason,
+    });
   } catch {
     return NextResponse.json(null);
   }

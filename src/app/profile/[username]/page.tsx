@@ -11,6 +11,8 @@ import Crates from "./Crates";
 import Discussions from "./Discussions";
 import EditProfile from "./EditProfile";
 import FollowRequests from "./FollowRequests";
+import ContentMenu from "@/components/moderation/ContentMenu";
+import { isBlockedBetween } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +49,11 @@ export default async function ProfilePage({
   if (!user) notFound();
 
   const isOwnProfile = session?.user?.id === user.id;
+
+  // A blocked account is invisible in both directions — the profile behaves as
+  // though it doesn't exist (App Store guideline 1.2).
+  if (session && !isOwnProfile && (await isBlockedBetween(session.user.id, user.id))) notFound();
+
   // Your Diary is a SETLST Pro exclusive — only shown on your own profile when you're a member.
   const viewerPremium = isOwnProfile ? await isPremium(session?.user?.id) : false;
   const isFollowing = session && !isOwnProfile
@@ -157,6 +164,13 @@ export default async function ProfilePage({
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
                   Message
                 </Link>
+                {/* Report or block this member (App Store guideline 1.2). */}
+                <ContentMenu
+                  contentType="user"
+                  contentId={user.username}
+                  authorUsername={user.username}
+                  label={`@${user.username}`}
+                />
               </div>
             )}
             {isOwnProfile && (

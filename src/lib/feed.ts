@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { blockedIds } from "@/lib/moderation";
 
 const feedInclude = {
   user: { select: { id: true, username: true, avatar: true } },
@@ -9,16 +10,23 @@ const feedInclude = {
 // Home feed: a user's own + followed users' reviews (most recent first); for
 // logged-out visitors, the most recent reviews site-wide.
 async function getFeed(userId?: string, take = 20) {
+  // Blocked authors and moderator-removed reviews never reach a feed.
+  const hidden = await blockedIds(userId);
   if (!userId) {
-    return prisma.review.findMany({ include: feedInclude, orderBy: { createdAt: "desc" }, take });
+    return prisma.review.findMany({
+      where: { removedAt: null },
+      include: feedInclude,
+      orderBy: { createdAt: "desc" },
+      take,
+    });
   }
   const followed = await prisma.follow.findMany({
     where: { followerId: userId },
     select: { followingId: true },
   });
-  const ids = [userId, ...followed.map((f) => f.followingId)];
+  const ids = [userId, ...followed.map((f) => f.followingId)].filter((id) => !hidden.includes(id));
   return prisma.review.findMany({
-    where: { userId: { in: ids } },
+    where: { userId: { in: ids }, removedAt: null },
     include: feedInclude,
     orderBy: { createdAt: "desc" },
     take,
@@ -56,7 +64,18 @@ export type ActivityItem =
 // one activity stream, most recent first. viewerId reflects like-votes on reviews.
 async function getActivity(userIds: string[] | null, viewerId: string | undefined, take: number): Promise<ActivityItem[]> {
   if (userIds && userIds.length === 0) return [];
-  const where = userIds ? { userId: { in: userIds } } : {};
+
+  // Hide blocked people in both directions, plus anything moderation removed
+  // (App Store guideline 1.2).
+  const hidden = await blockedIds(viewerId);
+  const visibleIds = userIds?.filter((id) => !hidden.includes(id));
+  if (userIds && visibleIds!.length === 0) return [];
+
+  const where = {
+    removedAt: null,
+    ...(visibleIds ? { userId: { in: visibleIds } } : hidden.length ? { userId: { notIn: hidden } } : {}),
+  };
+
   const [reviews, threads, replies] = await Promise.all([
     prisma.review.findMany({ where, include: feedInclude, orderBy: { createdAt: "desc" }, take }),
     prisma.thread.findMany({

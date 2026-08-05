@@ -15,8 +15,21 @@ model User {
   bio           String?
   avatar        String?
   phone         String?
+  // SHA-256 of the normalized phone number. Contact matching compares hashes so
+  // the numbers in someone's address book never reach the server in the clear
+  // (App Store guideline 5.1.2 — data use limited to the disclosed purpose).
+  phoneHash     String?
   emailVerified Boolean @default(false)
   isPrivate     Boolean @default(false)
+
+  // Guideline 1.2 moderation. A suspended account can sign in (so it can appeal
+  // or delete its data) but cannot post, message, or follow.
+  suspendedAt     DateTime?
+  suspendedReason String?
+  isModerator     Boolean   @default(false)
+  // Guideline 1.2 / 5.1.1: recorded acceptance of the EULA + privacy policy.
+  termsAcceptedAt DateTime?
+  termsVersion    String?
   favoriteGenres String?
   topAlbums     String?
   createdAt     DateTime @default(now())
@@ -58,6 +71,69 @@ model User {
   resetTokens  PasswordResetToken[]
   emailTokens  EmailVerificationToken[]
   signInCodes  SignInCode[]
+
+  blocksMade     Block[] @relation("blocksMade")
+  blocksReceived Block[] @relation("blocksReceived")
+  reportsFiled   Report[] @relation("reportsFiled")
+  reportsAgainst Report[] @relation("reportsAgainst")
+  reportsHandled Report[] @relation("reportsHandled")
+}
+
+// Guideline 1.2: a user must be able to block abusive users. Blocking is stored
+// server-side (not in localStorage) so it is enforced on every request and
+// survives reinstalls — a block hides both directions and stops DMs, follows,
+// replies, and mentions.
+model Block {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  blockerId String
+  blockedId String
+  blocker   User @relation("blocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User @relation("blocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+// Guideline 1.2: a mechanism to report offensive content. Reports land in the
+// moderation queue at /studio/moderation, which is worked within 24 hours.
+model Report {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // "review" | "comment" | "thread" | "reply" | "message" | "user"
+  contentType String
+  contentId   String
+  // "spam" | "harassment" | "hate" | "sexual" | "violence" | "self_harm"
+  // | "copyright" | "impersonation" | "other"
+  reason      String
+  details     String?
+  // Snapshot of the reported text, so moderation still works if the author
+  // deletes the content before the report is reviewed.
+  snapshot    String?
+
+  // "pending" | "removed" | "dismissed" | "user_suspended"
+  status       String    @default("pending")
+  resolvedAt   DateTime?
+  resolverNote String?
+
+  // Nulled rather than cascaded when the reporter deletes their account: the
+  // evidence and outcome have to survive so repeat offenders stay actionable,
+  // but nothing identifying the reporter is kept.
+  reporterId String?
+  reporter   User?   @relation("reportsFiled", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  reportedUserId String?
+  reportedUser   User?   @relation("reportsAgainst", fields: [reportedUserId], references: [id], onDelete: SetNull)
+
+  resolvedById String?
+  resolvedBy   User?   @relation("reportsHandled", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([contentType, contentId])
+  @@index([reporterId])
 }
 
 model FollowRequest {
@@ -108,6 +184,9 @@ model Comment {
   body           String
   albumSpotifyId String
   createdAt      DateTime @default(now())
+  // Set when moderation removes this for a guideline violation; removed content
+  // is hidden everywhere but retained as evidence for the report it came from.
+  removedAt      DateTime?
 
   userId String
   user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -149,6 +228,7 @@ model Review {
   showSongs         Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  removedAt DateTime? // moderation removal (guideline 1.2)
 
   userId  String
   albumId String
@@ -245,6 +325,7 @@ model Thread {
   title     String
   body      String
   createdAt DateTime @default(now())
+  removedAt DateTime? // moderation removal (guideline 1.2)
 
   albumSpotifyId String
   albumTitle     String
@@ -277,6 +358,7 @@ model DirectMessage {
   albumArtwork   String?
   createdAt DateTime @default(now())
   readAt    DateTime?
+  removedAt DateTime? // moderation removal (guideline 1.2)
 
   fromId String
   from   User   @relation("dmSent", fields: [fromId], references: [id], onDelete: Cascade)
@@ -350,6 +432,7 @@ model ThreadReply {
   id        String   @id @default(cuid())
   body      String
   createdAt DateTime @default(now())
+  removedAt DateTime? // moderation removal (guideline 1.2)
   parentId  String?  // reply-to-reply (nested comments); null = top-level
 
   threadId String

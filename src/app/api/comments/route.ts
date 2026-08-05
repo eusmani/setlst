@@ -2,15 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkLimit } from "@/lib/rateLimit";
+import { autoReport, blockedIds, canPost, notFromBlocked, screenText } from "@/lib/moderation";
 
 export async function GET(req: NextRequest) {
   const albumId = req.nextUrl.searchParams.get("albumId");
   if (!albumId) return NextResponse.json([], { status: 400 });
 
   const session = await auth();
+  const hidden = await blockedIds(session?.user.id);
 
   const comments = await prisma.comment.findMany({
-    where: { albumSpotifyId: albumId },
+    // Hide comments from blocked users and anything moderation has removed.
+    where: { albumSpotifyId: albumId, removedAt: null, ...notFromBlocked(hidden) },
     include: {
       user: { select: { id: true, username: true, avatar: true } },
       likes: session ? { where: { userId: session.user.id }, select: { id: true } } : false,
@@ -40,12 +43,30 @@ export async function POST(req: NextRequest) {
   const limited = checkLimit("comment", session.user.id, 10, 60 * 1000);
   if (limited) return limited;
 
+  const posting = await canPost(session.user.id);
+  if (!posting.allowed) return NextResponse.json({ error: posting.reason }, { status: 403 });
+
   const { albumSpotifyId, body } = await req.json();
   if (!albumSpotifyId || !body?.trim()) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
   if (body.length > 1000) {
     return NextResponse.json({ error: "Comment too long" }, { status: 400 });
+  }
+
+  // Guideline 1.2: objectionable content is rejected before it is ever stored.
+  const screened = screenText(body);
+  if (!screened.ok) {
+    if (screened.escalate) {
+      await autoReport({
+        reporterId: session.user.id,
+        contentType: "comment",
+        contentId: `blocked:${Date.now()}`,
+        category: screened.category!,
+        snapshot: body,
+      });
+    }
+    return NextResponse.json({ error: screened.message }, { status: 422 });
   }
 
   const comment = await prisma.comment.create({

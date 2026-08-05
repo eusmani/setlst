@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
+import ContentMenu from "@/components/moderation/ContentMenu";
 
 interface Album {
   spotifyId: string;
@@ -52,16 +53,28 @@ export default function Discussion({ album, isLoggedIn }: { album: Album; isLogg
       ) : (
         <div className="space-y-2">
           {threads.map((t) => (
-            <Link key={t.id} href={`/thread/${t.id}`}
-              className="block p-3 bg-[#141414] border border-[#1f1f1f] hover:border-[#2e2e2e] rounded-lg transition-colors group">
-              <p className="text-sm text-[#f0f0f0] group-hover:text-[#c4a832] transition-colors leading-snug">{t.title}</p>
-              <p className="text-xs text-[#a0a0a0] line-clamp-1 mt-0.5">{t.body}</p>
-              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#6b6b6b]">
-                <Avatar username={t.user.username} avatar={t.user.avatar} size={16} />
-                <span>{t.user.username}</span>
-                <span>· {t._count.replies} {t._count.replies === 1 ? "reply" : "replies"}</span>
-              </div>
-            </Link>
+            // The report/block menu is a sibling of the Link, not a child —
+            // nesting a button inside an anchor is invalid and swallows taps.
+            <div key={t.id} className="relative">
+              <Link href={`/thread/${t.id}`}
+                className="block p-3 bg-[#141414] border border-[#1f1f1f] hover:border-[#2e2e2e] rounded-lg transition-colors group">
+                <p className="text-sm text-[#f0f0f0] group-hover:text-[#c4a832] transition-colors leading-snug pr-8">{t.title}</p>
+                <p className="text-xs text-[#a0a0a0] line-clamp-1 mt-0.5">{t.body}</p>
+                <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#6b6b6b]">
+                  <Avatar username={t.user.username} avatar={t.user.avatar} size={16} />
+                  <span>{t.user.username}</span>
+                  <span>· {t._count.replies} {t._count.replies === 1 ? "reply" : "replies"}</span>
+                </div>
+              </Link>
+              <ContentMenu
+                contentType="thread"
+                contentId={t.id}
+                authorUsername={t.user.username}
+                label="this discussion"
+                onBlocked={() => setThreads((ts) => (ts ?? []).filter((x) => x.id !== t.id))}
+                className="absolute top-2 right-1"
+              />
+            </div>
           ))}
         </div>
       )}

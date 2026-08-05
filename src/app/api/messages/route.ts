@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { blockedIds, canPost, isBlockedBetween, screenText, autoReport } from "@/lib/moderation";
 
 const userSel = { id: true, username: true, avatar: true };
 
@@ -10,8 +11,16 @@ export async function GET() {
   if (!session) return NextResponse.json([], { status: 401 });
   const me = session.user.id;
 
+  // Conversations with blocked users disappear from the inbox entirely, and
+  // moderator-removed messages never surface.
+  const hidden = await blockedIds(me);
+
   const msgs = await prisma.directMessage.findMany({
-    where: { OR: [{ fromId: me }, { toId: me }] },
+    where: {
+      OR: [{ fromId: me }, { toId: me }],
+      removedAt: null,
+      ...(hidden.length ? { NOT: [{ fromId: { in: hidden } }, { toId: { in: hidden } }] } : {}),
+    },
     orderBy: { createdAt: "desc" },
     take: 300,
     include: { from: { select: userSel }, to: { select: userSel } },
@@ -42,8 +51,29 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const me = session.user.id;
+
+  const posting = await canPost(me);
+  if (!posting.allowed) return NextResponse.json({ error: posting.reason }, { status: 403 });
+
   const { toUsername, toUsernames, body, threadId, album } = await req.json();
   const text = String(body ?? "").trim();
+
+  // Guideline 1.2: screen message text before it is stored.
+  const screened = screenText(text);
+  if (!screened.ok) {
+    if (screened.escalate) {
+      await autoReport({
+        reporterId: me,
+        contentType: "message",
+        contentId: `blocked:${Date.now()}`,
+        category: screened.category!,
+        snapshot: text,
+      });
+    }
+    return NextResponse.json({ error: screened.message }, { status: 422 });
+  }
+
+  const hidden = await blockedIds(me);
 
   // Share an album or discussion to one or more recipients.
   if (album?.spotifyId || threadId) {
@@ -51,7 +81,7 @@ export async function POST(req: NextRequest) {
       .map((n: string) => String(n).toLowerCase());
     if (names.length === 0) return NextResponse.json({ error: "No recipients" }, { status: 400 });
     const users = await prisma.user.findMany({ where: { username: { in: names } }, select: { id: true } });
-    const recips = users.filter((u) => u.id !== me);
+    const recips = users.filter((u) => u.id !== me && !hidden.includes(u.id));
     if (recips.length === 0) return NextResponse.json({ error: "No recipients" }, { status: 400 });
     await prisma.directMessage.createMany({
       data: recips.map((u) => ({
@@ -73,6 +103,12 @@ export async function POST(req: NextRequest) {
   const to = await prisma.user.findUnique({ where: { username: String(toUsername).toLowerCase() }, select: { id: true } });
   if (!to) return NextResponse.json({ error: "User not found" }, { status: 404 });
   if (to.id === me) return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 });
+
+  // A block stops messages in both directions — the sender is told the message
+  // can't be delivered, without revealing who blocked whom.
+  if (await isBlockedBetween(me, to.id)) {
+    return NextResponse.json({ error: "You can't message this person." }, { status: 403 });
+  }
 
   const msg = await prisma.directMessage.create({
     data: { fromId: me, toId: to.id, body: text },

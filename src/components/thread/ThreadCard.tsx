@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
+import ContentMenu from "@/components/moderation/ContentMenu";
 import type { ThreadActivity } from "@/lib/feed";
 
 // A discussion thread as it appears in an activity feed, alongside reviews.
@@ -24,6 +25,14 @@ export default function ThreadCard({ thread }: { thread: ThreadActivity }) {
             </svg>
             started a discussion
           </span>
+          {/* Report / block, on every discussion (App Store guideline 1.2). */}
+          <ContentMenu
+            contentType="thread"
+            contentId={thread.id}
+            authorUsername={thread.user.username}
+            label="this discussion"
+            className="ml-auto"
+          />
         </div>
 
         <Link href={`/thread/${thread.id}`} className="block group">

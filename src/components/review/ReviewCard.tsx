@@ -3,6 +3,7 @@ import Avatar from "@/components/ui/Avatar";
 import { ratingTier } from "@/lib/rating";
 import ReviewVotes from "./ReviewVotes";
 import ClampedBody from "./ClampedBody";
+import ContentMenu from "@/components/moderation/ContentMenu";
 
 export interface ReviewData {
   id: string;
@@ -133,6 +134,14 @@ export default function ReviewCard({ review, showAlbum = true, isLoggedIn = fals
           </Link>
           <span className="text-[#6b6b6b] text-xs">·</span>
           <span className="text-xs text-[#6b6b6b]">{date}</span>
+          {/* Report / block, on every review (App Store guideline 1.2). */}
+          <ContentMenu
+            contentType="review"
+            contentId={review.id}
+            authorUsername={review.user.username}
+            label="this review"
+            className="ml-auto"
+          />
         </div>
 
         {/* Like / dislike / share */}

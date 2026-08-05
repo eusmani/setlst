@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
+import ContentMenu from "@/components/moderation/ContentMenu";
 
 interface UserLite { id: string; username: string; avatar: string | null }
 interface Reply { id: string; body: string; createdAt: string; user: UserLite; parentId: string | null; likeCount: number; dislikeCount: number; myVote: number }
@@ -138,8 +139,17 @@ export default function ThreadView({ thread, currentUserId, isLoggedIn }: { thre
         <Avatar username={thread.user.username} avatar={thread.user.avatar} size={22} />
         <Link href={`/profile/${thread.user.username}`} className="hover:text-[#c4a832] transition-colors">{thread.user.username}</Link>
         <span className="text-[#6b6b6b]">· {fmt(thread.createdAt)}</span>
-        {currentUserId === thread.user.id && (
+        {currentUserId === thread.user.id ? (
           <button onClick={deleteThread} className="ml-auto text-[#6b6b6b] hover:text-red-400 transition-colors">Delete</button>
+        ) : (
+          /* Report / block the original post (App Store guideline 1.2). */
+          <ContentMenu
+            contentType="thread"
+            contentId={thread.id}
+            authorUsername={thread.user.username}
+            label="this discussion"
+            className="ml-auto"
+          />
         )}
       </div>
 
@@ -285,8 +295,17 @@ function ReplyNode({
           <Avatar username={reply.user.username} avatar={reply.user.avatar} size={18} />
           <Link href={`/profile/${reply.user.username}`} className="hover:text-[#c4a832] transition-colors">{reply.user.username}</Link>
           <span className="text-[#6b6b6b]">· {fmt(reply.createdAt)}</span>
-          {currentUserId === reply.user.id && (
+          {currentUserId === reply.user.id ? (
             <button onClick={() => onRemove(reply.id)} className="ml-auto text-[#6b6b6b] hover:text-red-400 transition-colors">Delete</button>
+          ) : (
+            /* Report / block on every reply (App Store guideline 1.2). */
+            <ContentMenu
+              contentType="reply"
+              contentId={reply.id}
+              authorUsername={reply.user.username}
+              label="this reply"
+              className="ml-auto"
+            />
           )}
         </div>
         <p className="text-sm text-[#e8e8e8] whitespace-pre-wrap leading-relaxed">{reply.body}</p>

@@ -523,6 +523,16 @@ export default async function AlbumPage({
         genre={similarGenre}
         excludeId={spotifyId}
       />
+
+      {/* Attribution for the catalogue data on this page (guideline 5.2.1). */}
+      <p className="mt-8 pt-4 border-t border-[#1f1f1f] text-[11px] text-[#6b6b6b] leading-relaxed">
+        Album metadata and artwork provided by Apple Music, Spotify, and MusicBrainz, and remain the
+        property of their respective rights holders. SETLST is an independent app and is not
+        affiliated with or endorsed by them.{" "}
+        <Link href="/copyright" className="text-[#a0a0a0] hover:text-[#c4a832] transition-colors">
+          Copyright &amp; attribution
+        </Link>
+      </p>
       </div>
     </>
   );

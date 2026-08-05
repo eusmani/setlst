@@ -10,6 +10,8 @@ import RegisterSW from "@/components/layout/RegisterSW";
 import UpcomingBanner from "@/components/layout/UpcomingBanner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import NativeBridge from "@/components/layout/NativeBridge";
+import OfflineNotice from "@/components/layout/OfflineNotice";
+import SuspensionBanner from "@/components/layout/SuspensionBanner";
 import OnboardingSlideshow from "@/components/layout/OnboardingSlideshow";
 import NavProgress from "@/components/layout/NavProgress";
 
@@ -78,6 +80,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <NavProgress />
           <RegisterSW />
           <NativeBridge />
+          <OfflineNotice />
+          <SuspensionBanner />
           <OnboardingSlideshow />
           <Navbar />
           {/* Desktop only: offsets the fixed navbar (h-16). On mobile the navbar is

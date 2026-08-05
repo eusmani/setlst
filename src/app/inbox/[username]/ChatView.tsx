@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
+import ContentMenu from "@/components/moderation/ContentMenu";
 
 interface Reaction { emoji: string; mine: boolean }
 interface Message {
@@ -40,6 +41,10 @@ export default function ChatView({ username }: { username: string }) {
   const [sending, setSending] = useState(false);
   const [picker, setPicker] = useState<string | null>(null); // messageId whose emoji bar is open
   const [loaded, setLoaded] = useState(false);
+  // Set when the conversation is unavailable (blocked in either direction), or
+  // when a send is rejected — e.g. the content filter turned it down.
+  const [unavailable, setUnavailable] = useState(false);
+  const [sendError, setSendError] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const countRef = useRef(0);
   // Hidden input that summons the OS emoji keyboard for "react with any emoji".
@@ -54,7 +59,9 @@ export default function ChatView({ username }: { username: string }) {
 
   const load = useCallback(async () => {
     try {
-      const d = await fetch(`/api/messages/${encodeURIComponent(username)}`).then((r) => r.json());
+      const res = await fetch(`/api/messages/${encodeURIComponent(username)}`);
+      if (res.status === 403) { setUnavailable(true); setLoaded(true); return; }
+      const d = await res.json();
       if (d?.partner) { setPartner(d.partner); setMessages(d.messages); }
     } catch { /* ignore */ }
     setLoaded(true);
@@ -63,9 +70,10 @@ export default function ChatView({ username }: { username: string }) {
   useEffect(() => { load(); }, [load]);
   // Light polling so replies appear without a refresh.
   useEffect(() => {
+    if (unavailable) return;
     const t = setInterval(load, 5000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, unavailable]);
 
   // Keep pinned to the newest message when the count grows.
   useEffect(() => {
@@ -80,6 +88,7 @@ export default function ChatView({ username }: { username: string }) {
     const body = text.trim();
     if (!body || sending) return;
     setSending(true);
+    setSendError("");
     setText("");
     const r = await fetch("/api/messages", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -90,7 +99,12 @@ export default function ChatView({ username }: { username: string }) {
       const m = await r.json();
       setMessages((xs) => [...xs, { ...m, thread: null }]);
     } else {
+      // Put the text back and say why — a 422 is the content filter, a 403 is a
+      // block or a suspended account.
       setText(body);
+      const d = await r.json().catch(() => ({}));
+      setSendError(d.error ?? "Couldn't send that message.");
+      if (r.status === 403) setUnavailable(true);
     }
   }
 
@@ -115,14 +129,38 @@ export default function ChatView({ username }: { username: string }) {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           {partner && (
-            <Link href={`/profile/${partner.username}`} className="flex items-center gap-2.5 min-w-0">
-              <Avatar username={partner.username} avatar={partner.avatar} size={34} />
-              <span className="text-sm text-[#f0f0f0] font-medium truncate">{partner.username}</span>
-            </Link>
+            <>
+              <Link href={`/profile/${partner.username}`} className="flex items-center gap-2.5 min-w-0">
+                <Avatar username={partner.username} avatar={partner.avatar} size={34} />
+                <span className="text-sm text-[#f0f0f0] font-medium truncate">{partner.username}</span>
+              </Link>
+              {/* Report or block the person you're talking to (guideline 1.2). */}
+              <ContentMenu
+                contentType="user"
+                contentId={partner.username}
+                authorUsername={partner.username}
+                label="this conversation"
+                onBlocked={() => setUnavailable(true)}
+                className="ml-auto"
+              />
+            </>
           )}
         </div>
       </div>
 
+      {/* Blocked in either direction: the thread is closed, not just hidden. */}
+      {unavailable ? (
+        <div className="flex-1 flex items-center justify-center px-8">
+          <div className="text-center max-w-xs">
+            <p className="text-sm text-[#f0f0f0] mb-2">This conversation is unavailable</p>
+            <p className="text-xs text-[#6b6b6b] leading-relaxed">
+              You can&apos;t message this person. If you blocked them, you can undo that in{" "}
+              <Link href="/settings" className="text-[#c4a832] hover:underline">Settings → Blocked accounts</Link>.
+            </p>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto w-full px-4 py-4 space-y-1">
@@ -203,6 +241,14 @@ export default function ChatView({ username }: { username: string }) {
 
       {/* Composer */}
       <div className="shrink-0 border-t border-[#1f1f1f] bg-[#111111] pb-[env(safe-area-inset-bottom)]">
+        {/* Why a message was refused — content filter (422) or suspension (403). */}
+        {sendError && (
+          <div className="max-w-2xl mx-auto w-full px-3 pt-2">
+            <p className="text-xs text-red-400 bg-red-950/30 border border-red-900/30 px-3 py-2 rounded-lg leading-snug">
+              {sendError}
+            </p>
+          </div>
+        )}
         <div className="max-w-2xl mx-auto w-full px-3 py-2.5 flex items-center gap-2">
           <input
             value={text}
@@ -217,6 +263,8 @@ export default function ChatView({ username }: { username: string }) {
           </button>
         </div>
       </div>
+      </>
+      )}
 
       {/* Off-screen input that pops the OS emoji keyboard for picking any emoji */}
       <input
