@@ -220,9 +220,19 @@ export default function TopAlbums({ initial, isOwner }: Props) {
                   ))}
                 </div>
               ) : query ? (
-                <p className="text-xs text-[#6b6b6b] text-center py-3">No results</p>
+                <p className="text-xs text-[#6b6b6b] text-center py-3">
+                  No results.{" "}
+                  <Link href={`/search?q=${encodeURIComponent(query)}`} className="text-[#c4a832] hover:underline">
+                    Search in Albums instead →
+                  </Link>
+                </p>
               ) : (
-                <p className="text-xs text-[#6b6b6b] text-center py-3">Type to search Spotify</p>
+                <p className="text-xs text-[#6b6b6b] text-center py-3">
+                  Type to search, or{" "}
+                  <Link href="/search" className="text-[#c4a832] hover:underline">
+                    browse Albums →
+                  </Link>
+                </p>
               )}
             </div>
           )}

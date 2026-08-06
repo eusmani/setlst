@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import AlbumRow from "@/components/album/AlbumRow";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
@@ -80,7 +81,11 @@ const TYPE_FILTERS = [
 type TypeFilter = (typeof TYPE_FILTERS)[number]["key"];
 
 export default function SearchPage() {
-  const [q, setQ] = useState("");
+  // Prefill from ?q= so links into this screen carry the term with them —
+  // the profile's top-5 picker hands off here when its inline search comes up
+  // empty, and arriving with a blank box would throw away what was typed.
+  const searchParams = useSearchParams();
+  const [q, setQ] = useState(() => searchParams.get("q") ?? "");
   const [searchResults, setSearchResults] = useState<SpotifyAlbum[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);

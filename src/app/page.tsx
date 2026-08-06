@@ -37,13 +37,13 @@ function FeedSkeleton() {
 
 async function MobilePrimaryFeed({ userId }: { userId?: string }) {
   if (userId) {
-    return <MobileFeed items={await cachedFriends(userId)} href="/activity?tab=friends" empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }} />;
+    return <MobileFeed items={await cachedFriends(userId)} empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }} />;
   }
-  return <MobileFeed items={await cachedRecent()} href="/activity" empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }} />;
+  return <MobileFeed items={await cachedRecent()} empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }} />;
 }
 
 async function MobileMyFeed({ userId }: { userId: string }) {
-  return <MobileFeed items={await cachedMine(userId)} href="/activity?tab=you&only=you" limit={5} empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
+  return <MobileFeed items={await cachedMine(userId)} limit={5} empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
 }
 
 async function DesktopPrimaryFeed({ userId }: { userId?: string }) {
@@ -132,9 +132,6 @@ export default async function HomePage() {
               <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
                 {userId ? "From your friends" : "Recent activity"}
               </h2>
-              <Link href={userId ? "/activity?tab=friends" : "/activity"} className="text-xs text-[#c4a832]">
-                See all
-              </Link>
             </div>
             <Suspense fallback={<FeedSkeleton />}>
               <MobilePrimaryFeed userId={userId} />
@@ -146,12 +143,11 @@ export default async function HomePage() {
           <ClubsStrip />
 
           {userId && (
-            <section>
+            <section id="your-activity" className="scroll-mt-20">
               <div className="flex items-baseline justify-between mb-3">
                 <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
                   Your activity
                 </h2>
-                <Link href="/activity?tab=you&only=you" className="text-xs text-[#c4a832]">See all</Link>
               </div>
               <Suspense fallback={<FeedSkeleton />}>
                 <MobileMyFeed userId={userId} />

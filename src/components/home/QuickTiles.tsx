@@ -18,11 +18,12 @@ interface Tile {
 
 const TILES: Tile[] = [
   { href: "/log", label: "Log an album", icon: "plus", accent: true },
-  // Your own history only — `?tab=you` opens the activity screen on the You
-  // tab. Friends and Trending stay behind the bottom bar's Activity item, which
-  // points at bare /activity. Deliberately NOT /diary: despite that route's
-  // name it's the music-news reader (the navbar calls it "News").
-  { href: "/activity?tab=you&only=you", label: "Your diary", icon: "book" },
+  // Jumps to the Your activity section further down the home screen rather than
+  // navigating to /activity — the feed is already here, so leaving the screen to
+  // read it is a round trip for nothing. Friends and Trending live behind the
+  // bottom bar's Activity item. Deliberately NOT /diary either: despite that
+  // route's name it's the music-news reader (the navbar calls it "News").
+  { href: "/#your-activity", label: "Your diary", icon: "book" },
   { href: "/crate", label: "Crates", icon: "stack" },
   { href: "/members", label: "Friends", icon: "people" },
 ];
