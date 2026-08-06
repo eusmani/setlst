@@ -22,7 +22,7 @@ const TILES: Tile[] = [
   // tab. Friends and Trending stay behind the bottom bar's Activity item, which
   // points at bare /activity. Deliberately NOT /diary: despite that route's
   // name it's the music-news reader (the navbar calls it "News").
-  { href: "/activity?tab=you", label: "Your diary", icon: "book" },
+  { href: "/activity?tab=you&only=you", label: "Your diary", icon: "book" },
   { href: "/crate", label: "Crates", icon: "stack" },
   { href: "/members", label: "Friends", icon: "people" },
 ];

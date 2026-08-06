@@ -36,7 +36,7 @@ export default function MobileFeed({ items, href, empty, limit = 12 }: Props) {
           href={href}
           className="flex items-center justify-center gap-1.5 text-[13px] text-[#a0a0a0] border border-[#232323] rounded-xl py-3"
         >
-          See all activity
+          See more
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 6 15 12 9 18" />

@@ -43,7 +43,7 @@ async function MobilePrimaryFeed({ userId }: { userId?: string }) {
 }
 
 async function MobileMyFeed({ userId }: { userId: string }) {
-  return <MobileFeed items={await cachedMine(userId)} href="/activity?tab=you" limit={6} empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
+  return <MobileFeed items={await cachedMine(userId)} href="/activity?tab=you&only=you" limit={5} empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
 }
 
 async function DesktopPrimaryFeed({ userId }: { userId?: string }) {
@@ -151,7 +151,7 @@ export default async function HomePage() {
                 <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
                   Your activity
                 </h2>
-                <Link href="/activity?tab=you" className="text-xs text-[#c4a832]">See all</Link>
+                <Link href="/activity?tab=you&only=you" className="text-xs text-[#c4a832]">See all</Link>
               </div>
               <Suspense fallback={<FeedSkeleton />}>
                 <MobileMyFeed userId={userId} />

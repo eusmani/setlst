@@ -13,6 +13,15 @@ interface Props {
   myActivity: ActivityItem[];
   isLoggedIn: boolean;
   initialTab?: Tab | null;
+  /**
+   * Show one tab and hide the switcher entirely.
+   *
+   * "Your diary" on the home screen is meant to be your own history and nothing
+   * else — landing on the You tab but leaving Friends and Trending one tap away
+   * makes it just another route into the activity screen. Those live behind the
+   * bottom bar's Activity item instead.
+   */
+  lockedTab?: Tab | null;
 }
 
 const TABS: { key: Tab; label: string }[] = [
@@ -38,9 +47,9 @@ function FeedList({ items, isLoggedIn }: { items: ActivityItem[]; isLoggedIn: bo
   );
 }
 
-export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, initialTab = null }: Props) {
+export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, initialTab = null, lockedTab = null }: Props) {
   // Opens to the tab passed via ?tab= (e.g. from the home screen), else nothing until clicked.
-  const [tab, setTab] = useState<Tab | null>(initialTab);
+  const [tab, setTab] = useState<Tab | null>(lockedTab ?? initialTab);
 
   // Albums your friends have recently reviewed (favorites bubble up first), de-duped.
   const friendsAlbums = useMemo(() => {
@@ -57,9 +66,22 @@ export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, 
 
   return (
     <div>
+      {/* Locked mode has no switcher, so it needs its own title and a way
+          through to the full screen — otherwise it's a bare list with no
+          context and no exit. */}
+      {lockedTab && (
+        <div className="flex items-baseline justify-between mb-5">
+          <h1 className="font-serif text-2xl text-[#f0f0f0]">Your diary</h1>
+          <Link href="/activity" className="text-xs text-[#c4a832] hover:underline">
+            All activity →
+          </Link>
+        </div>
+      )}
+
       {/* Horizontal nested tab bar (segmented control) — spans the column so the
-          three tabs split it evenly instead of huddling in the middle */}
-      <div className="mb-6">
+          three tabs split it evenly instead of huddling in the middle.
+          Hidden when locked to a single tab. */}
+      {!lockedTab && <div className="mb-6">
         <div className="flex w-full items-center gap-1 p-1 rounded-full bg-[#1a1a1a] border border-[#1f1f1f]">
           {TABS.map(({ key, label }) => (
             <button
@@ -76,10 +98,10 @@ export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, 
             </button>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Nothing selected yet */}
-      {tab === null && (
+      {!lockedTab && tab === null && (
         <div className="py-12 text-center text-[#6b6b6b] bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg">
           <p className="text-sm">Pick a tab to see Friends, You, or Trending.</p>
         </div>
