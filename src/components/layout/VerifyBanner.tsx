@@ -31,7 +31,9 @@ export default function VerifyBanner() {
   if (pathname !== "/" || verified !== false || dismissed) return null;
 
   return (
-    <div className="relative bg-[#c4a832] text-[#111111]">
+    // Desktop web only — the mobile app deliberately has no ad-style top
+    // banners. Verification is still reachable there from Settings.
+    <div className="hidden sm:block relative bg-[#c4a832] text-[#111111]">
       <div className="max-w-6xl mx-auto px-5 py-2 flex items-center gap-3 text-sm">
         <span className="flex-1">
           {sent

@@ -113,7 +113,6 @@ export default async function HomePage() {
             content started three scrolls down. */}
         <div className="lg:hidden space-y-6">
           {session && <QuickTiles />}
-          {session && <SpotifyForYou />}
 
           <TrendingAlbums
             limit={12}

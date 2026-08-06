@@ -54,11 +54,12 @@ export default function SpotifyForYou() {
 
   if (connected === null) return null;
 
-  // Not connected → prompt (mobile only). Hidden once dismissed.
+  // Not connected → prompt. Desktop web only: the mobile app doesn't carry
+  // ad-style banners, and Spotify can still be linked from Settings there.
   if (!connected) {
     if (dismissed) return null;
     return (
-      <div className="sm:hidden relative bg-gradient-to-r from-[#1DB954]/15 to-[#1a1a1a] border border-[#1DB954]/30 rounded-2xl py-4 pl-4 pr-9 flex items-center gap-3">
+      <div className="hidden sm:flex relative bg-gradient-to-r from-[#1DB954]/15 to-[#1a1a1a] border border-[#1DB954]/30 rounded-2xl py-4 pl-4 pr-9 items-center gap-3">
         <button
           onClick={dismiss}
           aria-label="Dismiss"
