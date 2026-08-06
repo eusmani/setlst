@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { getUserActivity, getFriendsActivity, getRecentActivity } from "@/lib/feed";
 import { cache, Suspense } from "react";
 import MobileActivitySection from "@/components/home/MobileActivitySection";
+import MobileFeed from "@/components/home/MobileFeed";
+import QuickTiles from "@/components/home/QuickTiles";
 import ClubsStrip from "@/components/home/ClubsStrip";
 import SpotifyForYou from "@/components/home/SpotifyForYou";
 import ReleaseFilterPills from "@/components/home/ReleaseFilterPills";
@@ -36,9 +38,9 @@ function FeedSkeleton() {
 
 async function MobilePrimaryFeed({ userId }: { userId?: string }) {
   if (userId) {
-    return <MobileActivitySection heading="Friends' Activity" items={await cachedFriends(userId)} href="/activity?tab=friends" empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }} />;
+    return <MobileFeed items={await cachedFriends(userId)} href="/activity?tab=friends" empty={{ msg: "No activity from people you follow yet.", href: "/members", cta: "Follow friends to see their activity →" }} />;
   }
-  return <MobileActivitySection heading="Recent Activity" items={await cachedRecent()} href="/activity" empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }} />;
+  return <MobileFeed items={await cachedRecent()} href="/activity" empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }} />;
 }
 
 async function MobileMyFeed({ userId }: { userId: string }) {
@@ -105,20 +107,38 @@ export default async function HomePage() {
 
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
         {/* Mobile: Your / Friends' activity (preview 3, expandable) + discovery widgets */}
+        {/* Mobile home, in the shape of the apps people already use: shortcuts
+            for what you came to do, one browsable shelf, then the feed as the
+            main event. Discovery widgets sit below it rather than pushing it
+            off-screen — previously nine stacked sections meant the actual
+            content started three scrolls down. */}
         <div className="lg:hidden space-y-6">
+          {session && <QuickTiles />}
           {session && <SpotifyForYou />}
-          <ReleaseFilterPills />
+
           <TrendingAlbums
             limit={12}
             slider
             heading="Popular This Week"
             emptyMessage="Nothing here yet! Log your favorite albums in and start the chain."
           />
-          {/* Friends' Activity — above Grails (streamed) */}
-          <Suspense fallback={<FeedSkeleton />}>
-            <MobilePrimaryFeed userId={userId} />
-          </Suspense>
 
+          <section>
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
+                {userId ? "From your friends" : "Recent activity"}
+              </h2>
+              <Link href={userId ? "/activity?tab=friends" : "/activity"} className="text-xs text-[#c4a832]">
+                See all
+              </Link>
+            </div>
+            <Suspense fallback={<FeedSkeleton />}>
+              <MobilePrimaryFeed userId={userId} />
+            </Suspense>
+          </section>
+
+          {/* Discovery, below the feed. */}
+          <ReleaseFilterPills />
           <ClubsStrip />
 
           {userId && (
