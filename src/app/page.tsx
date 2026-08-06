@@ -106,6 +106,12 @@ export default async function HomePage() {
 
       <div className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pb-12 ${session ? "pt-4" : "py-8 sm:py-10"}`}>
         {/* Mobile: Your / Friends' activity (preview 3, expandable) + discovery widgets */}
+        {/* Spotify: the connect prompt inside is web-only (hidden sm:flex) and the
+            for-you rails are mobile-only (sm:hidden), so this is mounted once
+            here rather than in either layout branch — two mounts would just
+            double the status fetch. */}
+        {session && <div className="mb-5 sm:mb-6"><SpotifyForYou /></div>}
+
         {/* Mobile home, in the shape of the apps people already use: shortcuts
             for what you came to do, one browsable shelf, then the feed as the
             main event. Discovery widgets sit below it rather than pushing it
