@@ -6,7 +6,7 @@ import Link from "next/link";
 //
 // Deliberately four and no more — the value of this pattern is that it's
 // scannable in one glance, and a fifth row turns it back into a menu.
-type IconName = "plus" | "pulse" | "stack" | "people";
+type IconName = "plus" | "book" | "stack" | "people";
 
 interface Tile {
   href: string;
@@ -18,10 +18,10 @@ interface Tile {
 
 const TILES: Tile[] = [
   { href: "/log", label: "Log an album", icon: "plus", accent: true },
-  // NOT /diary — despite the name that route is the music-news reader
-  // (the navbar calls it "News"). Recent history across everyone lives on
-  // /activity, which has Friends / You / Trending tabs.
-  { href: "/activity", label: "Activity", icon: "pulse" },
+  // Keeps the "Your diary" name, but points at /activity — the recent-history
+  // screen with Friends / You / Trending tabs. Deliberately NOT /diary: despite
+  // that route's name it's the music-news reader (the navbar calls it "News").
+  { href: "/activity", label: "Your diary", icon: "book" },
   { href: "/crate", label: "Crates", icon: "stack" },
   { href: "/members", label: "Friends", icon: "people" },
 ];
@@ -35,8 +35,8 @@ function Icon({ name }: { name: IconName }) {
   switch (name) {
     case "plus":
       return <svg {...common}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
-    case "pulse":
-      return <svg {...common}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>;
+    case "book":
+      return <svg {...common}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>;
     case "stack":
       return <svg {...common}><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>;
     case "people":
