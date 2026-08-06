@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getUserActivity, getFriendsActivity, getRecentActivity } from "@/lib/feed";
 import { cache, Suspense } from "react";
-import MobileActivitySection from "@/components/home/MobileActivitySection";
 import MobileFeed from "@/components/home/MobileFeed";
 import QuickTiles from "@/components/home/QuickTiles";
 import ClubsStrip from "@/components/home/ClubsStrip";
@@ -44,7 +43,7 @@ async function MobilePrimaryFeed({ userId }: { userId?: string }) {
 }
 
 async function MobileMyFeed({ userId }: { userId: string }) {
-  return <MobileActivitySection heading="Your Activity" items={await cachedMine(userId)} href="/activity?tab=you" empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
+  return <MobileFeed items={await cachedMine(userId)} href="/activity?tab=you" limit={6} empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
 }
 
 async function DesktopPrimaryFeed({ userId }: { userId?: string }) {
@@ -142,9 +141,17 @@ export default async function HomePage() {
           <ClubsStrip />
 
           {userId && (
-            <Suspense fallback={<FeedSkeleton />}>
-              <MobileMyFeed userId={userId} />
-            </Suspense>
+            <section>
+              <div className="flex items-baseline justify-between mb-3">
+                <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
+                  Your activity
+                </h2>
+                <Link href="/activity?tab=you" className="text-xs text-[#c4a832]">See all</Link>
+              </div>
+              <Suspense fallback={<FeedSkeleton />}>
+                <MobileMyFeed userId={userId} />
+              </Suspense>
+            </section>
           )}
 
           <ReleaseRadar />
