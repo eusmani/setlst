@@ -1,19 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import AlbumSearchSheet, { type AlbumHit } from "@/components/album/AlbumSearchSheet";
 
 interface FavoriteAlbum {
   spotifyId: string;
   title: string;
   artist: string;
   artwork: string | null;
-}
-
-interface SpotifyResult {
-  id: string;
-  name: string;
-  artists: { name: string }[];
-  images: { url: string }[];
 }
 
 interface Props {
@@ -26,9 +20,6 @@ export default function TopAlbums({ initial, isOwner }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<FavoriteAlbum[]>(initial);
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SpotifyResult[]>([]);
-  const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const slots = Array.from({ length: 5 }, (_, i) => draft[i] ?? null);
@@ -49,29 +40,19 @@ export default function TopAlbums({ initial, isOwner }: Props) {
   }
   useEffect(() => { updateArrows(); }, [albums, editing]);
 
-  async function runSearch(q: string) {
-    if (!q.trim()) { setResults([]); return; }
-    setSearching(true);
-    const res = await fetch(`/api/spotify/search?q=${encodeURIComponent(q)}`);
-    const d = await res.json();
-    setResults(d.results ?? []);
-    setSearching(false);
-  }
 
-  function pick(r: SpotifyResult) {
+  function pick(hit: AlbumHit) {
     if (activeSlot == null) return;
     const album: FavoriteAlbum = {
-      spotifyId: r.id,
-      title: r.name,
-      artist: r.artists.map((a) => a.name).join(", "),
-      artwork: r.images?.[0]?.url ?? null,
+      spotifyId: hit.id,
+      title: hit.name,
+      artist: hit.artists.map((a) => a.name).join(", "),
+      artwork: hit.images?.[0]?.url ?? null,
     };
     const next = [...draft];
     next[activeSlot] = album;
     setDraft(next.filter(Boolean) as FavoriteAlbum[]);
     setActiveSlot(null);
-    setQuery("");
-    setResults([]);
   }
 
   function removeSlot(i: number) {
@@ -98,8 +79,6 @@ export default function TopAlbums({ initial, isOwner }: Props) {
     setDraft(albums);
     setEditing(false);
     setActiveSlot(null);
-    setQuery("");
-    setResults([]);
   }
 
   // Read-only view (visitors, or owner not editing) with no favorites
@@ -174,7 +153,7 @@ export default function TopAlbums({ initial, isOwner }: Props) {
             {slots.map((a, i) => (
               <div key={i} className="relative">
                 <button
-                  onClick={() => { setActiveSlot(i); setQuery(""); setResults([]); }}
+                  onClick={() => setActiveSlot(i)}
                   className={`aspect-square w-full rounded-md overflow-hidden border transition-colors ${
                     activeSlot === i ? "border-[#c4a832]" : "border-[#2e2e2e] hover:border-[#c4a832]"
                   } ${a ? "" : "bg-[#1a1a1a] flex items-center justify-center"}`}
@@ -197,44 +176,14 @@ export default function TopAlbums({ initial, isOwner }: Props) {
             ))}
           </div>
 
+          {/* Full-screen album search, the same one the Albums tab uses. */}
           {activeSlot !== null && (
-            <div className="bg-[#1a1a1a] border border-[#2e2e2e] rounded-lg p-4">
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => { setQuery(e.target.value); runSearch(e.target.value); }}
-                placeholder={`Search album for slot ${activeSlot + 1}…`}
-                className="w-full bg-[#222222] border border-[#2e2e2e] text-[#f0f0f0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b] mb-3"
-              />
-              {searching ? (
-                <p className="text-xs text-[#6b6b6b] text-center py-3">Searching…</p>
-              ) : results.length > 0 ? (
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-56 overflow-y-auto">
-                  {results.map((r) => (
-                    <button key={r.id} onClick={() => pick(r)} className="group text-left">
-                      <div className="aspect-square rounded overflow-hidden bg-[#222222] border border-transparent group-hover:border-[#c4a832] transition-colors">
-                        {r.images?.[0]?.url && <img src={r.images[0].url} alt={r.name} className="w-full h-full object-cover" />}
-                      </div>
-                      <p className="text-[9px] text-[#a0a0a0] truncate mt-0.5">{r.name}</p>
-                    </button>
-                  ))}
-                </div>
-              ) : query ? (
-                <p className="text-xs text-[#6b6b6b] text-center py-3">
-                  No results.{" "}
-                  <Link href={`/search?q=${encodeURIComponent(query)}`} className="text-[#c4a832] hover:underline">
-                    Search in Albums instead →
-                  </Link>
-                </p>
-              ) : (
-                <p className="text-xs text-[#6b6b6b] text-center py-3">
-                  Type to search, or{" "}
-                  <Link href="/search" className="text-[#c4a832] hover:underline">
-                    browse Albums →
-                  </Link>
-                </p>
-              )}
-            </div>
+            <AlbumSearchSheet
+              title={`Pick album for slot ${activeSlot + 1}`}
+              mode="single"
+              onPick={pick}
+              onClose={() => setActiveSlot(null)}
+            />
           )}
         </>
       )}

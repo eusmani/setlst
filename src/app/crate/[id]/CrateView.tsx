@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CrateCover from "@/components/crate/CrateCover";
+import AlbumSearchSheet, { type AlbumHit } from "@/components/album/AlbumSearchSheet";
 import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
 
 interface Album {
@@ -19,15 +20,6 @@ interface CrateData {
   cover: string | null;
   username: string;
   albums: Album[];
-}
-
-// A Spotify search hit, as returned by /api/spotify/search.
-interface SearchHit {
-  id: string;
-  name: string;
-  artists: { name: string }[];
-  images: { url: string }[];
-  release_date: string;
 }
 
 // Resize an uploaded image to a small square data URL (no external storage).
@@ -71,9 +63,6 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
   // Inline "add albums" picker — the playlist-style way to fill a crate without
   // leaving it.
   const [adding, setAdding] = useState(false);
-  const [q, setQ] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
-  const [searching, setSearching] = useState(false);
   const inCrate = new Set(albums.map((a) => a.spotifyId));
 
   async function patch(data: Record<string, unknown>) {
@@ -113,28 +102,8 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
     await patch({ name: next });
   }
 
-  // Debounced album search while the picker is open. All state changes happen
-  // inside the timeout so none run synchronously during the effect (which would
-  // cascade renders).
-  useEffect(() => {
-    if (!adding) return;
-    const query = q.trim();
-    const t = setTimeout(async () => {
-      if (query.length < 2) { setHits([]); setSearching(false); return; }
-      setSearching(true);
-      try {
-        const d = await fetch(`/api/spotify/search?q=${encodeURIComponent(query)}`).then((r) => r.json());
-        setHits(Array.isArray(d.results) ? d.results.slice(0, 12) : []);
-      } catch {
-        setHits([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 200);
-    return () => clearTimeout(t);
-  }, [q, adding]);
 
-  async function addAlbum(h: SearchHit) {
+  async function addAlbum(h: AlbumHit) {
     if (inCrate.has(h.id)) return;
     const album: Album = {
       id: `tmp-${h.id}`,
@@ -201,7 +170,7 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
       {isOwner && (
         <div className="mb-5">
           <button
-            onClick={() => { setAdding((v) => !v); setQ(""); setHits([]); }}
+            onClick={() => setAdding(true)}
             className="flex items-center gap-2 bg-[#c4a832] hover:bg-[#d4b842] text-[#111111] text-sm font-medium py-2.5 px-4 rounded-full transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -210,51 +179,16 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
             {adding ? "Done" : "Add albums"}
           </button>
 
+          {/* Full-screen album search — the same one the Albums tab uses.
+              Stays open while you add, so filling a crate is one pass. */}
           {adding && (
-            <div className="mt-3 rounded-xl border border-[#2e2e2e] bg-[#151515] p-3">
-              <input
-                autoFocus
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search albums to add…"
-                className="w-full bg-[#1a1a1a] border border-[#2e2e2e] text-[#f0f0f0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#c4a832] placeholder-[#6b6b6b]"
-              />
-              <div className="mt-2 max-h-80 overflow-y-auto space-y-1">
-                {searching && hits.length === 0 && (
-                  <p className="px-2 py-3 text-xs text-[#6b6b6b]">Searching…</p>
-                )}
-                {!searching && q.trim().length >= 2 && hits.length === 0 && (
-                  <p className="px-2 py-3 text-xs text-[#6b6b6b]">No albums found.</p>
-                )}
-                {hits.map((h) => {
-                  const added = inCrate.has(h.id);
-                  return (
-                    <div key={h.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#1f1f1f] transition-colors">
-                      {h.images?.[0]?.url ? (
-                        <img src={h.images[0].url} alt={h.name} className="w-10 h-10 rounded object-cover shrink-0" />
-                      ) : (
-                        <div className="w-10 h-10 rounded bg-[#222222] shrink-0" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm text-[#f0f0f0] truncate">{h.name}</p>
-                        <p className="text-xs text-[#a0a0a0] truncate">{h.artists.map((x) => x.name).join(", ")}{h.release_date ? ` · ${h.release_date.slice(0, 4)}` : ""}</p>
-                      </div>
-                      <button
-                        onClick={() => addAlbum(h)}
-                        disabled={added}
-                        className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                          added
-                            ? "border-[#2e2e2e] text-[#6b6b6b] cursor-default"
-                            : "border-[#c4a832] text-[#c4a832] hover:bg-[#c4a832] hover:text-[#111111]"
-                        }`}
-                      >
-                        {added ? "Added" : "Add"}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <AlbumSearchSheet
+              title={`Add albums to ${crate.name}`}
+              mode="multi"
+              addedIds={inCrate}
+              onPick={addAlbum}
+              onClose={() => setAdding(false)}
+            />
           )}
         </div>
       )}
