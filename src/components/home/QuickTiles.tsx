@@ -23,7 +23,7 @@ const TILES: Tile[] = [
   // read it is a round trip for nothing. Friends and Trending live behind the
   // bottom bar's Activity item. Deliberately NOT /diary either: despite that
   // route's name it's the music-news reader (the navbar calls it "News").
-  { href: "/#your-activity", label: "Your diary", icon: "book" },
+  { href: "/#your-diary", label: "Your diary", icon: "book" },
   { href: "/crate", label: "Crates", icon: "stack" },
   { href: "/members", label: "Friends", icon: "people" },
 ];
