@@ -48,8 +48,14 @@ async function searchOne(q: string, type: "album" | "artist", limit: number, off
     const t = await token();
     const r = await fetch(url, { headers: { Authorization: `Bearer ${t}` }, next: { revalidate: 3600 } });
     if (r.status === 429) {
-      const retry = Math.min(parseInt(r.headers.get("Retry-After") ?? "1") * 1000, 2000);
-      await new Promise((res) => setTimeout(res, retry));
+      // Spotify's client-credentials quota is finite and, once exhausted,
+      // Retry-After comes back in hours — far longer than we can wait here.
+      // Log it: this used to return null silently, which surfaced to users as
+      // "no results" and was indistinguishable from a genuinely empty search.
+      const retryAfter = parseInt(r.headers.get("Retry-After") ?? "1");
+      console.error(`[spotify] rate limited (429), retry-after ${retryAfter}s`);
+      if (retryAfter > 5) return null;
+      await new Promise((res) => setTimeout(res, Math.min(retryAfter * 1000, 2000)));
       continue;
     }
     const d = await r.json();
@@ -239,4 +245,47 @@ export async function getAlbum(id: string): Promise<SpotifyAlbum | null> {
   });
   if (!r.ok) return null;
   return r.json();
+}
+
+// ---------------------------------------------------------------------------
+// Fallback catalogue
+// ---------------------------------------------------------------------------
+
+/**
+ * Album search via the iTunes Search API, shaped like a Spotify response.
+ *
+ * Spotify's client-credentials quota is finite and, when it runs out, comes back
+ * 429 with a Retry-After measured in hours — which took search down completely.
+ * iTunes needs no auth and is already used elsewhere in this codebase, so it
+ * makes a good second source rather than leaving the app with a dead search bar.
+ *
+ * Ids are iTunes collection ids, not Spotify ids. That's fine: album links carry
+ * title/artist/artwork as query params and the album page falls back to them
+ * when an id can't be resolved.
+ */
+export async function searchAlbumsViaITunes(q: string, limit = 20): Promise<SpotifyAlbum[]> {
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=${limit}`;
+    const r = await fetch(url, { next: { revalidate: 3600 } });
+    if (!r.ok) return [];
+    const d = await r.json();
+    const rows: Record<string, unknown>[] = Array.isArray(d?.results) ? d.results : [];
+
+    return rows
+      .filter((row) => row.collectionId && row.collectionName && row.artistName)
+      .map((row) => ({
+        id: String(row.collectionId),
+        name: String(row.collectionName),
+        artists: [{ name: String(row.artistName) }],
+        // artworkUrl100 is a 100px thumb; the same URL serves larger sizes.
+        images: row.artworkUrl100
+          ? [{ url: String(row.artworkUrl100).replace("100x100", "600x600") }]
+          : [],
+        release_date: row.releaseDate ? String(row.releaseDate).slice(0, 10) : "",
+        total_tracks: Number(row.trackCount ?? 0),
+        album_type: "album",
+      }));
+  } catch {
+    return [];
+  }
 }

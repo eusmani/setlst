@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isLikelyAI } from "@/lib/aiFilter";
-import { searchArtistsAndAlbums, type SpotifyAlbum, type SpotifyArtist } from "@/lib/spotify";
+import { searchArtistsAndAlbums, searchAlbumsViaITunes, type SpotifyAlbum, type SpotifyArtist } from "@/lib/spotify";
 
 // Reject tributes, karaoke, covers, parodies, instrumentals, etc.
 const BAD = /\b(tribute|karaoke|made famous|in the style of|originally performed|cover version|covers of|string quartet|lullaby|piano versions?|instrumental|8-bit|parody|parodies|spoof)\b/i;
@@ -20,7 +20,20 @@ export async function GET(req: NextRequest) {
   if (!q) return NextResponse.json({ results: [], artists: [] });
 
   try {
-    const { artists, albums } = await searchArtistsAndAlbums(q);
+    let { artists, albums } = await searchArtistsAndAlbums(q);
+
+    // Spotify's quota runs out for hours at a time, and when it does every
+    // search came back empty — indistinguishable from "no such album". Fall back
+    // to the iTunes catalogue so search keeps working.
+    let degraded = false;
+    if (albums.length === 0) {
+      const fallback = await searchAlbumsViaITunes(q);
+      if (fallback.length > 0) {
+        albums = fallback;
+        artists = [];
+        degraded = true;
+      }
+    }
 
     // Artists ranked by popularity — the most popular match leads the results.
     const rankedArtists = artists
@@ -51,8 +64,11 @@ export async function GET(req: NextRequest) {
       .sort((x, y) => y._boost - x._boost)
       .map(({ _boost, ...rest }) => { void _boost; return rest; });
 
-    return NextResponse.json({ results: results.slice(0, 30), artists: rankedArtists });
-  } catch {
-    return NextResponse.json({ results: [], artists: [] });
+    return NextResponse.json({ results: results.slice(0, 30), artists: rankedArtists, degraded });
+  } catch (error) {
+    console.error("[search] failed:", error);
+    // Last resort: the catalogue search itself threw. Say so rather than
+    // pretending the catalogue is empty.
+    return NextResponse.json({ results: [], artists: [], unavailable: true });
   }
 }
