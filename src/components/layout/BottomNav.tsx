@@ -70,7 +70,7 @@ export default function BottomNav() {
           invisible, but it forced the webview to re-composite the region behind
           the bar on every scroll frame — the main source of scroll stutter on
           phones, where this bar is always on screen. */}
-      <div className="flex items-stretch justify-around h-14 rounded-2xl border border-[#2e2e2e] bg-[#161616] shadow-2xl shadow-black/60 px-1">
+      <div className="flex items-stretch justify-around h-[3.25rem] rounded-2xl border border-[#2e2e2e] bg-[#161616] shadow-2xl shadow-black/60 px-1">
         {NAV.map(({ href, label, icon, plus, profile }) => {
           // Profile tab points at the current user (or login when signed out).
           if (profile) href = username ? `/profile/${username}` : "/login";
@@ -80,7 +80,7 @@ export default function BottomNav() {
           if (plus) {
             return (
               <Link key={href} href={href} aria-label={label} className="flex items-center justify-center flex-1">
-                <span className="flex items-center justify-center w-12 h-12 -mt-3 rounded-full bg-[#c4a832] text-[#111111] shadow-lg shadow-black/40 active:scale-95 transition-transform">
+                <span className="flex items-center justify-center w-11 h-11 -mt-2 rounded-full bg-[#c4a832] text-[#111111] shadow-lg shadow-black/40 active:scale-95 transition-transform">
                   {icon}
                 </span>
               </Link>
