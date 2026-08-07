@@ -105,11 +105,13 @@ export default function Navbar() {
   return (
     <>
     {/* Fixed so it never shifts during momentum/rubber-band scroll in the iOS webview. */}
-    <nav className={`top-nav sm:fixed top-0 inset-x-0 z-50 border-b border-[#1f1f1f] bg-[#111111] sm:bg-[#111111]/96 sm:backdrop-blur-sm ${showMobileBar ? "" : "hidden sm:block"}`}>
-      <div className="max-w-6xl mx-auto pl-3 pr-5 sm:px-8 h-16 flex items-center gap-10">
+    <nav className={`top-nav sm:fixed top-0 inset-x-0 z-50 sm:border-b sm:border-[#1f1f1f] sm:bg-[#111111]/96 sm:backdrop-blur-sm ${showMobileBar ? "" : "hidden sm:block"}`}>
+      <div className="max-w-6xl mx-auto pl-3 pr-5 sm:px-8 h-11 sm:h-16 flex items-center gap-10">
 
-        {/* Logo */}
-        <Link href="/" className="app-logo flex items-center gap-2 font-serif text-3xl font-bold tracking-wide text-[#f0f0f0] hover:text-[#c4a832] transition-colors shrink-0">
+        {/* Logo — desktop only. On phones the app title bar is the thing that
+            most made this read as a website in a web view; the app icon and the
+            bottom tab bar already say where you are. */}
+        <Link href="/" className="app-logo hidden sm:flex items-center gap-2 font-serif text-3xl font-bold tracking-wide text-[#f0f0f0] hover:text-[#c4a832] transition-colors shrink-0">
           <img src="/turntable-logo.png" alt="" className="w-12 h-12 shrink-0 object-contain" />
           SETLST
         </Link>
