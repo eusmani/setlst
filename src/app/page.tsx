@@ -95,7 +95,7 @@ export default async function HomePage() {
       {session && (
         <div className="relative">
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pt-10 sm:pt-8 pb-4 sm:pb-6">
-            <h2 className="slide-down text-3xl sm:text-3xl font-bold text-[#f0f0f0] leading-tight" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
+            <h2 className="slide-down text-[27px] sm:text-3xl font-bold text-[#f0f0f0] leading-tight" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
               Welcome back, <span className="text-[#c4a832]">{username}</span>!
             </h2>
             <p className="slide-down-delay hero-sub hidden sm:block sm:text-base text-[#a0a0a0] mt-1">
