@@ -105,19 +105,24 @@ export default function Navbar() {
   return (
     <>
     {/* Fixed so it never shifts during momentum/rubber-band scroll in the iOS webview. */}
-    <nav className={`top-nav sm:fixed top-0 inset-x-0 z-50 sm:border-b sm:border-[#1f1f1f] sm:bg-[#111111]/96 sm:backdrop-blur-sm ${showMobileBar ? "" : "hidden sm:block"}`}>
+    <nav className={`top-nav fixed top-0 inset-x-0 z-50 sm:border-b sm:border-[#1f1f1f] sm:bg-[#111111]/96 sm:backdrop-blur-sm pointer-events-none sm:pointer-events-auto ${showMobileBar ? "" : "hidden sm:block"}`}>
+      {/* On phones this floats over the page — no fill, no border, no layout
+          space — so the album mural runs to the top of the screen and the
+          hamburger sits on it. pointer-events are off across the strip and back
+          on for the controls, or an invisible full-width bar would swallow taps
+          on whatever is underneath. */}
       <div className="max-w-6xl mx-auto pl-3 pr-5 sm:px-8 h-11 sm:h-16 flex items-center gap-10">
 
         {/* Logo — desktop only. On phones the app title bar is the thing that
             most made this read as a website in a web view; the app icon and the
             bottom tab bar already say where you are. */}
-        <Link href="/" className="app-logo hidden sm:flex items-center gap-2 font-serif text-3xl font-bold tracking-wide text-[#f0f0f0] hover:text-[#c4a832] transition-colors shrink-0">
+        <Link href="/" className="app-logo hidden sm:flex pointer-events-auto items-center gap-2 font-serif text-3xl font-bold tracking-wide text-[#f0f0f0] hover:text-[#c4a832] transition-colors shrink-0">
           <img src="/turntable-logo.png" alt="" className="w-12 h-12 shrink-0 object-contain" />
           SETLST
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden sm:flex items-center justify-center gap-10 lg:gap-14 flex-1">
+        <div className="hidden sm:flex pointer-events-auto items-center justify-center gap-10 lg:gap-14 flex-1">
           {NAV.map(({ href, label, icon }) => {
             const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
@@ -141,7 +146,7 @@ export default function Navbar() {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-3 ml-auto pointer-events-auto">
           {/* Get the iOS app — desktop web only; hidden on mobile (sm:) and inside
               the native app (iPhone/iPad), where there's nothing to download. */}
           {!native && (

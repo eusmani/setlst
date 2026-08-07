@@ -90,8 +90,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <SuspensionBanner />
           <OnboardingSlideshow />
           <Navbar />
-          {/* Desktop only: offsets the fixed navbar (h-16). On mobile the navbar is
-              in normal flow (scrolls away with the page), so no spacer is needed. */}
+          {/* Desktop only: offsets the fixed navbar (h-16). On phones the navbar
+              floats over the page and takes no layout space, so a spacer there
+              would reintroduce the very gap it was removed to close. */}
           <div className="hidden sm:block h-16 shrink-0" aria-hidden />
           <UpcomingBanner />
           <BottomNav />
