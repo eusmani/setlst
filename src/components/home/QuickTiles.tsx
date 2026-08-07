@@ -6,7 +6,7 @@ import Link from "next/link";
 //
 // Deliberately four and no more — the value of this pattern is that it's
 // scannable in one glance, and a fifth row turns it back into a menu.
-type IconName = "plus" | "book" | "stack" | "people";
+type IconName = "plus" | "book" | "stack" | "bell";
 
 interface Tile {
   href: string;
@@ -25,7 +25,9 @@ const TILES: Tile[] = [
   // reader (the navbar calls it "News").
   { href: "/activity?tab=you&only=you", label: "Your diary", icon: "book" },
   { href: "/crate", label: "Crates", icon: "stack" },
-  { href: "/members", label: "Friends", icon: "people" },
+  // Notifications, not a link to the members list: this is the tile people
+  // check, and there was nowhere else in the app showing things aimed at you.
+  { href: "/notifications", label: "Notifications", icon: "bell" },
 ];
 
 function Icon({ name }: { name: IconName }) {
@@ -41,8 +43,8 @@ function Icon({ name }: { name: IconName }) {
       return <svg {...common}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>;
     case "stack":
       return <svg {...common}><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>;
-    case "people":
-      return <svg {...common}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /></svg>;
+    case "bell":
+      return <svg {...common}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>;
   }
 }
 

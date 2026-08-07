@@ -12,7 +12,7 @@ export default async function ActivityPage({
   const session = await auth();
   const userId = session?.user?.id;
   const { tab, only } = await searchParams;
-  const initialTab = tab === "you" || tab === "notifications" || tab === "trending" ? tab : null;
+  const initialTab = tab === "you" || tab === "friends" || tab === "trending" ? tab : null;
   // ?only=you — "Your diary" from the home screen: one tab, no switcher.
   const lockedTab = only === "you" ? "you" as const : null;
 

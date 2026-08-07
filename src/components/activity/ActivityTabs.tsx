@@ -4,10 +4,9 @@ import Link from "next/link";
 import ActivityList from "@/components/activity/ActivityList";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
 import ClubsStrip from "@/components/home/ClubsStrip";
-import NotificationsList from "@/components/activity/NotificationsList";
 import type { ActivityItem } from "@/lib/feed";
 
-type Tab = "notifications" | "you" | "trending";
+type Tab = "friends" | "you" | "trending";
 
 interface Props {
   friendsActivity: ActivityItem[];
@@ -26,10 +25,7 @@ interface Props {
 }
 
 const TABS: { key: Tab; label: string }[] = [
-  // Notifications replaces the old Friends tab: friends' activity is already the
-  // home screen's main feed, so a second copy of it here was redundant, whereas
-  // there was nowhere at all to see things aimed at you.
-  { key: "notifications", label: "Notifications" },
+  { key: "friends", label: "Friends" },
   { key: "you", label: "You" },
   { key: "trending", label: "Trending" },
 ];
@@ -111,8 +107,16 @@ export default function ActivityTabs({ friendsActivity, myActivity, isLoggedIn, 
         </div>
       )}
 
-      {/* Notifications — what happened to you */}
-      {tab === "notifications" && <NotificationsList isLoggedIn={isLoggedIn} />}
+      {/* Friends */}
+      {tab === "friends" && (
+        !isLoggedIn ? (
+          <EmptyState message="Log in to see your friends' activity." href="/login" cta="Sign in →" />
+        ) : friendsActivity.length === 0 ? (
+          <EmptyState message="No activity from people you follow yet." href="/members" cta="Follow friends to see their activity here →" />
+        ) : (
+          <FeedList items={friendsActivity} isLoggedIn={isLoggedIn} />
+        )
+      )}
 
       {/* You */}
       {tab === "you" && (
