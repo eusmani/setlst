@@ -98,7 +98,7 @@ export default async function HomePage() {
             <h2 className="slide-down text-lg sm:text-3xl font-bold text-[#f0f0f0]" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
               Welcome back, <span className="text-[#c4a832]">{username}</span>!
             </h2>
-            <p className="slide-down-delay hero-sub text-xs sm:text-base text-[#a0a0a0] mt-1">
+            <p className="slide-down-delay hero-sub hidden sm:block sm:text-base text-[#a0a0a0] mt-1">
               Check your friends&apos; picks and log in new albums.
             </p>
           </div>
