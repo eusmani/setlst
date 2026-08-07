@@ -143,13 +143,10 @@ export default async function HomePage() {
           <ClubsStrip />
 
           {userId && (
-            <section id="your-diary" className="scroll-mt-20">
+            <section>
               <div className="flex items-baseline justify-between mb-3">
-                {/* Named to match the "Your diary" tile that jumps here. Fed by
-                    getUserActivity, which is your own reviews and posts only —
-                    the friends feed above is a separate section. */}
                 <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
-                  Your diary
+                  Your activity
                 </h2>
               </div>
               <Suspense fallback={<FeedSkeleton />}>
