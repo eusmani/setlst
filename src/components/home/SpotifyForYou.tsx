@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import AlbumCard from "@/components/album/AlbumCard";
+import { SPOTIFY_PROMOS_ENABLED } from "@/lib/promos";
 
 interface Album { spotifyId: string; title: string; artist: string; artwork: string | null; year: number | null }
 interface Concert { id: string; name: string; date: string; venue: string; city: string; url: string; artist: string; image: string | null }
@@ -54,10 +55,11 @@ export default function SpotifyForYou() {
 
   if (connected === null) return null;
 
-  // Not connected → prompt. Desktop web only: the mobile app doesn't carry
-  // ad-style banners, and Spotify can still be linked from Settings there.
+  // Not connected → prompt. Disabled until after the App Store release; Spotify
+  // can still be linked from Settings. Desktop web only when re-enabled — the
+  // mobile app doesn't carry ad-style banners.
   if (!connected) {
-    if (dismissed) return null;
+    if (!SPOTIFY_PROMOS_ENABLED || dismissed) return null;
     return (
       <div className="hidden sm:flex relative bg-gradient-to-r from-[#1DB954]/15 to-[#1a1a1a] border border-[#1DB954]/30 rounded-2xl py-4 pl-4 pr-9 items-center gap-3">
         <button

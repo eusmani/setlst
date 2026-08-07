@@ -8,6 +8,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import VerifyBanner from "@/components/layout/VerifyBanner";
 import RegisterSW from "@/components/layout/RegisterSW";
 import UpcomingBanner from "@/components/layout/UpcomingBanner";
+import { SPOTIFY_PROMOS_ENABLED } from "@/lib/promos";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import NativeBridge from "@/components/layout/NativeBridge";
 import NativeExtras from "@/components/layout/NativeExtras";
@@ -94,7 +95,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               floats over the page and takes no layout space, so a spacer there
               would reintroduce the very gap it was removed to close. */}
           <div className="hidden sm:block h-16 shrink-0" aria-hidden />
-          <UpcomingBanner />
+          {SPOTIFY_PROMOS_ENABLED && <UpcomingBanner />}
           <BottomNav />
           <VerifyBanner />
           <main className="flex-1">{children}</main>

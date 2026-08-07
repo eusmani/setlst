@@ -13,6 +13,7 @@ import ReleaseRadar from "@/components/layout/ReleaseRadar";
 import LocalConcerts from "@/components/layout/LocalConcerts";
 import AnniversaryBanner from "@/components/layout/AnniversaryBanner";
 import NewReleaseAd from "@/components/layout/NewReleaseAd";
+import { SPOTIFY_PROMOS_ENABLED } from "@/lib/promos";
 import TrendingAlbums from "@/components/album/TrendingAlbums";
 
 export const dynamic = "force-dynamic";
@@ -163,7 +164,7 @@ export default async function HomePage() {
 
         {/* Desktop */}
         <div className="hidden lg:block">
-        {session && <div className="hidden lg:block mb-5 sm:mb-6"><NewReleaseAd /></div>}
+        {SPOTIFY_PROMOS_ENABLED && session && <div className="hidden lg:block mb-5 sm:mb-6"><NewReleaseAd /></div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
           {/* Main column */}
