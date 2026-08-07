@@ -72,6 +72,7 @@ class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(InstagramStoryPlugin())
         bridge?.registerPluginInstance(QuickActionsPlugin())
+        bridge?.registerPluginInstance(WidgetBridgePlugin())
     }
 
     override func viewDidLoad() {

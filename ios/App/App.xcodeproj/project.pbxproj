@@ -7,39 +7,102 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0734F320F9815136CBF035D7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 739EFC4EB5BFF3615692ADD6 /* Foundation.framework */; };
+		0CF1A1268FEDB8035F08CEAB /* SETLSTWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F4C5037AA01016DAEDEE79 /* SETLSTWidget.swift */; };
+		1A5E7C022A9F41D000C0FFEE /* InstagramStoryPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E7C012A9F41D000C0FFEE /* InstagramStoryPlugin.swift */; };
+		1A5E7C042A9F41D000C0FFEE /* QuickActionsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E7C032A9F41D000C0FFEE /* QuickActionsPlugin.swift */; };
+		1A5E90102A9F41D000C0FFEE /* SetlstIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E90112A9F41D000C0FFEE /* SetlstIntents.swift */; };
+		2AE78EFCE8D6F6924CFE25E6 /* SETLSTShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E020DEEFAB8BAA3B5DA771FE /* SETLSTShare.appex */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
+		49F37D5B615815150EFDA543 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C7A535D0CD58E5A984C300F /* ShareViewController.swift */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
-		1A5E7C022A9F41D000C0FFEE /* InstagramStoryPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E7C012A9F41D000C0FFEE /* InstagramStoryPlugin.swift */; };
-		1A5E7C042A9F41D000C0FFEE /* QuickActionsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E7C032A9F41D000C0FFEE /* QuickActionsPlugin.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		6D9FEC9866E6B333E8104B05 /* SETLSTWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = D9FD99CD3A522FCF6E3AAFE1 /* SETLSTWidget.appex */; };
+		8F940C344FEBA178375AAFE5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 739EFC4EB5BFF3615692ADD6 /* Foundation.framework */; };
+		A0F960B7F4748B2BA038376A /* WidgetBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9DEEFDECD89CB459E49FA6 /* WidgetBridge.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		47E1BEA653F1867C95AC78F2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A3E9195937E357FD75099A2;
+			remoteInfo = SETLSTShare;
+		};
+		7DE0DF6BB72A2FF8183A2E77 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C6FA7BF4577670D4FC2FCF53;
+			remoteInfo = SETLSTWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA4CC26707C2656A0E9AF5DE /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6D9FEC9866E6B333E8104B05 /* SETLSTWidget.appex in Embed App Extensions */,
+				2AE78EFCE8D6F6924CFE25E6 /* SETLSTShare.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		1A5E7C012A9F41D000C0FFEE /* InstagramStoryPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstagramStoryPlugin.swift; sourceTree = "<group>"; };
+		1A5E7C032A9F41D000C0FFEE /* QuickActionsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActionsPlugin.swift; sourceTree = "<group>"; };
+		1A5E90112A9F41D000C0FFEE /* SetlstIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SetlstIntents.swift; path = Native/SetlstIntents.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		1A5E7C012A9F41D000C0FFEE /* InstagramStoryPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstagramStoryPlugin.swift; sourceTree = "<group>"; };
-		1A5E7C032A9F41D000C0FFEE /* QuickActionsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActionsPlugin.swift; sourceTree = "<group>"; };
 		504EC30C1FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
+		65F4C5037AA01016DAEDEE79 /* SETLSTWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SETLSTWidget.swift; sourceTree = "<group>"; };
+		6B9DEEFDECD89CB459E49FA6 /* WidgetBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetBridge.swift; path = Native/WidgetBridge.swift; sourceTree = "<group>"; };
+		739EFC4EB5BFF3615692ADD6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		8C7A535D0CD58E5A984C300F /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		D9FD99CD3A522FCF6E3AAFE1 /* SETLSTWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SETLSTWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E020DEEFAB8BAA3B5DA771FE /* SETLSTShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SETLSTShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1BE1D51298B38E0373B0A70F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F940C344FEBA178375AAFE5 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		504EC3011FED79650016851F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		55A7ADC5CB36332207182DF2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0734F320F9815136CBF035D7 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,6 +115,9 @@
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
 				504EC3051FED79650016851F /* Products */,
+				5B1936A05A0C165DBFB36424 /* Frameworks */,
+				A3CD091ABF8AEA57C29B94C3 /* SETLSTWidget */,
+				558E8D995D6E9E3381AA2731 /* SETLSTShare */,
 			);
 			sourceTree = "<group>";
 		};
@@ -59,6 +125,8 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				D9FD99CD3A522FCF6E3AAFE1 /* SETLSTWidget.appex */,
+				E020DEEFAB8BAA3B5DA771FE /* SETLSTShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,14 +138,50 @@
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				1A5E7C012A9F41D000C0FFEE /* InstagramStoryPlugin.swift */,
 				1A5E7C032A9F41D000C0FFEE /* QuickActionsPlugin.swift */,
+				1A5E90112A9F41D000C0FFEE /* SetlstIntents.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				6B9DEEFDECD89CB459E49FA6 /* WidgetBridge.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		51D98862164BCFD85765FCDB /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				739EFC4EB5BFF3615692ADD6 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		558E8D995D6E9E3381AA2731 /* SETLSTShare */ = {
+			isa = PBXGroup;
+			children = (
+				8C7A535D0CD58E5A984C300F /* ShareViewController.swift */,
+			);
+			name = SETLSTShare;
+			path = SETLSTShare;
+			sourceTree = "<group>";
+		};
+		5B1936A05A0C165DBFB36424 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				51D98862164BCFD85765FCDB /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A3CD091ABF8AEA57C29B94C3 /* SETLSTWidget */ = {
+			isa = PBXGroup;
+			children = (
+				65F4C5037AA01016DAEDEE79 /* SETLSTWidget.swift */,
+			);
+			name = SETLSTWidget;
+			path = SETLSTWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -90,10 +194,13 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				AA4CC26707C2656A0E9AF5DE /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				59F2A783B9D5F9B9A2DC0862 /* PBXTargetDependency */,
+				AADBCBE1686DC31C1F5F82A0 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -102,6 +209,40 @@
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		5A3E9195937E357FD75099A2 /* SETLSTShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8C761A125451254EE89E5235 /* Build configuration list for PBXNativeTarget "SETLSTShare" */;
+			buildPhases = (
+				3FE1F02F6222F62B7F3C6DDB /* Sources */,
+				1BE1D51298B38E0373B0A70F /* Frameworks */,
+				CE6FAB59A5A4449ADD0C0F84 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SETLSTShare;
+			productName = SETLSTShare;
+			productReference = E020DEEFAB8BAA3B5DA771FE /* SETLSTShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		C6FA7BF4577670D4FC2FCF53 /* SETLSTWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 877CACBDEA7AE47CF6A9406D /* Build configuration list for PBXNativeTarget "SETLSTWidget" */;
+			buildPhases = (
+				8429246A130A0A883B2FEB40 /* Sources */,
+				55A7ADC5CB36332207182DF2 /* Frameworks */,
+				36FFB72FE36780BEDE2700A4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SETLSTWidget;
+			productName = SETLSTWidget;
+			productReference = D9FD99CD3A522FCF6E3AAFE1 /* SETLSTWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -137,11 +278,20 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				C6FA7BF4577670D4FC2FCF53 /* SETLSTWidget */,
+				5A3E9195937E357FD75099A2 /* SETLSTShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		36FFB72FE36780BEDE2700A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		504EC3021FED79650016851F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -155,9 +305,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CE6FAB59A5A4449ADD0C0F84 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3FE1F02F6222F62B7F3C6DDB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49F37D5B615815150EFDA543 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		504EC3001FED79650016851F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -165,10 +330,35 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				1A5E7C022A9F41D000C0FFEE /* InstagramStoryPlugin.swift in Sources */,
 				1A5E7C042A9F41D000C0FFEE /* QuickActionsPlugin.swift in Sources */,
+				1A5E90102A9F41D000C0FFEE /* SetlstIntents.swift in Sources */,
+				A0F960B7F4748B2BA038376A /* WidgetBridge.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8429246A130A0A883B2FEB40 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0CF1A1268FEDB8035F08CEAB /* SETLSTWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		59F2A783B9D5F9B9A2DC0862 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SETLSTWidget;
+			target = C6FA7BF4577670D4FC2FCF53 /* SETLSTWidget */;
+			targetProxy = 7DE0DF6BB72A2FF8183A2E77 /* PBXContainerItemProxy */;
+		};
+		AADBCBE1686DC31C1F5F82A0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SETLSTShare;
+			target = 5A3E9195937E357FD75099A2 /* SETLSTShare */;
+			targetProxy = 47E1BEA653F1867C95AC78F2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
@@ -190,6 +380,49 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		08E77AD35F956606275F99DC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = SETLSTWidget/SETLSTWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 14;
+				DEVELOPMENT_TEAM = KUDG5M87G9;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SETLSTWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.setlst.native.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1B5D61871CF30B139FBD248D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = SETLSTWidget/SETLSTWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 14;
+				DEVELOPMENT_TEAM = KUDG5M87G9;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SETLSTWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.setlst.native.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		504EC3141FED79650016851F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 958DCC722DB07C7200EA8C5F /* debug.xcconfig */;
@@ -245,7 +478,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -303,7 +536,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -320,12 +553,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_ASSET_PATHS = "";
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SETLST;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -346,13 +579,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_DEBUG_DYLIB = NO;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SETLST;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -365,6 +598,49 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		BAA51AD6423E7C6E23332C4A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = SETLSTShare/SETLSTShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 14;
+				DEVELOPMENT_TEAM = KUDG5M87G9;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SETLSTShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.setlst.native.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		FED1708FF0584832B44880DF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = SETLSTShare/SETLSTShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 14;
+				DEVELOPMENT_TEAM = KUDG5M87G9;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SETLSTShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.setlst.native.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -383,6 +659,24 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		877CACBDEA7AE47CF6A9406D /* Build configuration list for PBXNativeTarget "SETLSTWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08E77AD35F956606275F99DC /* Release */,
+				1B5D61871CF30B139FBD248D /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8C761A125451254EE89E5235 /* Build configuration list for PBXNativeTarget "SETLSTShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BAA51AD6423E7C6E23332C4A /* Release */,
+				FED1708FF0584832B44880DF /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -23,6 +23,10 @@ public class QuickActionsPlugin: CAPPlugin, CAPBridgedPlugin {
     /// Set by the app delegate before the bridge exists; drained by `consumePending`.
     public static var pendingType: String?
 
+    /// A concrete path, used by App Intents (Siri / Spotlight / Shortcuts),
+    /// which know exactly where they want to land rather than a shortcut id.
+    public static var pendingRoute: String?
+
     /// Live instance, so a shortcut used while the app is already running can be
     /// delivered immediately rather than waiting for the next `consumePending`.
     public static weak var current: QuickActionsPlugin?
@@ -40,10 +44,14 @@ public class QuickActionsPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    /// Returns the shortcut that launched the app, if any, and clears it.
+    /// Returns whatever launched the app — a shortcut id, a route, or neither —
+    /// and clears it.
     @objc func consumePending(_ call: CAPPluginCall) {
         let type = QuickActionsPlugin.pendingType
+        let route = QuickActionsPlugin.pendingRoute ?? IntentRoute.pending
         QuickActionsPlugin.pendingType = nil
-        call.resolve(["type": type as Any])
+        QuickActionsPlugin.pendingRoute = nil
+        IntentRoute.pending = nil
+        call.resolve(["type": type as Any, "route": route as Any])
     }
 }

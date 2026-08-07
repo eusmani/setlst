@@ -22,23 +22,24 @@ export default function NativeBridge() {
       if (!Capacitor.isNativePlatform()) return;
 
       interface QuickActionsAPI {
-        consumePending(): Promise<{ type: string | null }>;
+        consumePending(): Promise<{ type: string | null; route: string | null }>;
         addListener(
           event: "quickAction",
-          fn: (data: { type: string }) => void
+          fn: (data: { type?: string; route?: string }) => void
         ): Promise<{ remove: () => void }>;
       }
       const QuickActions = registerPlugin<QuickActionsAPI>("QuickActions");
 
       try {
         const pending = await QuickActions.consumePending();
-        const route = quickActionRoute(pending?.type);
+        // App Intents send a concrete path; Home Screen shortcuts send an id.
+        const route = pending?.route ?? quickActionRoute(pending?.type);
         if (route) router.push(route);
       } catch { /* plugin unavailable */ }
 
       try {
-        const handle = await QuickActions.addListener("quickAction", ({ type }) => {
-          const route = quickActionRoute(type);
+        const handle = await QuickActions.addListener("quickAction", (data) => {
+          const route = data.route ?? quickActionRoute(data.type);
           if (route) router.push(route);
         });
         remove = () => handle.remove();
