@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Avatar from "@/components/ui/Avatar";
 import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
 import { squareDataUrl } from "@/lib/photo";
+import PhotoActionSheet from "@/components/ui/PhotoActionSheet";
 
 interface Props {
   username: string;
@@ -36,6 +37,7 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [photoSheet, setPhotoSheet] = useState(false);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -52,9 +54,10 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
 
   // Inside the app, go through the native camera / photo picker instead of the
   // web file input — iOS offers "Take Photo" as well as the photo library.
-  async function chooseNativePhoto() {
+  async function chooseNativePhoto(source: "camera" | "photos") {
+    setPhotoSheet(false);
     tapHaptic();
-    const pick = await pickPhoto("prompt");
+    const pick = await pickPhoto(source);
 
     if (pick.status === "cancelled") return;
     if (pick.status === "unavailable") { fileRef.current?.click(); return; }
@@ -123,18 +126,28 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
           <div className="flex flex-col gap-1.5">
             <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
             <button
-              onClick={() => (canUseNativeCamera() ? chooseNativePhoto() : fileRef.current?.click())}
+              onClick={() => setPhotoSheet(true)}
               className="text-xs text-[#f0f0f0] bg-[#222222] border border-[#2e2e2e] hover:border-[#c4a832] px-3 py-1.5 rounded-lg transition-colors"
             >
-              {canUseNativeCamera() ? "Take or choose photo" : "Upload picture"}
+              {avatar ? "Change photo" : "Add photo"}
             </button>
-            {avatar && (
-              <button onClick={() => setAvatar(null)} className="text-xs text-[#6b6b6b] hover:text-red-400 transition-colors">
-                Remove
-              </button>
-            )}
           </div>
         </div>
+
+        {photoSheet && (
+          <PhotoActionSheet
+            title="Profile picture"
+            onLibrary={() => {
+              setPhotoSheet(false);
+              // Native goes to the photo picker; the web has only the file input.
+              if (canUseNativeCamera()) void chooseNativePhoto("photos");
+              else fileRef.current?.click();
+            }}
+            onCamera={canUseNativeCamera() ? () => void chooseNativePhoto("camera") : undefined}
+            onRemove={avatar ? () => { setAvatar(null); setPhotoSheet(false); } : undefined}
+            onClose={() => setPhotoSheet(false)}
+          />
+        )}
 
         {/* Username */}
         <label className="block text-xs text-[#a0a0a0] mb-1.5">Username</label>
