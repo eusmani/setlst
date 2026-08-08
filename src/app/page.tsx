@@ -171,8 +171,8 @@ export default async function HomePage() {
 
           <ReleaseRadar />
           <LocalConcerts />
-          {/* On This Day — pinned to the bottom of the mobile home */}
-          <AnniversaryBanner />
+          {/* On This Day is desktop-only — it renders further down in the
+              sidebar column, where there's room for it. */}
         </div>
 
         {/* Desktop */}
