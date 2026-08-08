@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { useSession } from "next-auth/react";
 import Avatar from "@/components/ui/Avatar";
 
 const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profile?: boolean }[] = [
@@ -59,7 +60,10 @@ export default function BottomNav() {
   const pathname = usePathname();
   // Current user (username + pfp) for the Profile tab, kept out of the session.
   const [me, setMe] = useState<{ username: string; avatar: string | null } | null>(null);
-  const username = me?.username ?? null;
+  // The session token already carries the username, so it's known on first
+  // render. /api/me is only for the live value after a rename, and the avatar.
+  const { data: session, status } = useSession();
+  const username = me?.username ?? session?.user?.username ?? null;
   useEffect(() => {
     fetch("/api/me").then((r) => r.json()).then((d) => { if (d?.username) setMe(d); }).catch(() => {});
   }, []);
@@ -72,12 +76,16 @@ export default function BottomNav() {
           phones, where this bar is always on screen. */}
       <div className="flex items-stretch justify-around h-[3.25rem] rounded-2xl border border-[#2e2e2e] bg-[#161616] shadow-2xl shadow-black/60 px-1">
         {NAV.map(({ href, label, icon, plus, profile }) => {
-          // Always /profile: the server resolves who that is and redirects.
-          // Building the href here from an async /api/me meant the tab pointed
-          // at /login until that resolved — the sign-in screen appearing for
-          // someone already signed in. The avatar below still uses /api/me, but
-          // only for the picture, where arriving late is harmless.
-          if (profile) href = "/profile";
+          // Go straight to the profile when the session already names the user.
+          // Falling back to /profile (which resolves server-side) rather than
+          // /login matters: /login was previously shown to people who were
+          // signed in, just because an /api/me fetch hadn't returned yet.
+          // Only an actually-unauthenticated session goes to sign-in.
+          if (profile) {
+            href = username
+              ? `/profile/${username}`
+              : status === "unauthenticated" ? "/login" : "/profile";
+          }
           const active = profile ? pathname.startsWith("/profile") : href === "/" ? pathname === "/" : pathname.startsWith(href);
 
           // The center "+" is a prominent yellow action button (write a review).
