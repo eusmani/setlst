@@ -6,6 +6,7 @@ import CrateCover from "@/components/crate/CrateCover";
 import AlbumSearchSheet, { type AlbumHit } from "@/components/album/AlbumSearchSheet";
 import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
 import { squareDataUrl } from "@/lib/photo";
+import PhotoActionSheet from "@/components/ui/PhotoActionSheet";
 
 interface Album {
   id: string;
@@ -60,6 +61,7 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
   const [cover, setCover] = useState(crate.cover);
   const [albums, setAlbums] = useState(crate.albums);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [coverSheet, setCoverSheet] = useState(false);
 
   // Inline "add albums" picker — the playlist-style way to fill a crate without
   // leaving it.
@@ -83,9 +85,10 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
   }
 
   // Native camera / photo picker inside the app; the file input stays for web.
-  async function chooseNativeCover() {
+  async function chooseNativeCover(source: "camera" | "photos") {
+    setCoverSheet(false);
     tapHaptic();
-    const pick = await pickPhoto("prompt");
+    const pick = await pickPhoto(source);
     if (pick.status === "cancelled") return;
     if (pick.status !== "ok") { fileRef.current?.click(); return; }
     // Crate covers share the avatar's 400,000-character cap.
@@ -159,13 +162,29 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
 
           {isOwner && (
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs">
-              <button onClick={() => (canUseNativeCamera() ? chooseNativeCover() : fileRef.current?.click())} className="text-[#c4a832] hover:underline">
+              <button onClick={() => setCoverSheet(true)} className="text-[#c4a832] hover:underline">
                 {cover ? "Change photo" : "Add custom photo"}
               </button>
-              {cover && <button onClick={removeCover} className="text-[#6b6b6b] hover:text-[#f0f0f0]">Use album collage</button>}
               <button onClick={rename} className="text-[#6b6b6b] hover:text-[#f0f0f0]">Rename</button>
               <button onClick={deleteCrate} className="text-[#6b6b6b] hover:text-red-400">Delete</button>
               <input ref={fileRef} type="file" accept="image/*" onChange={onCoverFile} className="hidden" />
+
+              {coverSheet && (
+                <PhotoActionSheet
+                  title="Crate cover"
+                  onLibrary={() => {
+                    setCoverSheet(false);
+                    if (canUseNativeCamera()) void chooseNativeCover("photos");
+                    else fileRef.current?.click();
+                  }}
+                  onCamera={canUseNativeCamera() ? () => void chooseNativeCover("camera") : undefined}
+                  // Removing a crate cover falls back to the album collage
+                  // rather than leaving it blank, so the label says that.
+                  onRemove={cover ? () => { void removeCover(); setCoverSheet(false); } : undefined}
+                  removeLabel="Use album collage instead"
+                  onClose={() => setCoverSheet(false)}
+                />
+              )}
             </div>
           )}
         </div>

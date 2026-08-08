@@ -10,6 +10,9 @@ interface Props {
   onCamera?: () => void;
   /** Clear the current picture. Omitted when there isn't one. */
   onRemove?: () => void;
+  /** What removing actually does, when "Remove current photo" isn't accurate —
+      a crate falls back to its album collage rather than to nothing. */
+  removeLabel?: string;
   onClose: () => void;
 }
 
@@ -20,7 +23,7 @@ interface Props {
 // Remove — so clearing a picture meant hunting for a separate control. This
 // asks once, with every option in one place.
 export default function PhotoActionSheet({
-  title = "Profile picture", onLibrary, onCamera, onRemove, onClose,
+  title = "Profile picture", onLibrary, onCamera, onRemove, removeLabel, onClose,
 }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -58,7 +61,7 @@ export default function PhotoActionSheet({
 
             {onRemove && (
               <button onClick={onRemove} className={`${row} text-red-400`}>
-                Remove current photo
+                {removeLabel ?? "Remove current photo"}
               </button>
             )}
           </div>
