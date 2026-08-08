@@ -131,7 +131,7 @@ export default async function HomePage() {
             main event. Discovery widgets sit below it rather than pushing it
             off-screen — previously nine stacked sections meant the actual
             content started three scrolls down. */}
-        <div className="lg:hidden space-y-6">
+        <div className="lg:hidden space-y-4">
           {session && <QuickTiles />}
 
           <TrendingAlbums
