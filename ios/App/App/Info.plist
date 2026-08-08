@@ -46,6 +46,12 @@
 	     use (App Store guideline 5.1.1). -->
 	<key>NSCameraUsageDescription</key>
 	<string>SETLST uses the camera when you choose to take a new photo for your profile picture, a crate cover, or a discussion post.</string>
+	<!-- Required whenever the camera plugin is present, even though SETLST only
+	     reads a photo you pick and never writes to your library on its own: iOS
+	     refuses the photo APIs outright if the key is absent, which is why the
+	     picker could open and then return nothing. -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SETLST only asks for this so iOS will let it read the photo you choose for your profile picture, a crate cover, or a discussion post. It doesn't save anything to your library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>SETLST accesses your photo library only when you pick an image for your profile picture, a crate cover, or a discussion post. Nothing is uploaded until you post it.</string>
 	<!-- Home Screen quick actions (long-press the app icon). Routed to the app's
