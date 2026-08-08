@@ -47,8 +47,17 @@ async function MobilePrimaryFeed({ userId }: { userId?: string }) {
   return <MobileFeed items={await cachedRecent()} empty={{ msg: "No activity yet.", href: "/register", cta: "Join to start logging albums →" }} />;
 }
 
-async function MobileMyFeed({ userId }: { userId: string }) {
-  return <MobileFeed items={await cachedMine(userId)} limit={3} empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
+async function MobileMyFeed({ userId, username }: { userId: string; username: string }) {
+  return (
+    <MobileFeed
+      items={await cachedMine(userId)}
+      limit={3}
+      // Opens the full "Albums reviewed" list on its own screen rather than
+      // growing the home screen.
+      moreHref={username ? `/profile/${username}/albums-reviewed` : "/activity?tab=you&only=you"}
+      empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }}
+    />
+  );
 }
 
 async function DesktopPrimaryFeed({ userId }: { userId?: string }) {
@@ -164,7 +173,7 @@ export default async function HomePage() {
                 </h2>
               </div>
               <Suspense fallback={<FeedSkeleton />}>
-                <MobileMyFeed userId={userId} />
+                <MobileMyFeed userId={userId} username={username} />
               </Suspense>
             </section>
           )}
