@@ -102,8 +102,9 @@ export async function pickPhoto(source: PhotoSource = "prompt"): Promise<string 
     throw new Error("camera-unavailable");
   }
 
+  let photo;
   try {
-    const photo = await Camera.getPhoto({
+    photo = await Camera.getPhoto({
       quality: 80,
       allowEditing: false,
       resultType: CameraResultType.DataUrl,
@@ -114,10 +115,30 @@ export async function pickPhoto(source: PhotoSource = "prompt"): Promise<string 
         : CameraSource.Prompt,
       width: 1200,
     });
-    return photo.dataUrl ?? null;
-  } catch {
-    return null; // cancelled, or permission refused
+  } catch (error) {
+    // Dismissing the sheet throws, and that's not a failure worth reporting.
+    // Anything else is, so it doesn't disappear the way it used to.
+    const message = String((error as Error)?.message ?? "").toLowerCase();
+    if (message.includes("cancel") || message.includes("no image")) return null;
+    throw error;
   }
+
+  if (photo.dataUrl) return photo.dataUrl;
+
+  // Every field on the result is optional, and iOS doesn't always populate
+  // dataUrl even when DataUrl was requested — it can hand back only a local
+  // path. Returning null there meant the picker opened, you chose a photo, and
+  // nothing happened. Read the file instead.
+  const local = photo.webPath ?? photo.path;
+  if (!local) throw new Error("camera-empty");
+
+  const blob = await (await fetch(local)).blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("camera-read-failed"));
+    reader.readAsDataURL(blob);
+  });
 }
 
 /** True when the native camera UI is available, so callers can offer it. */

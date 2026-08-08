@@ -89,7 +89,7 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
     try {
       raw = await pickPhoto("prompt");
     } catch {
-      fileRef.current?.click(); // plugin missing — use the file input instead
+      fileRef.current?.click(); // couldn't read it natively — use the file input
       return;
     }
     if (!raw) return; // cancelled

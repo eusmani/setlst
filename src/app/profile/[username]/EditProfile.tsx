@@ -57,10 +57,13 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
     let raw: string | null;
     try {
       raw = await pickPhoto("prompt");
-    } catch {
-      // Camera plugin missing from this build — fall back to the file input so
-      // there's still a way to set a picture.
-      fileRef.current?.click();
+    } catch (error) {
+      if (String((error as Error)?.message) === "camera-unavailable") {
+        // Plugin absent from this build — the file input still works.
+        fileRef.current?.click();
+        return;
+      }
+      setErr("Couldn't read that photo. Check SETLST has photo access in Settings.");
       return;
     }
     if (!raw) return; // cancelled
