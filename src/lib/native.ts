@@ -90,8 +90,19 @@ export type PhotoSource = "camera" | "photos" | "prompt";
  */
 export async function pickPhoto(source: PhotoSource = "prompt"): Promise<string | null> {
   if (!isNative()) return null;
+
+  // Import separately from the call: a failure here means the plugin isn't in
+  // the build, which callers must be able to tell apart from the user tapping
+  // cancel. Collapsing both into `null` made a missing plugin look exactly like
+  // a cancelled pick — nothing happens, nothing explains why.
+  let Camera, CameraResultType, CameraSource;
   try {
-    const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+    ({ Camera, CameraResultType, CameraSource } = await import("@capacitor/camera"));
+  } catch {
+    throw new Error("camera-unavailable");
+  }
+
+  try {
     const photo = await Camera.getPhoto({
       quality: 80,
       allowEditing: false,

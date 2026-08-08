@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/ui/Avatar";
 import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
+import { squareDataUrl } from "@/lib/photo";
 
 interface Props {
   username: string;
@@ -17,24 +18,7 @@ interface Props {
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const size = 240;
-        const canvas = document.createElement("canvas");
-        canvas.width = size; canvas.height = size;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("no ctx"));
-        // center-crop to square
-        const min = Math.min(img.width, img.height);
-        const sx = (img.width - min) / 2;
-        const sy = (img.height - min) / 2;
-        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
-        resolve(canvas.toDataURL("image/jpeg", 0.85));
-      };
-      img.onerror = reject;
-      img.src = reader.result as string;
-    };
+    reader.onload = () => squareDataUrl(reader.result as string).then(resolve, reject);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -70,8 +54,24 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
   // web file input — iOS offers "Take Photo" as well as the photo library.
   async function chooseNativePhoto() {
     tapHaptic();
-    const dataUrl = await pickPhoto("prompt");
-    if (dataUrl) { setAvatar(dataUrl); setErr(""); }
+    let raw: string | null;
+    try {
+      raw = await pickPhoto("prompt");
+    } catch {
+      // Camera plugin missing from this build — fall back to the file input so
+      // there's still a way to set a picture.
+      fileRef.current?.click();
+      return;
+    }
+    if (!raw) return; // cancelled
+    try {
+      // The camera hands back a 1200px capture; the API caps avatars at
+      // 400,000 characters, so it has to be cropped down like the file path.
+      setAvatar(await squareDataUrl(raw));
+      setErr("");
+    } catch {
+      setErr("Could not use that photo — try another.");
+    }
   }
 
   async function save() {

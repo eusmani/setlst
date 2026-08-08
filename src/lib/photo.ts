@@ -57,3 +57,32 @@ export async function moderateImage(dataUrl: string): Promise<SfwResult> {
   const safe = (s.Porn ?? 0) < 0.4 && (s.Hentai ?? 0) < 0.4 && (s.Sexy ?? 0) < 0.65;
   return { safe, scores: s };
 }
+
+/**
+ * Centre-crop an image to a square data URL.
+ *
+ * Avatars and crate covers are stored inline and the API rejects anything over
+ * 400,000 characters, so whatever a picker hands back has to be brought down to
+ * size before it's saved. The web file input path always did this; the native
+ * camera path didn't, and handed back a 1200px capture that either blew the
+ * limit or saved uncropped.
+ *
+ * Takes a data URL so it works for both — the file input reads to one first.
+ */
+export function squareDataUrl(src: string, size = 240, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("no canvas context"));
+      const min = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, size, size);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => reject(new Error("could not decode image"));
+    img.src = src;
+  });
+}

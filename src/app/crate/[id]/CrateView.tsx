@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import CrateCover from "@/components/crate/CrateCover";
 import AlbumSearchSheet, { type AlbumHit } from "@/components/album/AlbumSearchSheet";
 import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
+import { squareDataUrl } from "@/lib/photo";
 
 interface Album {
   id: string;
@@ -84,10 +85,20 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
   // Native camera / photo picker inside the app; the file input stays for web.
   async function chooseNativeCover() {
     tapHaptic();
-    const dataUrl = await pickPhoto("prompt");
-    if (!dataUrl) return;
-    setCover(dataUrl);
-    await patch({ cover: dataUrl });
+    let raw: string | null;
+    try {
+      raw = await pickPhoto("prompt");
+    } catch {
+      fileRef.current?.click(); // plugin missing — use the file input instead
+      return;
+    }
+    if (!raw) return; // cancelled
+    // Crate covers share the avatar's 400,000-character cap, so the native
+    // capture needs the same crop the file input path applies.
+    const cover = await squareDataUrl(raw, 480).catch(() => null);
+    if (!cover) return;
+    setCover(cover);
+    await patch({ cover });
   }
 
   async function removeCover() {
