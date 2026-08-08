@@ -83,7 +83,7 @@ export default function TrendingAlbums({
     if (emptyMessage) {
       return (
         <div>
-          <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em] mb-4">{heading}</p>
+          <p className="section-heading mb-4">{heading}</p>
           <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg px-5 py-8 text-center">
             <p className="text-sm text-[#a0a0a0] mb-2">{emptyMessage}</p>
             <Link href="/search" className="text-xs text-[#c4a832] hover:underline">
@@ -107,7 +107,7 @@ export default function TrendingAlbums({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xl text-[#6b6b6b] uppercase tracking-[0.15em]">{heading}</p>
+        <p className="section-heading">{heading}</p>
         {/* In slider mode the "See more" lives at the end of the scroller as a circle. */}
         {showSeeAll && !slider && (
           <Link href={seeAllHref} className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">

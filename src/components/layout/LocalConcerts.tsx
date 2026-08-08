@@ -84,7 +84,7 @@ export default function LocalConcerts() {
           the text sits on the page under it. Nesting cards inside a card was
           most of what made this section feel crowded. */}
       <div className="flex items-baseline gap-2 mb-3">
-        <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold flex-1">
+        <h2 className="section-heading flex-1">
           Local Concerts
         </h2>
         {locationLabel && (

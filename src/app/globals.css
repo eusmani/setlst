@@ -491,3 +491,17 @@ html.onb-pending body { overflow: hidden; }
 .snap-x {
   overscroll-behavior-x: contain;
 }
+
+/* Section headings.
+   These had drifted into three variants — 11px semibold at 0.18em in some
+   places, 20px regular at 0.15em in others, in three different greys. One class
+   so they can't diverge again. Tracking is tighter than the old 11px version
+   because 0.18em at this size pushes longer headings onto two lines. */
+.section-heading {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8a8a8a;
+}

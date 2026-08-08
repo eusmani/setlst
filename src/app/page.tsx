@@ -152,7 +152,7 @@ export default async function HomePage() {
 
           <section>
             <div className="flex items-baseline justify-between mb-3">
-              <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
+              <h2 className="section-heading">
                 {userId ? "From your friends" : "Recent activity"}
               </h2>
             </div>
@@ -168,7 +168,7 @@ export default async function HomePage() {
           {userId && (
             <section>
               <div className="flex items-baseline justify-between mb-3">
-                <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
+                <h2 className="section-heading">
                   Your activity
                 </h2>
               </div>
@@ -202,7 +202,7 @@ export default async function HomePage() {
             </div>
             {/* Friends' Activity — above Grails */}
             <div>
-              <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Friends&apos; Activity</h2>
+              <h2 className="section-heading mb-3">Friends&apos; Activity</h2>
               {/* Logged-in: only people you follow (never your own activity). Logged-out: recent site-wide. Streamed. */}
               <Suspense fallback={<FeedSkeleton />}>
                 <DesktopPrimaryFeed userId={userId} />
@@ -211,7 +211,7 @@ export default async function HomePage() {
             <ClubsStrip />
             {userId && (
               <div>
-                <h2 className="text-xl text-[#a0a0a0] uppercase tracking-[0.15em] mb-3">Your recent activity</h2>
+                <h2 className="section-heading mb-3">Your recent activity</h2>
                 {/* Reviews + discussion posts + replies — not just albums. */}
                 <Suspense fallback={<FeedSkeleton />}>
                   <DesktopMyFeed userId={userId} />

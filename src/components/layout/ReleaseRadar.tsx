@@ -53,7 +53,7 @@ export default function ReleaseRadar() {
           boxed inside a bordered panel. Stacked panels were what made the home
           screen feel crowded. */}
       <div className="flex items-baseline gap-2 mb-3">
-        <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
+        <h2 className="section-heading">
           Release Radar
         </h2>
         <span className="ml-auto text-[10px] text-[#6b6b6b] uppercase tracking-wider">{label}</span>
