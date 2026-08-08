@@ -48,34 +48,35 @@ export default function ReleaseRadar() {
   }, []);
 
   return (
-    <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1f1f1f]">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12,6 12,12 16,14" />
-        </svg>
-        <p className="text-sm text-[#f0f0f0] uppercase tracking-widest">Release Radar</p>
+    <section>
+      {/* No card: a heading on the page with rows under it, rather than content
+          boxed inside a bordered panel. Stacked panels were what made the home
+          screen feel crowded. */}
+      <div className="flex items-baseline gap-2 mb-3">
+        <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold">
+          Release Radar
+        </h2>
         <span className="ml-auto text-[10px] text-[#6b6b6b] uppercase tracking-wider">{label}</span>
       </div>
 
       {loading ? (
-        <div className="px-4 py-6 text-center text-xs text-[#6b6b6b]">Loading…</div>
+        <div className="py-6 text-xs text-[#6b6b6b]">Loading…</div>
       ) : releases.length === 0 ? (
-        <div className="px-4 py-6 text-center text-xs text-[#6b6b6b]">No releases this week — check back soon</div>
+        <div className="py-6 text-xs text-[#6b6b6b]">No releases this week — check back soon</div>
       ) : (
-        <div className="divide-y divide-[#1f1f1f] max-h-[520px] overflow-y-auto">
+        <div className="space-y-3 max-h-[520px] overflow-y-auto">
           {releases.slice(0, 15).map((r) => (
-            <div key={r.id} className="flex gap-3 px-4 py-2.5">
+            <div key={r.id} className="flex gap-3">
               {r.artwork ? (
                 <img
                   src={r.artwork}
                   alt={r.title}
                   width={48}
                   height={48}
-                  className="rounded w-12 h-12 object-cover shrink-0"
+                  className="rounded-lg w-14 h-14 object-cover shrink-0"
                 />
               ) : (
-                <div className="w-12 h-12 rounded bg-[#222222] shrink-0" />
+                <div className="w-14 h-14 rounded-lg bg-[#1c1c1c] shrink-0" />
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-[#f0f0f0] truncate leading-snug">{r.title}</p>
@@ -100,7 +101,7 @@ export default function ReleaseRadar() {
         </div>
       )}
 
-      <div className="px-4 py-2.5 border-t border-[#1f1f1f]">
+      <div className="pt-3">
         <a
           href="https://open.spotify.com/playlist/37i9dQZF1DX4JAvHpjipBk"
           target="_blank"
@@ -110,6 +111,6 @@ export default function ReleaseRadar() {
           New Music Friday on Spotify →
         </a>
       </div>
-    </div>
+    </section>
   );
 }

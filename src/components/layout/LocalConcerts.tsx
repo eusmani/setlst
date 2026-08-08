@@ -79,16 +79,16 @@ export default function LocalConcerts() {
   }
 
   return (
-    <div className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1f1f1f]">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4a832" strokeWidth="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-        <p className="text-sm text-[#f0f0f0] uppercase tracking-widest flex-1">Local Concerts</p>
+    <section>
+      {/* No panel, and no card around each show: the artwork carries the row and
+          the text sits on the page under it. Nesting cards inside a card was
+          most of what made this section feel crowded. */}
+      <div className="flex items-baseline gap-2 mb-3">
+        <h2 className="text-[11px] text-[#8a8a8a] uppercase tracking-[0.18em] font-semibold flex-1">
+          Local Concerts
+        </h2>
         {locationLabel && (
-          <span className="text-[10px] text-[#6b6b6b] truncate max-w-[80px]">{locationLabel}</span>
+          <span className="text-[10px] text-[#6b6b6b] truncate max-w-[110px]">{locationLabel}</span>
         )}
       </div>
 
@@ -138,17 +138,17 @@ export default function LocalConcerts() {
       )}
 
       {status === "done" && concerts.length > 0 && (
-        <div className="p-3 space-y-3">
+        <div className="space-y-5">
           {concerts.map((c) => {
             const going = attended.has(c.id);
             return (
-              <div key={c.id} className="rounded-xl overflow-hidden border border-[#1f1f1f] bg-[#141414] group">
+              <div key={c.id} className="group">
                 {/* Show banner — the actual event's landscape artwork */}
-                <a href={c.url} target="_blank" rel="noopener noreferrer" className="block relative">
+                <a href={c.url} target="_blank" rel="noopener noreferrer" className="block relative overflow-hidden rounded-xl">
                   {c.image ? (
-                    <img src={c.image} alt={c.name} referrerPolicy="no-referrer" loading="lazy" className="w-full h-28 object-cover bg-[#222222]" />
+                    <img src={c.image} alt={c.name} referrerPolicy="no-referrer" loading="lazy" className="w-full h-32 object-cover bg-[#1c1c1c]" />
                   ) : (
-                    <div className="w-full h-28 bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] flex items-center justify-center">
+                    <div className="w-full h-32 bg-gradient-to-br from-[#242424] to-[#141414] flex items-center justify-center">
                       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4a4a4a" strokeWidth="1.5"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
                     </div>
                   )}
@@ -157,7 +157,7 @@ export default function LocalConcerts() {
                   <p className="absolute bottom-2 left-3 right-3 text-sm text-white font-semibold truncate drop-shadow group-hover:text-[#c4a832] transition-colors">{c.name}</p>
                 </a>
 
-                <div className="px-3 py-2.5">
+                <div className="pt-2">
                   <a href={c.url} target="_blank" rel="noopener noreferrer" className="block">
                     <p className="text-xs text-[#a0a0a0] truncate">{c.venue}{c.city ? ` · ${c.city}` : ""}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -186,7 +186,7 @@ export default function LocalConcerts() {
       )}
 
       {status === "done" && (
-        <div className="px-4 py-2.5 border-t border-[#1f1f1f] flex items-center justify-between">
+        <div className="pt-3 flex items-center justify-between">
           <button
             onClick={requestLocation}
             className="text-[10px] text-[#6b6b6b] hover:text-[#c4a832] transition-colors"
@@ -203,6 +203,6 @@ export default function LocalConcerts() {
           </a>
         </div>
       )}
-    </div>
+    </section>
   );
 }
