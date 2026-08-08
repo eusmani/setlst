@@ -112,8 +112,15 @@ export default function AlbumMosaic() {
         {display.map((src, i) => (
           <img
             key={i}
-            src={src}
+            // Apple serves any size from the same URL. These tiles render about
+            // 98px wide on a phone, sit at 50% opacity behind two gradients, and
+            // there are 65 of them — 600px covers meant a 6.3 MB background
+            // image for decoration nobody looks at directly. 300px is still
+            // sharp at 3x on the widest tile.
+            src={src.replace("/600x600bb.jpg", "/300x300bb.jpg")}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="object-cover aspect-square w-1/4 sm:w-1/5"
           />
         ))}

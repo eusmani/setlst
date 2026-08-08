@@ -71,8 +71,10 @@ export default function ReleaseRadar() {
                 <img
                   src={r.artwork}
                   alt={r.title}
-                  width={48}
-                  height={48}
+                  width={56}
+                  height={56}
+                  loading="lazy"
+                  decoding="async"
                   className="rounded-lg w-14 h-14 object-cover shrink-0"
                 />
               ) : (

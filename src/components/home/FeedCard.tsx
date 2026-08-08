@@ -59,6 +59,7 @@ export default function FeedCard({ item }: { item: ActivityItem }) {
         <Link href={`/album/${review.album.spotifyId}`} className="press-soft block relative">
           {review.album.artwork ? (
             <img src={review.album.artwork} alt={review.album.title}
+              loading="lazy" decoding="async"
               className="w-full aspect-square object-cover" />
           ) : (
             <div className="w-full aspect-square bg-[#1f1f1f]" />
@@ -98,7 +99,7 @@ export default function FeedCard({ item }: { item: ActivityItem }) {
         <Link href={`/thread/${thread.id}`} className="press-soft block px-3 pb-3">
           <div className="flex gap-3">
             {thread.album.artwork && (
-              <img src={thread.album.artwork} alt="" className="w-16 h-16 rounded-lg object-cover shrink-0" />
+              <img src={thread.album.artwork} alt="" loading="lazy" decoding="async" className="w-16 h-16 rounded-lg object-cover shrink-0" />
             )}
             <div className="min-w-0">
               <p className="text-[15px] text-[#f0f0f0] font-semibold leading-snug">{thread.title}</p>

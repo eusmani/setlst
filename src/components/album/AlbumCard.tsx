@@ -58,6 +58,8 @@ export default function AlbumCard({ spotifyId, title, artist, artwork, year, avg
                 src={src}
                 alt={title}
                 onError={heal}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
               />
             </ViewTransition>

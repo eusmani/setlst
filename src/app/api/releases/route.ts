@@ -146,12 +146,21 @@ function toRec(album: ItunesAlbum) {
   };
 }
 
+// Assembled results per range, so repeat loads don't redo 268 lookups and the
+// batching walk. Serverless instances are reused between requests, so in
+// practice this serves most of them. Short TTL because "this week" rolls over.
+const CACHE_MS = 15 * 60 * 1000;
+const memo = new Map<string, { at: number; data: unknown }>();
+
 export async function GET(req: NextRequest) {
   const todayStr = new Date().toISOString().slice(0, 10);
   // ?range=week   → only releases that dropped in the last 7 days (this week).
   // ?range=recent → already out (on/before today, last 90 days).
   // ?range=all    → upcoming + recent.   Default → upcoming-only (today forward).
   const range = req.nextUrl.searchParams.get("range");
+  const cacheKey = `${range ?? "upcoming"}:${todayStr}`;
+  const hit = memo.get(cacheKey);
+  if (hit && Date.now() - hit.at < CACHE_MS) return NextResponse.json(hit.data);
   const week = range === "week";
   const recent = range === "recent";
   const all = range === "all";
@@ -172,11 +181,15 @@ export async function GET(req: NextRequest) {
   // large bursts of parallel requests, dropping results). Cached 6h per artist.
   const roster = [...new Set(ARTISTS)];
   const lists: Awaited<ReturnType<typeof recentForArtist>>[] = [];
-  const BATCH = 8;
+  // 268 artists in batches of 8 with a 90ms pause between meant ~3s of sleeping
+  // on every request — and the pauses happened even when all 268 lookups were
+  // warm data-cache hits and no network was touched at all. Wider batches and a
+  // shorter pause still throttle a cold burst without taxing the common case.
+  const BATCH = 24;
   for (let i = 0; i < roster.length; i += BATCH) {
     const chunk = await Promise.all(roster.slice(i, i + BATCH).map((a) => recentForArtist(a, cutoffStr)));
     lists.push(...chunk);
-    if (i + BATCH < roster.length) await new Promise((res) => setTimeout(res, 90));
+    if (i + BATCH < roster.length) await new Promise((res) => setTimeout(res, 40));
   }
 
   const seen = new Set<string>();
@@ -200,5 +213,6 @@ export async function GET(req: NextRequest) {
   // recent → past only; default → upcoming only.
   const releases = (week ? past : all ? [...upcoming, ...past] : recent ? past : upcoming).slice(0, 80);
 
+  memo.set(cacheKey, { at: Date.now(), data: releases });
   return NextResponse.json(releases);
 }
