@@ -193,7 +193,10 @@ export default function Navbar() {
                     </div>
                     {/* Desktop: Profile (on mobile, Profile lives in the bottom bar) */}
                     <Link
-                      href={`/profile/${displayName}`}
+                      // /profile rather than an interpolated name: displayName
+                      // is empty until /api/me resolves, which would have linked
+                      // to /profile/ and 404'd.
+                      href="/profile"
                       className="hidden sm:flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#f0f0f0] hover:bg-[#222222] transition-colors"
                       onClick={() => setUserOpen(false)}
                     >

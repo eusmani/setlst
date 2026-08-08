@@ -72,8 +72,12 @@ export default function BottomNav() {
           phones, where this bar is always on screen. */}
       <div className="flex items-stretch justify-around h-[3.25rem] rounded-2xl border border-[#2e2e2e] bg-[#161616] shadow-2xl shadow-black/60 px-1">
         {NAV.map(({ href, label, icon, plus, profile }) => {
-          // Profile tab points at the current user (or login when signed out).
-          if (profile) href = username ? `/profile/${username}` : "/login";
+          // Always /profile: the server resolves who that is and redirects.
+          // Building the href here from an async /api/me meant the tab pointed
+          // at /login until that resolved — the sign-in screen appearing for
+          // someone already signed in. The avatar below still uses /api/me, but
+          // only for the picture, where arriving late is harmless.
+          if (profile) href = "/profile";
           const active = profile ? pathname.startsWith("/profile") : href === "/" ? pathname === "/" : pathname.startsWith(href);
 
           // The center "+" is a prominent yellow action button (write a review).
