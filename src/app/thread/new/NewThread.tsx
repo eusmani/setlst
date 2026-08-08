@@ -89,8 +89,13 @@ export default function NewThread({ album }: { album: Album }) {
   async function addNativePhoto() {
     if (images.length >= 4) { setPhotoErr("Up to 4 photos."); return; }
     tapHaptic();
-    const raw = await pickPhoto("prompt");
-    if (!raw) return;
+    const pick = await pickPhoto("prompt");
+    if (pick.status === "cancelled") return;
+    if (pick.status !== "ok") {
+      setPhotoErr(pick.status === "unavailable" ? "Photo picker unavailable." : `Couldn't use that photo — ${pick.reason}.`);
+      return;
+    }
+    const raw = pick.dataUrl;
     setPhotoErr("");
     setChecking(true);
     try {

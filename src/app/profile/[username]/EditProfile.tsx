@@ -54,26 +54,24 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
   // web file input — iOS offers "Take Photo" as well as the photo library.
   async function chooseNativePhoto() {
     tapHaptic();
-    let raw: string | null;
-    try {
-      raw = await pickPhoto("prompt");
-    } catch (error) {
-      if (String((error as Error)?.message) === "camera-unavailable") {
-        // Plugin absent from this build — the file input still works.
-        fileRef.current?.click();
-        return;
-      }
-      setErr("Couldn't read that photo. Check SETLST has photo access in Settings.");
+    const pick = await pickPhoto("prompt");
+
+    if (pick.status === "cancelled") return;
+    if (pick.status === "unavailable") { fileRef.current?.click(); return; }
+    if (pick.status === "failed") {
+      // Say what went wrong. Silence here is what made this look like the
+      // feature simply didn't work.
+      setErr(`Couldn't use that photo — ${pick.reason}.`);
       return;
     }
-    if (!raw) return; // cancelled
+
     try {
-      // The camera hands back a 1200px capture; the API caps avatars at
-      // 400,000 characters, so it has to be cropped down like the file path.
-      setAvatar(await squareDataUrl(raw));
+      // Crop to the same 240px square the file input produces; the API caps
+      // avatars at 400,000 characters.
+      setAvatar(await squareDataUrl(pick.dataUrl));
       setErr("");
     } catch {
-      setErr("Could not use that photo — try another.");
+      setErr("Could not process that photo — try another.");
     }
   }
 

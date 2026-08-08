@@ -88,18 +88,29 @@ export type PhotoSource = "camera" | "photos" | "prompt";
  * existing <input type="file"> path as the fallback. Inside the app this
  * replaces the web file picker with the real iOS camera and photo picker.
  */
-export async function pickPhoto(source: PhotoSource = "prompt"): Promise<string | null> {
-  if (!isNative()) return null;
+/** What a pick actually did, so callers stop having to infer it from `null`. */
+export type PhotoPick =
+  | { status: "ok"; dataUrl: string }
+  | { status: "cancelled" }
+  | { status: "unavailable" }          // plugin not in this build
+  | { status: "failed"; reason: string };
 
-  // Import separately from the call: a failure here means the plugin isn't in
-  // the build, which callers must be able to tell apart from the user tapping
-  // cancel. Collapsing both into `null` made a missing plugin look exactly like
-  // a cancelled pick — nothing happens, nothing explains why.
+/**
+ * Pick or shoot a photo using the native camera UI.
+ *
+ * Returns a tagged result rather than `string | null`. The null version
+ * conflated "you cancelled", "the plugin is missing" and "the pick worked but
+ * produced nothing readable" — and the third case looked exactly like the
+ * first: the picker opened, you chose a photo, and nothing happened.
+ */
+export async function pickPhoto(source: PhotoSource = "prompt"): Promise<PhotoPick> {
+  if (!isNative()) return { status: "unavailable" };
+
   let Camera, CameraResultType, CameraSource;
   try {
     ({ Camera, CameraResultType, CameraSource } = await import("@capacitor/camera"));
   } catch {
-    throw new Error("camera-unavailable");
+    return { status: "unavailable" };
   }
 
   let photo;
@@ -113,32 +124,35 @@ export async function pickPhoto(source: PhotoSource = "prompt"): Promise<string 
         source === "camera" ? CameraSource.Camera
         : source === "photos" ? CameraSource.Photos
         : CameraSource.Prompt,
-      width: 1200,
+      // Deliberately no `width`: the plugin's own downscale is an extra step
+      // that can come back with nothing, and every caller crops client-side
+      // anyway, so asking for it bought nothing and could lose the photo.
     });
   } catch (error) {
-    // Dismissing the sheet throws, and that's not a failure worth reporting.
-    // Anything else is, so it doesn't disappear the way it used to.
-    const message = String((error as Error)?.message ?? "").toLowerCase();
-    if (message.includes("cancel") || message.includes("no image")) return null;
-    throw error;
+    const message = String((error as Error)?.message ?? "");
+    if (/cancel/i.test(message) || /no image/i.test(message)) return { status: "cancelled" };
+    return { status: "failed", reason: message || "the camera returned an error" };
   }
 
-  if (photo.dataUrl) return photo.dataUrl;
+  if (photo.dataUrl) return { status: "ok", dataUrl: photo.dataUrl };
 
-  // Every field on the result is optional, and iOS doesn't always populate
-  // dataUrl even when DataUrl was requested — it can hand back only a local
-  // path. Returning null there meant the picker opened, you chose a photo, and
-  // nothing happened. Read the file instead.
+  // dataUrl isn't always populated even when it's what was requested; iOS can
+  // hand back only a local path.
   const local = photo.webPath ?? photo.path;
-  if (!local) throw new Error("camera-empty");
+  if (!local) return { status: "failed", reason: "the photo came back empty" };
 
-  const blob = await (await fetch(local)).blob();
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("camera-read-failed"));
-    reader.readAsDataURL(blob);
-  });
+  try {
+    const blob = await (await fetch(local)).blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("could not read the photo file"));
+      reader.readAsDataURL(blob);
+    });
+    return { status: "ok", dataUrl };
+  } catch (error) {
+    return { status: "failed", reason: String((error as Error)?.message ?? "could not read the photo") };
+  }
 }
 
 /** True when the native camera UI is available, so callers can offer it. */

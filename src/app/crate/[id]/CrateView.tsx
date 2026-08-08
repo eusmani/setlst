@@ -85,17 +85,11 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
   // Native camera / photo picker inside the app; the file input stays for web.
   async function chooseNativeCover() {
     tapHaptic();
-    let raw: string | null;
-    try {
-      raw = await pickPhoto("prompt");
-    } catch {
-      fileRef.current?.click(); // couldn't read it natively — use the file input
-      return;
-    }
-    if (!raw) return; // cancelled
-    // Crate covers share the avatar's 400,000-character cap, so the native
-    // capture needs the same crop the file input path applies.
-    const cover = await squareDataUrl(raw, 480).catch(() => null);
+    const pick = await pickPhoto("prompt");
+    if (pick.status === "cancelled") return;
+    if (pick.status !== "ok") { fileRef.current?.click(); return; }
+    // Crate covers share the avatar's 400,000-character cap.
+    const cover = await squareDataUrl(pick.dataUrl, 480).catch(() => null);
     if (!cover) return;
     setCover(cover);
     await patch({ cover });
