@@ -48,7 +48,7 @@ async function MobilePrimaryFeed({ userId }: { userId?: string }) {
 }
 
 async function MobileMyFeed({ userId }: { userId: string }) {
-  return <MobileFeed items={await cachedMine(userId)} limit={5} empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
+  return <MobileFeed items={await cachedMine(userId)} limit={3} empty={{ msg: "You haven't posted anything yet.", href: "/search", cta: "Find an album to review or discuss →" }} />;
 }
 
 async function DesktopPrimaryFeed({ userId }: { userId?: string }) {
