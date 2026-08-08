@@ -1,4 +1,7 @@
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
+import HomeGreeting from "@/components/home/HomeGreeting";
+import { GREETING_COOKIE, GREETINGS } from "@/lib/greetings";
 import { getUserActivity, getFriendsActivity, getRecentActivity } from "@/lib/feed";
 import { cache, Suspense } from "react";
 import MobileFeed from "@/components/home/MobileFeed";
@@ -18,14 +21,6 @@ import TrendingAlbums from "@/components/album/TrendingAlbums";
 
 export const dynamic = "force-dynamic";
 
-// The home greeting rotates on every load. Picked on the server, which is safe
-// here because this page is force-dynamic and the heading is server-rendered —
-// choosing at random on the client would flash the wrong greeting on hydration.
-const GREETINGS: { before: string; after: string }[] = [
-  { before: "Welcome back, ", after: "!" },
-  { before: "Go on and review ", after: "!" },
-  { before: "Hey ", after: ", log in your new favorites!" },
-];
 
 // The activity feed is a heavy multi-relation query against a cross-region Turso
 // DB (~5s) — it used to block the whole home render. It's now streamed via
@@ -69,7 +64,15 @@ export default async function HomePage() {
   const session = await auth();
   const userId = session?.user?.id;
   const username = session?.user?.username ?? "";
-  const greeting = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
+
+  // Render the greeting the client pinned for this session, so the first paint
+  // is already right. On a fresh launch there's no cookie yet and HomeGreeting
+  // picks one; a random default here keeps that first-ever load varied.
+  const cookieStore = await cookies();
+  const stored = Number(cookieStore.get(GREETING_COOKIE)?.value);
+  const greetingIndex = Number.isNaN(stored)
+    ? Math.floor(Math.random() * GREETINGS.length)
+    : stored;
 
   return (
     <div className="relative">
@@ -106,9 +109,7 @@ export default async function HomePage() {
         <div className="relative">
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-5 pt-10 sm:pt-8 pb-4 sm:pb-6">
             <h2 className="slide-down text-[27px] sm:text-3xl font-bold text-[#f0f0f0] leading-tight" style={{ fontFamily: "var(--font-jakarta), sans-serif" }}>
-              {greeting.before}
-              <span className="text-[#c4a832]">{username}</span>
-              {greeting.after}
+              <HomeGreeting username={username} initialIndex={greetingIndex} />
             </h2>
             <p className="slide-down-delay hero-sub hidden sm:block sm:text-base text-[#a0a0a0] mt-1">
               Check your friends&apos; picks and log in new albums.
