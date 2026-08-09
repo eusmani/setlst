@@ -151,6 +151,7 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
         {pending && (
           <PhotoAdjuster
             src={pending}
+            title="Profile picture"
             onDone={(dataUrl) => { setAvatar(dataUrl); setPending(null); }}
             onCancel={() => setPending(null)}
           />

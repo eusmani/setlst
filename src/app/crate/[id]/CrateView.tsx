@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import CrateCover from "@/components/crate/CrateCover";
 import AlbumSearchSheet, { type AlbumHit } from "@/components/album/AlbumSearchSheet";
 import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
-import { squareDataUrl } from "@/lib/photo";
 import PhotoActionSheet from "@/components/ui/PhotoActionSheet";
+import PhotoAdjuster from "@/components/ui/PhotoAdjuster";
 
 interface Album {
   id: string;
@@ -24,25 +24,12 @@ interface CrateData {
   albums: Album[];
 }
 
-// Resize an uploaded image to a small square data URL (no external storage).
-function fileToDataUrl(file: File): Promise<string> {
+// Read an upload as a data URL. No resize: the adjuster needs full resolution
+// to crop from, and does the downscale itself.
+function readFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const size = 400;
-        const canvas = document.createElement("canvas");
-        canvas.width = size; canvas.height = size;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("no ctx"));
-        const min = Math.min(img.width, img.height);
-        ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, size, size);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
-      };
-      img.onerror = reject;
-      img.src = reader.result as string;
-    };
+    reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -62,6 +49,8 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
   const [albums, setAlbums] = useState(crate.albums);
   const fileRef = useRef<HTMLInputElement>(null);
   const [coverSheet, setCoverSheet] = useState(false);
+  // The picked cover, held while it's being framed.
+  const [pendingCover, setPendingCover] = useState<string | null>(null);
 
   // Inline "add albums" picker — the playlist-style way to fill a crate without
   // leaving it.
@@ -79,9 +68,8 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
   async function onCoverFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const dataUrl = await fileToDataUrl(file);
-    setCover(dataUrl);
-    await patch({ cover: dataUrl });
+    // Straight to the adjuster at full resolution — it crops and saves.
+    setPendingCover(await readFile(file));
   }
 
   // Native camera / photo picker inside the app; the file input stays for web.
@@ -91,11 +79,15 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
     const pick = await pickPhoto(source);
     if (pick.status === "cancelled") return;
     if (pick.status !== "ok") { fileRef.current?.click(); return; }
-    // Crate covers share the avatar's 400,000-character cap.
-    const cover = await squareDataUrl(pick.dataUrl, 480).catch(() => null);
-    if (!cover) return;
-    setCover(cover);
-    await patch({ cover });
+    setPendingCover(pick.dataUrl);
+  }
+
+  // Applied once the framing is confirmed. Crate covers share the avatar's
+  // 400,000-character cap, so they're saved at 480px.
+  async function applyCover(dataUrl: string) {
+    setPendingCover(null);
+    setCover(dataUrl);
+    await patch({ cover: dataUrl });
   }
 
   async function removeCover() {
@@ -183,6 +175,18 @@ export default function CrateView({ crate, isOwner }: { crate: CrateData; isOwne
                   onRemove={cover ? () => { void removeCover(); setCoverSheet(false); } : undefined}
                   removeLabel="Use album collage instead"
                   onClose={() => setCoverSheet(false)}
+                />
+              )}
+
+              {/* Framing step. Square mask, since a crate cover isn't round. */}
+              {pendingCover && (
+                <PhotoAdjuster
+                  src={pendingCover}
+                  title="Crate cover"
+                  round={false}
+                  size={480}
+                  onDone={(dataUrl) => void applyCover(dataUrl)}
+                  onCancel={() => setPendingCover(null)}
                 />
               )}
             </div>
