@@ -180,7 +180,11 @@ export function spotifyAppUri(href: string): string | null {
     // Localised links carry an /intl-xx prefix before the resource.
     const path = url.pathname.replace(/^\/intl-[a-z]{2,3}/i, "");
     const match = path.match(SPOTIFY_RESOURCE);
-    return match ? `spotify:${match[1]}:${match[2]}` : null;
+    if (match) return `spotify:${match[1]}:${match[2]}`;
+    // Releases we only know by name link to a search, which the app handles too.
+    const search = path.match(/^\/search\/(.+)/);
+    if (search) return `spotify:search:${search[1]}`;
+    return null;
   } catch {
     return null;
   }

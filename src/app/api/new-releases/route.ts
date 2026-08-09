@@ -6,6 +6,14 @@ export const dynamic = "force-dynamic";
 
 interface Out { id: string; title: string; artist: string; artwork: string | null; releaseDate: string; spotifyUrl: string }
 
+/** A Spotify search link for a release we only know by name. */
+function spotifySearchUrl(artist?: string, title?: string): string {
+  const query = [artist, title].filter(Boolean).join(" ").trim();
+  return query
+    ? `https://open.spotify.com/search/${encodeURIComponent(query)}`
+    : "https://open.spotify.com/genre/new-releases";
+}
+
 // Reliable fallback: the iTunes "Top Albums" chart (newest first) for when
 // Spotify search is momentarily empty/rate-limited.
 async function itunesNewest(): Promise<Out[]> {
@@ -21,7 +29,11 @@ async function itunesNewest(): Promise<Out[]> {
         artist: e["im:artist"]?.label ?? "",
         artwork: (e["im:image"]?.slice(-1)[0]?.label ?? "").replace("170x170bb", "600x600bb") || null,
         releaseDate: e["im:releaseDate"]?.attributes?.label ? new Date(e["im:releaseDate"]!.attributes!.label!).toISOString().slice(0, 10) : "",
-        spotifyUrl: e.id?.label ?? "https://open.spotify.com/genre/new-releases",
+        // The field is a Spotify link, and this feed is Apple's — `e.id.label`
+        // is a music.apple.com page, so "Listen" opened Apple Music. iTunes
+        // can't tell us a Spotify id, so link to Spotify's search for the
+        // release instead: it opens the Spotify app on the right album.
+        spotifyUrl: spotifySearchUrl(e["im:artist"]?.label, e["im:name"]?.label),
       }))
       .filter((a) => a.id && a.title && a.artist && a.artwork)
       .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));
