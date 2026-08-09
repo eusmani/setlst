@@ -161,6 +161,70 @@ export function canUseNativeCamera(): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Spotify
+// ---------------------------------------------------------------------------
+
+const SPOTIFY_RESOURCE = /^\/(track|album|artist|playlist|episode|show)\/([A-Za-z0-9]+)/;
+
+/**
+ * The `spotify:` deep link for an open.spotify.com URL, or null if it isn't one.
+ *
+ * open.spotify.com links are universal links, so in Safari they hand off to the
+ * Spotify app — but not when opened from inside another app's web view, which
+ * is where every link in SETLST ends up. The custom scheme has no such caveat.
+ */
+export function spotifyAppUri(href: string): string | null {
+  try {
+    const url = new URL(href);
+    if (!/(^|\.)spotify\.com$/i.test(url.hostname)) return null;
+    // Localised links carry an /intl-xx prefix before the resource.
+    const path = url.pathname.replace(/^\/intl-[a-z]{2,3}/i, "");
+    const match = path.match(SPOTIFY_RESOURCE);
+    return match ? `spotify:${match[1]}:${match[2]}` : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Open a Spotify link in the Spotify app, falling back to the web player.
+ *
+ * There's no API to ask whether Spotify is installed without adding a native
+ * plugin — which would need a new binary, so it couldn't reach a build that's
+ * already shipped. Instead this navigates to the `spotify:` scheme and watches
+ * whether we get backgrounded: if iOS handed off to Spotify the page hides
+ * almost immediately, and if nothing is registered for the scheme the failure
+ * is silent and we're still visible a moment later, which is the cue to open
+ * the web player rather than leave the tap doing nothing.
+ */
+export async function openSpotify(href: string): Promise<void> {
+  const uri = spotifyAppUri(href);
+  if (!isNative() || !uri) {
+    window.open(href, "_blank", "noopener");
+    return;
+  }
+
+  let handedOff = false;
+  const onLeave = () => { handedOff = true; };
+  document.addEventListener("visibilitychange", onLeave);
+  window.addEventListener("pagehide", onLeave);
+
+  window.location.href = uri;
+  await new Promise((resolve) => setTimeout(resolve, 1200));
+
+  document.removeEventListener("visibilitychange", onLeave);
+  window.removeEventListener("pagehide", onLeave);
+  if (handedOff || document.visibilityState === "hidden") return;
+
+  try {
+    const { Browser } = await import("@capacitor/browser");
+    await Browser.open({ url: href, presentationStyle: "popover" });
+  } catch {
+    window.location.href = href;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Sharing
 // ---------------------------------------------------------------------------
 

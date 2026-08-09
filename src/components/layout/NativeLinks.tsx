@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { isNative } from "@/lib/native";
+import { isNative, openSpotify, spotifyAppUri } from "@/lib/native";
 
 // Makes external and `target="_blank"` links work inside the native app.
 //
@@ -44,6 +44,17 @@ export default function NativeLinks() {
       const isExternal = url.origin !== window.location.origin;
       const opensNewTab = anchor.target === "_blank";
       if (!isExternal && !opensNewTab) return; // ordinary in-app navigation
+
+      // Spotify goes to the Spotify app, not the in-app browser. Handing an
+      // open.spotify.com link to SFSafariViewController lands on the web player
+      // inside a Safari sheet — tapping a song showed a web page instead of
+      // playing it. Universal links don't hand off from another app's web view,
+      // so this needs the spotify: scheme.
+      if (spotifyAppUri(url.toString())) {
+        event.preventDefault();
+        void openSpotify(url.toString());
+        return;
+      }
 
       event.preventDefault();
       void (async () => {
