@@ -9,7 +9,7 @@ const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profi
   {
     href: "/", label: "Home",
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
         <polyline points="9,21 9,12 15,12 15,21" />
       </svg>
@@ -18,7 +18,7 @@ const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profi
   {
     href: "/search", label: "Albums",
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <circle cx="12" cy="12" r="2.5" strokeWidth="1.4" />
         <circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none" />
@@ -28,7 +28,7 @@ const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profi
   {
     href: "/log", label: "Review", plus: true,
     icon: (
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <line x1="12" y1="5" x2="12" y2="19" />
         <line x1="5" y1="12" x2="19" y2="12" />
       </svg>
@@ -37,7 +37,7 @@ const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profi
   {
     href: "/activity", label: "Activity",
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 3v18h18" />
         <path d="M7 14l4-4 3 3 5-6" />
       </svg>
@@ -46,7 +46,7 @@ const NAV: { href: string; label: string; icon: ReactNode; plus?: boolean; profi
   {
     href: "/profile", label: "Profile", profile: true,
     icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="8" r="4" />
         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
       </svg>
@@ -92,7 +92,7 @@ export default function BottomNav() {
           if (plus) {
             return (
               <Link key={href} href={href} aria-label={label} className="flex items-center justify-center flex-1">
-                <span className="flex items-center justify-center w-11 h-11 -mt-2 rounded-full bg-[#c4a832] text-[#111111] shadow-lg shadow-black/40 active:scale-95 transition-transform">
+                <span className="flex items-center justify-center w-12 h-12 rounded-full bg-[#c4a832] text-[#111111] shadow-lg shadow-black/40 active:scale-95 transition-transform">
                   {icon}
                 </span>
               </Link>
@@ -103,18 +103,18 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 text-[10px] tracking-wide transition-colors ${
+              aria-label={label}
+              className={`flex items-center justify-center flex-1 transition-colors ${
                 active ? "text-[#c4a832]" : "text-[#6b6b6b] hover:text-[#a0a0a0]"
               }`}
             >
               {profile && username ? (
                 <span className={`rounded-full ${active ? "ring-2 ring-[#c4a832]" : ""}`}>
-                  <Avatar username={username} avatar={me?.avatar ?? null} size={21} />
+                  <Avatar username={username} avatar={me?.avatar ?? null} size={27} />
                 </span>
               ) : (
                 icon
               )}
-              <span>{label}</span>
             </Link>
           );
         })}
