@@ -201,6 +201,33 @@ export default async function ProfilePage({
               );
             })}
           </div>
+
+          {/* Settings and SETLST Pro, moved off the hamburger menu. Only on your
+              own profile — they're meaningless on someone else's. Pro stays
+              phone-only, as it's an Apple in-app purchase. */}
+          {isOwnProfile && (
+            <div className="flex items-center gap-2 mt-4">
+              <Link
+                href="/settings"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#2e2e2e] text-xs text-[#d8d8d8] hover:border-[#c4a832] hover:text-[#c4a832] transition-colors"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                Settings
+              </Link>
+              <Link
+                href="/plus"
+                className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#c4a832]/40 text-xs text-[#c4a832] hover:border-[#c4a832] transition-colors"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                SETLST Pro
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
