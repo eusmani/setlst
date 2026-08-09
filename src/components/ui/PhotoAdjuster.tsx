@@ -39,6 +39,11 @@ export default function PhotoAdjuster({
   // Top-left of the image relative to the viewport, in viewport px.
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const drag = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
+  // Live pointers by id — pinch needs two at once, which a single handler can't see.
+  const points = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinch = useRef<{ gap: number; zoom: number; u: number; v: number } | null>(null);
+  const frame = useRef<HTMLDivElement>(null);
+  const [touching, setTouching] = useState(false);
 
   // `cover` scale: the smaller edge exactly fills the viewport at zoom 1.
   const base = img ? VIEWPORT / Math.min(img.width, img.height) : 1;
@@ -78,14 +83,73 @@ export default function PhotoAdjuster({
 
   function onPointerDown(e: React.PointerEvent) {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    drag.current = { x: e.clientX, y: e.clientY, ox: pos.x, oy: pos.y };
+    points.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    setTouching(true);
+    if (points.current.size === 2) startPinch();
+    else drag.current = { x: e.clientX, y: e.clientY, ox: pos.x, oy: pos.y };
   }
+
+  /**
+   * Anchor the pinch: remember the gap between the fingers, and which point of
+   * the image sits under their midpoint. Holding that point in place is what
+   * makes the photo zoom around the fingers rather than around the frame.
+   */
+  function startPinch() {
+    if (!img) return;
+    const [a, b] = [...points.current.values()];
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const box = frame.current?.getBoundingClientRect();
+    const local = { x: mid.x - (box?.left ?? 0), y: mid.y - (box?.top ?? 0) };
+    pinch.current = {
+      gap: Math.hypot(a.x - b.x, a.y - b.y),
+      zoom,
+      // Where the midpoint falls on the image itself, in image pixels.
+      u: (local.x - pos.x) / scale,
+      v: (local.y - pos.y) / scale,
+    };
+    drag.current = null;
+  }
+
   function onPointerMove(e: React.PointerEvent) {
-    if (!drag.current || !img) return;
+    if (!img) return;
+    if (!points.current.has(e.pointerId)) return;
+    points.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (points.current.size >= 2 && pinch.current) {
+      const [a, b] = [...points.current.values()];
+      const gap = Math.hypot(a.x - b.x, a.y - b.y);
+      const p = pinch.current;
+      const next = Math.min(MAX_ZOOM, Math.max(1, p.zoom * (gap / p.gap)));
+      const s = base * next;
+      // Follow the midpoint too, so a pinch can pan at the same time.
+      const box = frame.current?.getBoundingClientRect();
+      const mid = {
+        x: (a.x + b.x) / 2 - (box?.left ?? 0),
+        y: (a.y + b.y) / 2 - (box?.top ?? 0),
+      };
+      setZoom(next);
+      setPos(clamp(mid.x - p.u * s, mid.y - p.v * s, img.width * s, img.height * s));
+      return;
+    }
+
+    if (!drag.current) return;
     const d = drag.current;
     setPos(clamp(d.ox + (e.clientX - d.x), d.oy + (e.clientY - d.y), shownW, shownH));
   }
-  function onPointerUp() { drag.current = null; }
+
+  function onPointerUp(e: React.PointerEvent) {
+    points.current.delete(e.pointerId);
+    if (points.current.size < 2) pinch.current = null;
+    if (points.current.size === 1) {
+      // Lifting one finger hands back to a drag from where the other one is,
+      // instead of the photo jumping by however far the pinch had moved.
+      const [only] = [...points.current.values()];
+      drag.current = { x: only.x, y: only.y, ox: pos.x, oy: pos.y };
+    } else if (points.current.size === 0) {
+      drag.current = null;
+      setTouching(false);
+    }
+  }
 
   function save() {
     if (!img) return;
@@ -105,9 +169,10 @@ export default function PhotoAdjuster({
       <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-5">
         <div className="w-full max-w-sm bg-[#161616] border border-[#2e2e2e] rounded-2xl p-5">
           <p className="text-sm text-[#f0f0f0] mb-1">Adjust photo</p>
-          <p className="text-xs text-[#6b6b6b] mb-4">Drag to move, slide to zoom.</p>
+          <p className="text-xs text-[#6b6b6b] mb-4">Drag to move, pinch to zoom.</p>
 
           <div
+            ref={frame}
             className="relative mx-auto overflow-hidden bg-[#0c0c0c] touch-none select-none cursor-grab active:cursor-grabbing"
             style={{
               width: VIEWPORT,
@@ -134,6 +199,21 @@ export default function PhotoAdjuster({
                 }}
               />
             )}
+
+            {/* Rule-of-thirds guides. Subtle at rest so they don't fight the
+                photo, firmer while you're actually moving it. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 transition-opacity duration-150"
+              style={{ opacity: touching ? 0.75 : 0.3 }}
+            >
+              {[33.33, 66.66].map((p) => (
+                <div key={`h${p}`} className="absolute inset-x-0 border-t border-white/50" style={{ top: `${p}%` }} />
+              ))}
+              {[33.33, 66.66].map((p) => (
+                <div key={`v${p}`} className="absolute inset-y-0 border-l border-white/50" style={{ left: `${p}%` }} />
+              ))}
+            </div>
           </div>
 
           <input
