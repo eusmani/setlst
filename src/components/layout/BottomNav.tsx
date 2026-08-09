@@ -74,7 +74,7 @@ export default function BottomNav() {
           invisible, but it forced the webview to re-composite the region behind
           the bar on every scroll frame — the main source of scroll stutter on
           phones, where this bar is always on screen. */}
-      <div className="flex items-stretch justify-around h-[3.75rem] rounded-full border border-[#2e2e2e] bg-[#161616] shadow-2xl shadow-black/60 px-1">
+      <div className="flex items-stretch justify-around h-[5rem] rounded-full border border-[#2e2e2e] bg-[#161616] shadow-2xl shadow-black/60 px-1">
         {NAV.map(({ href, label, icon, plus, profile }) => {
           // Go straight to the profile when the session already names the user.
           // Falling back to /profile (which resolves server-side) rather than
