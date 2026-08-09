@@ -12,6 +12,63 @@ interface ItunesAlbum {
   artworkUrl100?: string;
   releaseDate?: string;
   artistId?: number;
+  trackCount?: number;
+}
+
+export type ReleaseKind = "album" | "ep" | "single";
+
+/**
+ * Album, EP or single.
+ *
+ * iTunes has no field for this: it marks the distinction in the title ("… -
+ * Single", "… - EP") and otherwise leaves you to infer it from track count.
+ * Without this everything was presented as an album, which is why singles and
+ * EPs looked missing.
+ */
+function releaseKind(name: string, trackCount?: number): ReleaseKind {
+  if (/[-–—]\s*single\s*$/i.test(name)) return "single";
+  if (/[-–—]\s*ep\s*$/i.test(name) || /\bE\.?P\.?\s*$/.test(name)) return "ep";
+  if (typeof trackCount === "number") {
+    if (trackCount <= 2) return "single";
+    if (trackCount <= 6) return "ep";
+  }
+  return "album";
+}
+
+/**
+ * The artists actually credited on a release.
+ *
+ * iTunes puts collaborations in one string — "Artist A & Artist B", "Artist A
+ * feat. Artist B" — and gives the release a single artistId, usually the first
+ * name. Filtering on that id alone is why a collaboration only ever appeared in
+ * one artist's discography. Splitting the credit lets it appear in both.
+ *
+ * Split, then compare whole names: "Drake & Future" yields Future, while "Drake
+ * Bell" stays one name and won't be mistaken for Drake.
+ *
+ * The comma is the awkward one. iTunes uses it for collaborations ("Metro
+ * Boomin, The Weeknd"), but some artists have it in their actual name ("Tyler,
+ * The Creator", "Earth, Wind & Fire"), which splits into fragments. That only
+ * misleads if a release elsewhere is credited to exactly one of those fragments,
+ * which is rare — and dropping the comma would lose a common collaboration
+ * format outright, so it's the better trade.
+ */
+function creditedArtists(artistName: string): string[] {
+  return artistName
+    .split(/\s*(?:,|&|\/|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b|\bwith\b|\bx\b|\bvs\.?\b|\band\b)\s*/i)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+/** True when `target` is one of the artists credited on the release. */
+function isCreditedTo(a: ItunesAlbum, target: string): boolean {
+  const want = norm(target);
+  if (!want) return false;
+  if (a.artistName && creditedArtists(a.artistName).some((n) => norm(n) === want)) return true;
+  // Features are often only in the title: "Song (feat. Artist B) - Single".
+  const feat = a.collectionName?.match(/\((?:feat\.?|featuring|ft\.?|with)\s+([^)]+)\)/i);
+  if (feat) return creditedArtists(feat[1]).some((n) => norm(n) === want);
+  return false;
 }
 
 const BAD = /\b(karaoke|tribute|made famous|cover version|string quartet|instrumental|8-bit|parody|parodies|spoof)\b/i;
@@ -54,7 +111,11 @@ function mapAlbums(results: ItunesAlbum[]) {
     .map((a) => ({
       id: String(a.collectionId),
       rawTitle: a.collectionName as string,
-      title: cleanTitle(a.collectionName as string) || (a.collectionName as string),
+      // The suffix is how the kind is detected, so classify before stripping it.
+      kind: releaseKind(a.collectionName as string, a.trackCount),
+      title:
+        cleanTitle((a.collectionName as string).replace(/\s*[-–—]\s*(single|ep)\s*$/i, "")) ||
+        (a.collectionName as string),
       artist: a.artistName as string,
       artwork: (a.artworkUrl100 as string).replace("100x100bb", "600x600bb"),
       year: a.releaseDate ? parseInt(a.releaseDate.slice(0, 4)) : null,
@@ -71,39 +132,57 @@ function mapAlbums(results: ItunesAlbum[]) {
 
   return Array.from(best.values())
     .sort((a, b) => b.date.localeCompare(a.date))
-    .map(({ id, title, artist, artwork, year }) => ({ id, title, artist, artwork, year }));
+    .map(({ id, title, artist, artwork, year, kind }) => ({ id, title, artist, artwork, year, kind }));
 }
 
 async function getDiscography(artist: string) {
   try {
-    // 1. Exact artist via ID — the reliable path
     const artistId = await resolveArtistId(artist);
-    if (artistId) {
-      const res = await fetch(
-        `https://itunes.apple.com/lookup?id=${artistId}&entity=album&limit=100`,
-        { next: { revalidate: 86400 } }
-      );
-      if (res.ok) {
-        // Keep only releases where this artist is the PRIMARY artist (not features/collabs by others)
-        const results: ItunesAlbum[] = ((await res.json()).results ?? []).filter(
-          (r: ItunesAlbum) => r.collectionId && r.artistId === artistId
-        );
-        const mapped = mapAlbums(results);
-        if (mapped.length > 0) return mapped;
-      }
-    }
 
-    // 2. Fallback: name search requiring the FULL name to match
-    const res = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=album&limit=80`,
-      { next: { revalidate: 86400 } }
+    // Two passes, because neither finds everything on its own:
+    //
+    //  1. lookup by artist id — reliable for releases this artist headlines, and
+    //     the only way to be sure it's the right artist of that name;
+    //  2. a name search — the only way to reach collaborations, which iTunes
+    //     files under a single artistId (usually the first name credited), so
+    //     the id lookup misses them from the other artist's side entirely.
+    //
+    // Both run in parallel and are merged; mapAlbums de-duplicates.
+    const [byId, byName] = await Promise.all([
+      artistId
+        ? fetch(`https://itunes.apple.com/lookup?id=${artistId}&entity=album&limit=100`, {
+            next: { revalidate: 86400 },
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null)
+        : Promise.resolve(null),
+      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=album&limit=100`, {
+        next: { revalidate: 86400 },
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+    ]);
+
+    const headlined: ItunesAlbum[] = (byId?.results ?? []).filter(
+      (r: ItunesAlbum) => r.collectionId && r.artistId === artistId
     );
-    if (!res.ok) return [];
+
+    // Anything where this artist is one of the credited names — the collaborations.
+    const collaborations: ItunesAlbum[] = (byName?.results ?? []).filter(
+      (a: ItunesAlbum) => a.collectionId && isCreditedTo(a, artist)
+    );
+
+    const merged = mapAlbums([...headlined, ...collaborations]);
+    if (merged.length > 0) return merged;
+
+    // Nothing matched precisely — fall back to a looser name match rather than
+    // showing an empty discography.
     const want = norm(artist);
-    const results: ItunesAlbum[] = ((await res.json()).results ?? []).filter(
-      (a: ItunesAlbum) => a.artistName && norm(a.artistName).includes(want)
+    return mapAlbums(
+      (byName?.results ?? []).filter(
+        (a: ItunesAlbum) => a.artistName && norm(a.artistName).includes(want)
+      )
     );
-    return mapAlbums(results);
   } catch {
     return [];
   }
@@ -144,10 +223,27 @@ export default async function ArtistPage({ params }: { params: Promise<{ name: s
       {albums.length === 0 ? (
         <p className="text-center text-[#6b6b6b] text-sm py-12">No releases found for this artist.</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {albums.map((a) => (
-            <AlbumCard key={a.id} spotifyId={a.id} title={a.title} artist={a.artist} artwork={a.artwork} year={a.year} />
-          ))}
+        // Grouped by kind: everything used to be presented as an album, so
+        // singles and EPs were indistinguishable from LPs in one flat grid.
+        <div className="space-y-8">
+          {([
+            ["album", "Albums"],
+            ["ep", "EPs"],
+            ["single", "Singles"],
+          ] as const).map(([kind, label]) => {
+            const group = albums.filter((a) => a.kind === kind);
+            if (group.length === 0) return null;
+            return (
+              <section key={kind}>
+                <h2 className="section-heading mb-3">{label}</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {group.map((a) => (
+                    <AlbumCard key={a.id} spotifyId={a.id} title={a.title} artist={a.artist} artwork={a.artwork} year={a.year} />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </div>
       )}
     </div>
