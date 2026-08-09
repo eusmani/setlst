@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { displayCredits } from "@/lib/credits";
 import { prisma } from "@/lib/prisma";
 import { getAlbum } from "@/lib/spotify";
 import { getAlbumDescription } from "@/lib/wikipedia";
@@ -319,6 +320,9 @@ export default async function AlbumPage({
 
   // Primary performing artists (fast — from the artist string).
   const primaryArtists = artist.split(", ").filter(Boolean);
+  // Everyone credited, for the byline: the artist string plus any guest who is
+  // named only in the title.
+  const credits = displayCredits(artist, title);
   // LogPanel stays in the shell (so the review CTA is instant); its song picker
   // uses Spotify's track names when present (empty for slug albums, where the
   // full tracklist streams into <AlbumClient> below).
@@ -420,14 +424,20 @@ export default async function AlbumPage({
         <div>
           <h1 className="font-serif text-3xl  text-[#f0f0f0] leading-tight mb-1">{title}</h1>
           <p className="text-base mb-1">
-            {artist ? (
-              <Link
-                href={`/artist/${encodeURIComponent(artist)}`}
-                className="text-[#a0a0a0] hover:text-[#c4a832] transition-colors"
-              >
-                {artist}
-              </Link>
-            ) : (
+            {/* Every credited artist links to their own page, including a guest
+                named only in the title — "My Life (feat. Tame Impala)" credits
+                Tame Impala, who otherwise appeared nowhere on this release. */}
+            {credits.length ? credits.map((name, i) => (
+              <span key={name}>
+                {i > 0 && <span className="text-[#6b6b6b]">, </span>}
+                <Link
+                  href={`/artist/${encodeURIComponent(name)}`}
+                  className="text-[#a0a0a0] hover:text-[#c4a832] transition-colors"
+                >
+                  {name}
+                </Link>
+              </span>
+            )) : (
               <span className="text-[#a0a0a0]">{artist}</span>
             )}
           </p>

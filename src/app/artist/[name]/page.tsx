@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { matchesCredit } from "@/lib/credits";
 import AlbumCard from "@/components/album/AlbumCard";
 import FollowArtistButton from "./FollowArtistButton";
 import { isLikelyAI } from "@/lib/aiFilter";
@@ -33,42 +34,6 @@ function releaseKind(name: string, trackCount?: number): ReleaseKind {
     if (trackCount <= 6) return "ep";
   }
   return "album";
-}
-
-/**
- * The artists actually credited on a release.
- *
- * iTunes puts collaborations in one string — "Artist A & Artist B", "Artist A
- * feat. Artist B" — and gives the release a single artistId, usually the first
- * name. Filtering on that id alone is why a collaboration only ever appeared in
- * one artist's discography. Splitting the credit lets it appear in both.
- *
- * Split, then compare whole names: "Drake & Future" yields Future, while "Drake
- * Bell" stays one name and won't be mistaken for Drake.
- *
- * The comma is the awkward one. iTunes uses it for collaborations ("Metro
- * Boomin, The Weeknd"), but some artists have it in their actual name ("Tyler,
- * The Creator", "Earth, Wind & Fire"), which splits into fragments. That only
- * misleads if a release elsewhere is credited to exactly one of those fragments,
- * which is rare — and dropping the comma would lose a common collaboration
- * format outright, so it's the better trade.
- */
-function creditedArtists(artistName: string): string[] {
-  return artistName
-    .split(/\s*(?:,|&|\/|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b|\bwith\b|\bx\b|\bvs\.?\b|\band\b)\s*/i)
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
-
-/** True when `target` is one of the artists credited on the release. */
-function isCreditedTo(a: ItunesAlbum, target: string): boolean {
-  const want = norm(target);
-  if (!want) return false;
-  if (a.artistName && creditedArtists(a.artistName).some((n) => norm(n) === want)) return true;
-  // Features are often only in the title: "Song (feat. Artist B) - Single".
-  const feat = a.collectionName?.match(/\((?:feat\.?|featuring|ft\.?|with)\s+([^)]+)\)/i);
-  if (feat) return creditedArtists(feat[1]).some((n) => norm(n) === want);
-  return false;
 }
 
 const BAD = /\b(karaoke|tribute|made famous|cover version|string quartet|instrumental|8-bit|parody|parodies|spoof)\b/i;
@@ -169,7 +134,7 @@ async function getDiscography(artist: string) {
 
     // Anything where this artist is one of the credited names — the collaborations.
     const collaborations: ItunesAlbum[] = (byName?.results ?? []).filter(
-      (a: ItunesAlbum) => a.collectionId && isCreditedTo(a, artist)
+      (a: ItunesAlbum) => a.collectionId && matchesCredit(a.artistName, a.collectionName, artist)
     );
 
     const merged = mapAlbums([...headlined, ...collaborations]);
