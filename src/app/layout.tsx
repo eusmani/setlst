@@ -99,7 +99,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <BottomNav />
           <VerifyBanner />
           <main className="flex-1">{children}</main>
-          <footer className="mt-auto border-t border-[#1f1f1f] py-5 text-center text-xs text-[#6b6b6b]">
+          {/* Desktop only. A link footer at the end of a scroll is a website
+              tell, and on a phone it sat right under the tab bar. Every link
+              here is already reachable in Settings → Legal & safety, which is
+              also where App Review looks for them. */}
+          <footer className="hidden sm:block mt-auto border-t border-[#1f1f1f] py-5 text-center text-xs text-[#6b6b6b]">
             <strong>SETLST</strong> · log the music you love
             <span className="mx-2 text-[#2e2e2e]">·</span>
             <a href="/privacy" className="hover:text-[#c4a832] transition-colors">Privacy</a>

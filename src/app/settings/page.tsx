@@ -333,6 +333,14 @@ export default function SettingsPage() {
           Delete account →
         </Link>
       </div>
+
+      {/* The copyright line from the old site footer, which phones no longer
+          show. It has to live somewhere. */}
+      <p className="mb-8 text-center text-[11px] text-[#4a4a4a] sm:hidden">
+        SETLST · log the music you love
+        <br />
+        © {new Date().getFullYear()} Ebaad Usmani. All rights reserved.
+      </p>
       </>)}
     </div>
   );
