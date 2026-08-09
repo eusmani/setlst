@@ -68,11 +68,11 @@ export default function BottomNav() {
     fetch("/api/me").then((r) => r.json()).then((d) => { if (d?.username) setMe(d); }).catch(() => {});
   }, []);
 
+  // Anchored to the very bottom rather than floating above it: the bar paints
+  // through the home-indicator strip instead of leaving page content showing
+  // underneath, so it reads as chrome. Its own padding keeps the tabs clear of
+  // the indicator.
   return (
-    {/* Anchored to the very bottom rather than floating above it: the bar now
-        paints through the home-indicator strip instead of leaving page content
-        showing underneath, so it reads as part of the chrome. Its own padding
-        keeps the tabs clear of the indicator. */}
     <nav className="bottom-nav sm:hidden fixed inset-x-2 bottom-0 z-50">
       {/* Opaque rather than translucent-with-blur: at 95% opacity the blur was
           invisible, but it forced the webview to re-composite the region behind
