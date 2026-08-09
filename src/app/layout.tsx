@@ -74,7 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#111111] text-[#f0f0f0] overflow-x-clip pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-0">
+      <body className="min-h-screen flex flex-col bg-[#111111] text-[#f0f0f0] overflow-x-clip pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
         {/* Pre-hydration onboarding cover — see globals.css #onb-preload and the
             head script that toggles .onb-pending. Hidden unless first launch. */}
         <div id="onb-preload" aria-hidden="true">
