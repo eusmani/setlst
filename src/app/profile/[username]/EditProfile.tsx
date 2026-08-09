@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/ui/Avatar";
 import { canUseNativeCamera, pickPhoto, tapHaptic } from "@/lib/native";
-import { squareDataUrl } from "@/lib/photo";
 import PhotoActionSheet from "@/components/ui/PhotoActionSheet";
+import PhotoAdjuster from "@/components/ui/PhotoAdjuster";
 
 interface Props {
   username: string;
@@ -15,11 +15,12 @@ interface Props {
   initialEmail?: string | null;
 }
 
-// Resize an uploaded image to a small square data URL (no external storage needed)
-function fileToDataUrl(file: File): Promise<string> {
+// Read an upload as a data URL. Deliberately no resize: the adjuster needs the
+// full-resolution photo to crop from, and does the downscale itself.
+function readFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => squareDataUrl(reader.result as string).then(resolve, reject);
+    reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -38,14 +39,15 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
   const [err, setErr] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [photoSheet, setPhotoSheet] = useState(false);
+  // The picked photo, held while it's being framed.
+  const [pending, setPending] = useState<string | null>(null);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) { setErr("Please choose an image file"); return; }
     try {
-      const dataUrl = await fileToDataUrl(file);
-      setAvatar(dataUrl);
+      setPending(await readFile(file));
       setErr("");
     } catch {
       setErr("Could not read that image");
@@ -68,14 +70,9 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
       return;
     }
 
-    try {
-      // Crop to the same 240px square the file input produces; the API caps
-      // avatars at 400,000 characters.
-      setAvatar(await squareDataUrl(pick.dataUrl));
-      setErr("");
-    } catch {
-      setErr("Could not process that photo — try another.");
-    }
+    // Straight to the adjuster: cropping happens there, once the framing is set.
+    setPending(pick.dataUrl);
+    setErr("");
   }
 
   async function save() {
@@ -146,6 +143,16 @@ export default function EditProfile({ username, initialBio, initialAvatar, initi
             onCamera={canUseNativeCamera() ? () => void chooseNativePhoto("camera") : undefined}
             onRemove={avatar ? () => { setAvatar(null); setPhotoSheet(false); } : undefined}
             onClose={() => setPhotoSheet(false)}
+          />
+        )}
+
+        {/* Framing step. Nothing is applied to the avatar until "Use photo",
+            so backing out here leaves the existing picture alone. */}
+        {pending && (
+          <PhotoAdjuster
+            src={pending}
+            onDone={(dataUrl) => { setAvatar(dataUrl); setPending(null); }}
+            onCancel={() => setPending(null)}
           />
         )}
 
