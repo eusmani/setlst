@@ -51,15 +51,40 @@ const BAD = /\b(karaoke|tribute|made famous|cover version|string quartet|instrum
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
+/**
+ * Fetch JSON from iTunes, not caching a failure.
+ *
+ * Next's data cache keys on the URL and stores whatever came back, including a
+ * 403 or 429. iTunes throttles by IP and Vercel's egress addresses are shared,
+ * so one throttled reply used to pin an artist's page empty for the full
+ * revalidate window — which is why some artists had no discography at all while
+ * others were fine, and why it never recovered on reload.
+ *
+ * A failed response is retried once uncached, so a bad reply costs one extra
+ * request instead of a day of blank pages.
+ */
+async function itunes<T>(url: string): Promise<{ results?: T[] } | null> {
+  try {
+    const cached = await fetch(url, { next: { revalidate: 86400 } });
+    if (cached.ok) return await cached.json();
+  } catch {
+    /* fall through to the uncached attempt */
+  }
+  try {
+    const fresh = await fetch(url, { cache: "no-store" });
+    return fresh.ok ? await fresh.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 // Resolve the exact iTunes artist ID so we get THIS artist's catalog, not anyone sharing a name
 async function resolveArtistId(name: string): Promise<number | null> {
   try {
-    const res = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=musicArtist&limit=15`,
-      { next: { revalidate: 86400 } }
+    const data = await itunes<{ artistId?: number; artistName?: string }>(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=musicArtist&limit=15`
     );
-    if (!res.ok) return null;
-    const results: { artistId?: number; artistName?: string }[] = (await res.json()).results ?? [];
+    const results = data?.results ?? [];
     const want = norm(name);
     const exact = results.find((a) => a.artistName && norm(a.artistName) === want);
     return exact?.artistId ?? null;
@@ -126,17 +151,9 @@ async function getDiscography(artist: string) {
     // Both run in parallel and are merged; mapAlbums de-duplicates.
     const [byId, byName] = await Promise.all([
       artistId
-        ? fetch(`https://itunes.apple.com/lookup?id=${artistId}&entity=album&limit=100`, {
-            next: { revalidate: 86400 },
-          })
-            .then((r) => (r.ok ? r.json() : null))
-            .catch(() => null)
+        ? itunes<ItunesAlbum>(`https://itunes.apple.com/lookup?id=${artistId}&entity=album&limit=100`)
         : Promise.resolve(null),
-      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=album&limit=100`, {
-        next: { revalidate: 86400 },
-      })
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null),
+      itunes<ItunesAlbum>(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=album&limit=100`),
     ]);
 
     const headlined: ItunesAlbum[] = (byId?.results ?? []).filter(
