@@ -61,7 +61,7 @@ const NAV = [
 ];
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
   const [userOpen, setUserOpen] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -100,7 +100,14 @@ export default function Navbar() {
   // On phones the SETLST top bar only shows on Home and the "+" (log) screen —
   // content pages (Albums, Activity, Profile, etc.) get the full height and rely
   // on the bottom tab bar. Desktop always keeps the bar (it's the main nav).
-  const showMobileBar = pathname === "/" || pathname === "/log" || pathname.startsWith("/log/");
+  //
+  // Signed out is the exception: the bar carries the only Sign in / Join buttons
+  // there are, so it stays on every screen until you're in. It costs no layout
+  // space on phones — it floats, with pointer events only on the controls.
+  // Keyed on `status` rather than on `session` being falsy, so it doesn't flash
+  // in during the moment before the session resolves.
+  const signedOut = status === "unauthenticated";
+  const showMobileBar = signedOut || pathname === "/" || pathname === "/log" || pathname.startsWith("/log/");
 
   return (
     <>
@@ -267,13 +274,22 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              {/* Desktop only — on mobile, Sign in is reached from the Join page. */}
-              <Link href="/login" className="hidden sm:inline-block text-sm text-[#a0a0a0] hover:text-[#f0f0f0] px-3 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors">
+            <div className="flex items-center gap-2 pointer-events-auto">
+              {/* Two taps in the corner, phone and desktop alike. On phones there
+                  used to be nothing here at all — signing in meant finding a
+                  prompt buried in the page, which is not where anyone looks for
+                  it. Sized and placed to match the hamburger a signed-in user
+                  sees in the same spot. */}
+              <Link
+                href="/login"
+                className="text-[13px] sm:text-sm text-[#e8e8e8] sm:text-[#a0a0a0] sm:hover:text-[#f0f0f0] px-2.5 sm:px-3 py-1.5 rounded-full sm:rounded-md sm:hover:bg-[#1a1a1a] transition-colors"
+              >
                 Sign in
               </Link>
-              {/* Desktop only — mobile signed-out users sign up from the home hero / prompts */}
-              <Link href="/register" className="hidden sm:inline-block text-sm bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111]  px-3 py-1.5 rounded-md transition-colors">
+              <Link
+                href="/register"
+                className="text-[13px] sm:text-sm font-semibold sm:font-normal bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111] px-3 py-1.5 rounded-full sm:rounded-md transition-colors"
+              >
                 Join
               </Link>
             </div>
