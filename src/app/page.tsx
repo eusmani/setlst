@@ -89,15 +89,39 @@ export default async function HomePage() {
       {!session && (
         <div className="relative">
           <div className="relative z-10 max-w-4xl mx-auto px-5 py-12 sm:py-20">
-            {/* Phones get one line instead of the pitch. Two paragraphs of
-                marketing above the fold is a landing page, not an app — and the
-                Log in / Sign up buttons are already in the corner, so the copy
-                only has to point at them. The full version stays on the web,
-                where a first-time visitor arrives with no other context. */}
-            <h1 className="slide-down sm:hidden text-2xl font-bold text-[#f0f0f0] leading-tight mb-6" style={{ fontFamily: "var(--font-jakarta)" }}>
+            {/* Phones get one line instead of the pitch — two paragraphs of
+                marketing above the fold is a landing page, not an app. The full
+                version stays on the web, where a first-time visitor arrives with
+                no other context.
+
+                Sized in vw with a nowrap so it holds one line at every phone
+                width instead of breaking after "join?" on the narrow ones; the
+                clamp keeps it legible on a small screen without letting it grow
+                past a comfortable size on a large one. */}
+            <h1
+              className="slide-down sm:hidden font-bold text-[#f0f0f0] leading-tight mb-5 whitespace-nowrap"
+              style={{ fontFamily: "var(--font-jakarta)", fontSize: "clamp(15px, 4.6vw, 22px)" }}
+            >
               Looking to join?{" "}
               <span className="text-[#c4a832]">Sign in or sign up!</span>
             </h1>
+
+            {/* The two auth buttons live here on phones, under the line that
+                refers to them, rather than in the top corner. */}
+            <div className="sm:hidden flex items-center gap-2.5 mb-2">
+              <Link
+                href="/login"
+                className="flex-1 text-center text-sm font-bold text-[#f0f0f0] border border-[#3a3a3a] px-4 py-2.5 rounded-full transition-colors"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="flex-1 text-center text-sm font-bold bg-[#f0f0f0] text-[#111111] px-4 py-2.5 rounded-full transition-colors"
+              >
+                Sign up
+              </Link>
+            </div>
             <h1 className="slide-down hidden sm:block text-3xl sm:text-5xl font-bold text-[#f0f0f0] leading-tight mb-3 sm:mb-4" style={{ fontFamily: "var(--font-jakarta)" }}>
               Your all-in-one music database<br />
               <span className="text-[#c4a832]">and review hub.</span>
@@ -105,7 +129,11 @@ export default async function HomePage() {
             <p className="slide-down-delay hero-sub hidden sm:block text-[#a0a0a0] text-sm max-w-md mb-6 sm:mb-7 leading-relaxed">
               Track every album you listen to, rate your favorites, explore complete discographies, and discover the next new artist in your rotation.
             </p>
-            <div className="flex flex-wrap gap-3">
+            {/* Desktop keeps the pitch and its call to action. On phones these
+                are gone: "Create account" only repeated the Sign up button now
+                sitting directly above, and Browse albums duplicates the Albums
+                tab in the bar at the bottom of the screen. */}
+            <div className="hidden sm:flex flex-wrap gap-3">
               <Link
                 href="/register"
                 className="bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111] px-5 py-2.5 rounded text-sm transition-colors"

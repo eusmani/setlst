@@ -274,7 +274,9 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2 pointer-events-auto">
+            /* On the phone home screen the buttons sit under the hero line
+               instead; everywhere else the corner is the only way in. */
+            <div className={`items-center gap-2 pointer-events-auto ${pathname === "/" ? "hidden sm:flex" : "flex"}`}>
               {/* The pattern Spotify and DICE use: a plain bold "Log in" beside a
                   solid white "Sign up" pill. The filled one is the light colour
                   rather than the app's gold — on a dark screen white is what
