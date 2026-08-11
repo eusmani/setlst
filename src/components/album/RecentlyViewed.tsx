@@ -51,6 +51,16 @@ export default function RecentlyViewed({
     return () => { live = false; };
   }, []);
 
+  // Keyed on title + artist, not on id.
+  //
+  // The two sources don't agree on ids: localStorage records whatever id the
+  // page was opened with, while /api/me/recent-albums returns the stored album's
+  // id — and since the catalogue falls back to iTunes when Spotify is
+  // unavailable, the same album can carry a Spotify id, an iTunes collectionId
+  // or a slug depending on when you met it. De-duping by id let one album take
+  // several of the six slots, so the section showed the same record over and
+  // over instead of the last six things you'd looked at.
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   const byAlbum = new Map<string, Entry>();
   for (const a of [
     ...viewed.map((v) => ({
@@ -59,9 +69,10 @@ export default function RecentlyViewed({
     })),
     ...reviewed,
   ]) {
-    const seen = byAlbum.get(a.spotifyId);
+    const key = a.title && a.artist ? `${norm(a.title)}|${norm(a.artist)}` : a.spotifyId;
+    const seen = byAlbum.get(key);
     // Keep whichever record is newer — a review edit should outrank an old click.
-    if (!seen || a.at > seen.at) byAlbum.set(a.spotifyId, a);
+    if (!seen || a.at > seen.at) byAlbum.set(key, a);
   }
 
   const rows = [...byAlbum.values()].sort((a, b) => b.at - a.at).slice(0, limit);

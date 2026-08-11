@@ -46,9 +46,17 @@ export function recordRecentAlbum(album: Omit<RecentAlbum, "viewedAt">): void {
   if (typeof window === "undefined") return;
   try {
     // Re-opening an album moves it to the front rather than duplicating it.
+    //
+    // Matched on title + artist as well as id: the same album has different ids
+    // depending on where it came from — a Spotify id, an iTunes collectionId
+    // when Spotify was unavailable, or a slug — so an id-only check let one
+    // album pile up several entries and crowd everything else out of the list.
+    const key = (a: { title: string; artist: string }) =>
+      `${a.title.toLowerCase().trim()}|${a.artist.toLowerCase().trim()}`;
+    const incoming = key(album);
     const next = [
       { ...album, viewedAt: Date.now() },
-      ...readRecentAlbums().filter((a) => a.spotifyId !== album.spotifyId),
+      ...readRecentAlbums().filter((a) => a.spotifyId !== album.spotifyId && key(a) !== incoming),
     ].slice(0, MAX);
     window.localStorage.setItem(KEY, JSON.stringify(next));
     // `storage` only fires in *other* tabs, so tell this one directly.
