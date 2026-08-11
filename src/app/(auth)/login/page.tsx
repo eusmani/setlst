@@ -33,14 +33,19 @@ export default function LoginPage() {
         <form onSubmit={submit} className="bg-[#1a1a1a] border border-[#1f1f1f] rounded-xl p-6 space-y-4">
           {error && <p className="text-red-400 text-sm bg-red-950/30 border border-red-900/30 px-3 py-2 rounded-lg">{error}</p>}
 
+          {/* `name` and `autoComplete` are what let iOS and every password
+              manager recognise this as a sign-in form — without them the
+              keychain never offers to save or fill anything. */}
           {[
-            { label: "Email or username", type: "text", val: identifier, set: setIdentifier, ph: "you@example.com or your username", noCap: true },
-            { label: "Password", type: "password", val: password, set: setPassword, ph: "••••••••" },
-          ].map(({ label, type, val, set, ph, noCap }) => (
+            { label: "Email or username", type: "text", val: identifier, set: setIdentifier, ph: "you@example.com or your username", noCap: true, field: "username", auto: "username" },
+            { label: "Password", type: "password", val: password, set: setPassword, ph: "••••••••", field: "password", auto: "current-password" },
+          ].map(({ label, type, val, set, ph, noCap, field, auto }) => (
             <div key={label}>
               <label className="block text-xs text-[#a0a0a0] mb-1.5">{label}</label>
               <input
                 type={type}
+                name={field}
+                autoComplete={auto}
                 value={val}
                 onChange={(e) => set(e.target.value)}
                 required

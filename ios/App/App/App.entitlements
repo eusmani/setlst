@@ -10,5 +10,13 @@
 	<array>
 		<string>group.app.setlst.native</string>
 	</array>
+	<!-- Links the app to setlst.dev's saved passwords. Without this the keychain
+	     treats the web view as an unrelated site, so nothing offers to save on
+	     sign-in and nothing is offered to fill next time. Paired with the
+	     webcredentials entry in /.well-known/apple-app-site-association. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>webcredentials:setlst.dev</string>
+	</array>
 </dict>
 </plist>

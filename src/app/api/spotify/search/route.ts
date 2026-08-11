@@ -39,20 +39,25 @@ export async function GET(req: NextRequest) {
       return 0;
     };
 
-    const byName = new Map<string, { name: string; image: string | null; count: number }>();
-    for (const a of albums) {
+    const byName = new Map<string, { name: string; image: string | null; count: number; rank: number }>();
+    albums.forEach((a, i) => {
       const name = a.artists?.[0]?.name;
-      if (!name || BAD_ARTIST.test(name) || isLikelyAI(name, a.name ?? "")) continue;
+      if (!name || BAD_ARTIST.test(name) || isLikelyAI(name, a.name ?? "")) return;
       const key = name.toLowerCase();
       const seen = byName.get(key);
       if (seen) seen.count += 1;
-      else byName.set(key, { name, image: a.images?.[0]?.url ?? null, count: 1 });
-    }
+      // `rank` is where this artist's best-placed release landed in the
+      // catalogue's own results, which is ordered by relevance and sales.
+      else byName.set(key, { name, image: a.images?.[0]?.url ?? null, count: 1, rank: i });
+    });
 
     return [...byName.values()]
-      // Name match first, then how much of the catalogue came back for them.
-      .sort((x, y) => match(y.name) - match(x.name) || y.count - x.count)
       .filter((a) => match(a.name) > 0)
+      // Fame leads. Searching "Earl" should surface Earl Sweatshirt, not
+      // whichever obscure act happens to be called exactly "Earl" — so the
+      // catalogue's own ordering decides, and the closeness of the name is only
+      // a tie-break. Depth of catalogue breaks any remaining tie.
+      .sort((x, y) => x.rank - y.rank || y.count - x.count || match(y.name) - match(x.name))
       .slice(0, 12)
       .map((a) => ({ id: `name:${a.name}`, name: a.name, image: a.image, popularity: 0 }));
   }

@@ -372,7 +372,7 @@ export default function OnboardingSlideshow() {
                   {usernameStatus === "taken" && <p className="mt-1.5 px-1 text-xs text-red-400">That username is already taken</p>}
                   {usernameStatus === "invalid" && form.username.length > 0 && <p className="mt-1.5 px-1 text-xs text-[#8a8a8a]">3–20 lowercase letters, numbers or underscores</p>}
                 </div>
-                <input className={inputClass} type="password" value={form.password} onChange={(e) => setField("password")(e.target.value)} minLength={8} placeholder="Password (min 8 characters)" />
+                <input className={inputClass} type="password" name="new-password" autoComplete="new-password" value={form.password} onChange={(e) => setField("password")(e.target.value)} minLength={8} placeholder="Password (min 8 characters)" />
               </>
             )}
             {cur.key === "phone" && (
@@ -385,7 +385,7 @@ export default function OnboardingSlideshow() {
             )}
             {cur.key === "email" && (
               <>
-                <input autoFocus className={inputClass} type="email" value={form.email} onChange={(e) => setField("email")(e.target.value)} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="you@example.com" />
+                <input autoFocus className={inputClass} type="email" name="username" autoComplete="username" value={form.email} onChange={(e) => setField("email")(e.target.value)} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="you@example.com" />
                 {/* Guideline 1.2: explicit agreement before an account that can
                     post user-generated content exists. */}
                 <label className="flex cursor-pointer items-start gap-2.5 pt-1">
@@ -434,7 +434,7 @@ export default function OnboardingSlideshow() {
               <p className="rounded-lg border border-red-900/30 bg-red-950/30 px-3 py-2 text-sm text-red-400">{authError}</p>
             )}
             <input className={inputClass} type="text" value={form.identifier} onChange={(e) => setField("identifier")(e.target.value)} required autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="Email or username" />
-            <input className={inputClass} type="password" value={form.password} onChange={(e) => setField("password")(e.target.value)} required placeholder="Password" />
+            <input className={inputClass} type="password" name="password" autoComplete="current-password" value={form.password} onChange={(e) => setField("password")(e.target.value)} required placeholder="Password" />
             <button
               type="submit"
               disabled={submitting}
