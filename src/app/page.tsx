@@ -89,11 +89,20 @@ export default async function HomePage() {
       {!session && (
         <div className="relative">
           <div className="relative z-10 max-w-4xl mx-auto px-5 py-12 sm:py-20">
-            <h1 className="slide-down text-3xl sm:text-5xl font-bold text-[#f0f0f0] leading-tight mb-3 sm:mb-4" style={{ fontFamily: "var(--font-jakarta)" }}>
+            {/* Phones get one line instead of the pitch. Two paragraphs of
+                marketing above the fold is a landing page, not an app — and the
+                Log in / Sign up buttons are already in the corner, so the copy
+                only has to point at them. The full version stays on the web,
+                where a first-time visitor arrives with no other context. */}
+            <h1 className="slide-down sm:hidden text-2xl font-bold text-[#f0f0f0] leading-tight mb-6" style={{ fontFamily: "var(--font-jakarta)" }}>
+              Looking to join?{" "}
+              <span className="text-[#c4a832]">Sign in or sign up!</span>
+            </h1>
+            <h1 className="slide-down hidden sm:block text-3xl sm:text-5xl font-bold text-[#f0f0f0] leading-tight mb-3 sm:mb-4" style={{ fontFamily: "var(--font-jakarta)" }}>
               Your all-in-one music database<br />
               <span className="text-[#c4a832]">and review hub.</span>
             </h1>
-            <p className="slide-down-delay hero-sub text-[#a0a0a0] text-sm max-w-md mb-6 sm:mb-7 leading-relaxed">
+            <p className="slide-down-delay hero-sub hidden sm:block text-[#a0a0a0] text-sm max-w-md mb-6 sm:mb-7 leading-relaxed">
               Track every album you listen to, rate your favorites, explore complete discographies, and discover the next new artist in your rotation.
             </p>
             <div className="flex flex-wrap gap-3">
