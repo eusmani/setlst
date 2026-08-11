@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isLikelyAI } from "@/lib/aiFilter";
-import { searchArtistsAndAlbums, searchAlbumsViaITunes, type SpotifyAlbum, type SpotifyArtist } from "@/lib/spotify";
+import { searchArtistsAndAlbums, searchAlbumsViaITunes, searchArtistsViaITunes, type SpotifyAlbum, type SpotifyArtist } from "@/lib/spotify";
 
 // Reject tributes, karaoke, covers, parodies, instrumentals, etc.
 const BAD = /\b(tribute|karaoke|made famous|in the style of|originally performed|cover version|covers of|string quartet|lullaby|piano versions?|instrumental|8-bit|parody|parodies|spoof)\b/i;
@@ -19,47 +19,16 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q");
   if (!q) return NextResponse.json({ results: [], artists: [] });
 
-  // Artists inferred from album results.
-  //
-  // Spotify is the only source of artist objects, so whenever its quota ran out
-  // the Artists row vanished: you could search "Tame Impala", get twenty of
-  // their albums back from the iTunes fallback, and have no way to open the
-  // artist. iTunes has no artist-photo endpoint, so the avatar is one of their
-  // own covers — an artist you can reach beats an artist you can't.
-  // `want` is captured here rather than read off `q` inside: the early return
-  // above narrows `q` for the rest of GET, but that narrowing doesn't reach into
-  // a function declaration, which TypeScript assumes could run later.
-  const want = q.toLowerCase();
-  function artistsFromAlbums(albums: SpotifyAlbum[]) {
-    const match = (name: string) => {
-      const n = name.toLowerCase();
-      if (n === want) return 3;
-      if (n.startsWith(want)) return 2;
-      if (n.includes(want)) return 1;
-      return 0;
-    };
-
-    const byName = new Map<string, { name: string; image: string | null; count: number; rank: number }>();
-    albums.forEach((a, i) => {
-      const name = a.artists?.[0]?.name;
-      if (!name || BAD_ARTIST.test(name) || isLikelyAI(name, a.name ?? "")) return;
-      const key = name.toLowerCase();
-      const seen = byName.get(key);
-      if (seen) seen.count += 1;
-      // `rank` is where this artist's best-placed release landed in the
-      // catalogue's own results, which is ordered by relevance and sales.
-      else byName.set(key, { name, image: a.images?.[0]?.url ?? null, count: 1, rank: i });
-    });
-
-    return [...byName.values()]
-      .filter((a) => match(a.name) > 0)
-      // Fame leads. Searching "Earl" should surface Earl Sweatshirt, not
-      // whichever obscure act happens to be called exactly "Earl" — so the
-      // catalogue's own ordering decides, and the closeness of the name is only
-      // a tie-break. Depth of catalogue breaks any remaining tie.
-      .sort((x, y) => x.rank - y.rank || y.count - x.count || match(y.name) - match(x.name))
-      .slice(0, 12)
-      .map((a) => ({ id: `name:${a.name}`, name: a.name, image: a.image, popularity: 0 }));
+  /**
+   * Cover art for an artist, borrowed from the album results.
+   *
+   * The artist endpoint returns no images, so a release of theirs stands in.
+   * Falls back to null, which renders as a plain circle.
+   */
+  function coverFor(name: string, albums: SpotifyAlbum[]): string | null {
+    const want = name.toLowerCase();
+    const hit = albums.find((a) => a.artists?.[0]?.name?.toLowerCase() === want);
+    return hit?.images?.[0]?.url ?? null;
   }
 
   try {
@@ -85,10 +54,17 @@ export async function GET(req: NextRequest) {
       .slice(0, 12)
       .map((a) => ({ id: a.id, name: a.name, image: a.images?.[0]?.url ?? null, popularity: a.popularity ?? 0 }));
 
-    // Falling back to names off the albums whenever Spotify gave us no artists,
-    // rather than only when `degraded` is set — an empty artist list with albums
-    // present is the same dead end however it came about.
-    const rankedArtists = spotifyArtists.length ? spotifyArtists : artistsFromAlbums(albums);
+    // Whenever Spotify gave us no artists — not only when `degraded` is set, since
+    // an empty artist list alongside albums is the same dead end however it arose
+    // — ask the iTunes catalogue directly. Its ordering is by relevance and sales,
+    // so the famous act leads: "earl" gives Earl Sweatshirt, not the obscure acts
+    // named exactly "Earl".
+    const rankedArtists = spotifyArtists.length
+      ? spotifyArtists
+      : (await searchArtistsViaITunes(q))
+          .filter((a) => !BAD_ARTIST.test(a.name) && !isLikelyAI(a.name, ""))
+          .slice(0, 12)
+          .map((a) => ({ id: `itunes:${a.id}`, name: a.name, image: coverFor(a.name, albums), popularity: 0 }));
 
     // Albums to review. Keep Spotify's relevance order, but float albums by the
     // top popular artists to the front so popular matches come first.

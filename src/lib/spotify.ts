@@ -263,6 +263,33 @@ export async function getAlbum(id: string): Promise<SpotifyAlbum | null> {
  * title/artist/artwork as query params and the album page falls back to them
  * when an id can't be resolved.
  */
+/**
+ * Artist search against the iTunes catalogue.
+ *
+ * Used when Spotify gives us no artists. The catalogue's own ordering is by
+ * relevance and sales, so the well-known act leads: "earl" returns Earl
+ * Sweatshirt first, ahead of the several obscure acts named exactly "Earl".
+ * Inferring artists from album results can't do that — it only ever sees
+ * whoever happened to chart for that word.
+ *
+ * No artwork comes back from this endpoint; callers pair it with a cover from
+ * the album results.
+ */
+export async function searchArtistsViaITunes(q: string, limit = 12): Promise<{ id: string; name: string }[]> {
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=musicArtist&limit=${limit}`;
+    const r = await fetch(url, { next: { revalidate: 3600 } });
+    if (!r.ok) return [];
+    const d = await r.json();
+    const rows: Record<string, unknown>[] = Array.isArray(d?.results) ? d.results : [];
+    return rows
+      .filter((row) => row.artistId && row.artistName)
+      .map((row) => ({ id: String(row.artistId), name: String(row.artistName) }));
+  } catch {
+    return [];
+  }
+}
+
 export async function searchAlbumsViaITunes(q: string, limit = 20): Promise<SpotifyAlbum[]> {
   try {
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=${limit}`;
