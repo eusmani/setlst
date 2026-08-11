@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { matchesCredit } from "@/lib/credits";
+import { isCollaborationCredit } from "@/lib/credits";
 import AlbumCard from "@/components/album/AlbumCard";
 import FollowArtistButton from "./FollowArtistButton";
 import { isLikelyAI } from "@/lib/aiFilter";
@@ -36,7 +36,18 @@ function releaseKind(name: string, trackCount?: number): ReleaseKind {
   return "album";
 }
 
-const BAD = /\b(karaoke|tribute|made famous|cover version|string quartet|instrumental|8-bit|parody|parodies|spoof)\b/i;
+// Releases that aren't the artist's own work, plus unofficial pressings.
+//
+// The bootleg half is deliberately narrow. The obvious wider net — live, in
+// concert, broadcast, BBC, demos, unreleased — is wrong: iTunes sells licensed
+// music, so "Live at the BBC", "Live at the Hollywood Bowl" and "Suspiria
+// (Unreleased Material)" are all official records that people would notice
+// missing. Only wording that states the release is unofficial is matched.
+//
+// One known cost: The Beatles' officially-released "Bootleg Recordings 1963"
+// is caught by its own title. One real album lost is a better trade than a
+// pattern loose enough to strip every live record in the catalogue.
+const BAD = /\b(karaoke|tribute|made famous|cover version|string quartet|instrumental|8-bit|parody|parodies|spoof|bootleg|unofficial|not for resale|promo only)\b/i;
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -132,22 +143,39 @@ async function getDiscography(artist: string) {
       (r: ItunesAlbum) => r.collectionId && r.artistId === artistId
     );
 
-    // Anything where this artist is one of the credited names — the collaborations.
+    // Shared credits only.
+    //
+    // Matching on "is this artist one of the credited names" was too loose:
+    // artist names aren't unique — iTunes lists three separate bands called
+    // Geese — so every one of them landed on the same page. A release credited
+    // to one act alone is either already in the id lookup above or belongs to a
+    // different artist of that name; only a credit naming two or more acts needs
+    // reaching by name, because its id can only belong to one of them.
     const collaborations: ItunesAlbum[] = (byName?.results ?? []).filter(
-      (a: ItunesAlbum) => a.collectionId && matchesCredit(a.artistName, a.collectionName, artist)
+      (a: ItunesAlbum) => a.collectionId && isCollaborationCredit(a.artistName, a.collectionName, artist)
     );
 
     const merged = mapAlbums([...headlined, ...collaborations]);
     if (merged.length > 0) return merged;
 
-    // Nothing matched precisely — fall back to a looser name match rather than
-    // showing an empty discography.
+    // Nothing matched precisely — usually the id lookup failed. Rather than
+    // showing an empty discography, fall back to exact-name matches, then keep
+    // only the largest single artistId among them. Merging every match was how
+    // the fallback reintroduced the very problem above: with three bands called
+    // Geese it returned all three catalogues at once. Picking the busiest id
+    // gives one artist's records, which is at worst the wrong one of that name
+    // rather than a mixture of all of them.
     const want = norm(artist);
-    return mapAlbums(
-      (byName?.results ?? []).filter(
-        (a: ItunesAlbum) => a.artistName && norm(a.artistName).includes(want)
-      )
+    const exact: ItunesAlbum[] = (byName?.results ?? []).filter(
+      (a: ItunesAlbum) => a.collectionId && a.artistName && norm(a.artistName) === want
     );
+    const byArtist = new Map<number, ItunesAlbum[]>();
+    for (const a of exact) {
+      const id = a.artistId ?? 0;
+      byArtist.set(id, [...(byArtist.get(id) ?? []), a]);
+    }
+    const biggest = [...byArtist.values()].sort((x, y) => y.length - x.length)[0] ?? [];
+    return mapAlbums(biggest);
   } catch {
     return [];
   }

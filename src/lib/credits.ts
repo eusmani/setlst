@@ -71,6 +71,31 @@ export function matchesCredit(
 }
 
 /**
+ * True when `target` appears on a release *alongside someone else*.
+ *
+ * The distinction matters when pulling a discography together by name. Artist
+ * names are not unique — iTunes lists three separate bands called "Geese" — so
+ * "this release is credited to Geese" is not evidence it belongs to the Geese
+ * whose page you're on. A release credited to Geese alone is either already in
+ * that artist's id-based catalogue or it is a different band entirely.
+ *
+ * A shared credit is different: it names two or more acts, so the id can only
+ * belong to one of them and matching by name is the only way to reach it from
+ * the other's side. That's the case worth accepting.
+ */
+export function isCollaborationCredit(
+  artistName: string | undefined,
+  title: string | undefined,
+  target: string
+): boolean {
+  if (!matchesCredit(artistName, title, target)) return false;
+  // Named in the title as a guest — a collaboration by definition.
+  if (title && TITLE_FEATURE.test(title)) return true;
+  // Otherwise the credit itself has to name more than one act.
+  return !!artistName && creditedArtists(artistName).length > 1;
+}
+
+/**
  * The artists to show under a title, in credit order, each one linkable.
  *
  * Splits on the comma — which is structural here, since the album artist string
