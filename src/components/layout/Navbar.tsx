@@ -61,7 +61,7 @@ const NAV = [
 ];
 
 export default function Navbar() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const pathname = usePathname();
   const [userOpen, setUserOpen] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -100,14 +100,7 @@ export default function Navbar() {
   // On phones the SETLST top bar only shows on Home and the "+" (log) screen —
   // content pages (Albums, Activity, Profile, etc.) get the full height and rely
   // on the bottom tab bar. Desktop always keeps the bar (it's the main nav).
-  //
-  // Signed out is the exception: the bar carries the only Sign in / Join buttons
-  // there are, so it stays on every screen until you're in. It costs no layout
-  // space on phones — it floats, with pointer events only on the controls.
-  // Keyed on `status` rather than on `session` being falsy, so it doesn't flash
-  // in during the moment before the session resolves.
-  const signedOut = status === "unauthenticated";
-  const showMobileBar = signedOut || pathname === "/" || pathname === "/log" || pathname.startsWith("/log/");
+  const showMobileBar = pathname === "/" || pathname === "/log" || pathname.startsWith("/log/");
 
   return (
     <>
@@ -274,9 +267,9 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            /* On the phone home screen the buttons sit under the hero line
-               instead; everywhere else the corner is the only way in. */
-            <div className={`items-center gap-2 pointer-events-auto ${pathname === "/" ? "hidden sm:flex" : "flex"}`}>
+            /* Desktop only. On phones the way in is the pair of buttons under
+               the hero line on the home screen. */
+            <div className="hidden sm:flex items-center gap-2 pointer-events-auto">
               {/* The pattern Spotify and DICE use: a plain bold "Log in" beside a
                   solid white "Sign up" pill. The filled one is the light colour
                   rather than the app's gold — on a dark screen white is what
