@@ -275,22 +275,22 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2 pointer-events-auto">
-              {/* Two taps in the corner, phone and desktop alike. On phones there
-                  used to be nothing here at all — signing in meant finding a
-                  prompt buried in the page, which is not where anyone looks for
-                  it. Sized and placed to match the hamburger a signed-in user
-                  sees in the same spot. */}
+              {/* The pattern Spotify and DICE use: a plain bold "Log in" beside a
+                  solid white "Sign up" pill. The filled one is the light colour
+                  rather than the app's gold — on a dark screen white is what
+                  reads as the primary action, and it keeps gold meaning
+                  "SETLST" rather than "button". */}
               <Link
                 href="/login"
-                className="text-[13px] sm:text-sm text-[#e8e8e8] sm:text-[#a0a0a0] sm:hover:text-[#f0f0f0] px-2.5 sm:px-3 py-1.5 rounded-full sm:rounded-md sm:hover:bg-[#1a1a1a] transition-colors"
+                className="text-[13px] sm:text-sm font-bold text-[#f0f0f0] px-3 py-2 hover:text-[#c4a832] transition-colors"
               >
-                Sign in
+                Log in
               </Link>
               <Link
                 href="/register"
-                className="text-[13px] sm:text-sm font-semibold sm:font-normal bg-[#c4a832] hover:bg-[#d4ba44] text-[#111111] px-3 py-1.5 rounded-full sm:rounded-md transition-colors"
+                className="text-[13px] sm:text-sm font-bold bg-[#f0f0f0] hover:bg-[#ffffff] text-[#111111] px-4 py-2 rounded-full transition-colors"
               >
-                Join
+                Sign up
               </Link>
             </div>
           )}
