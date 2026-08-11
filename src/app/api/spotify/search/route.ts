@@ -48,9 +48,19 @@ export async function GET(req: NextRequest) {
     }
 
     // Artists ranked by popularity — the most popular match leads the results.
+    // De-duplicated by name for the same reason as the iTunes path: artist pages
+    // are keyed by name, so two artists sharing one open the same page. Dedupe
+    // after the sort, so the survivor is the better-known one.
+    const nameSeen = new Set<string>();
     const spotifyArtists = artists
       .filter((a: SpotifyArtist) => a.name && !BAD_ARTIST.test(a.name) && !isLikelyAI(a.name, ""))
       .sort((x, y) => (y.popularity ?? 0) - (x.popularity ?? 0) || (y.followers?.total ?? 0) - (x.followers?.total ?? 0))
+      .filter((a) => {
+        const key = a.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        if (!key || nameSeen.has(key)) return false;
+        nameSeen.add(key);
+        return true;
+      })
       .slice(0, 12)
       .map((a) => ({ id: a.id, name: a.name, image: a.images?.[0]?.url ?? null, popularity: a.popularity ?? 0 }));
 

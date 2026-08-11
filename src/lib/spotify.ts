@@ -282,9 +282,22 @@ export async function searchArtistsViaITunes(q: string, limit = 12): Promise<{ i
     if (!r.ok) return [];
     const d = await r.json();
     const rows: Record<string, unknown>[] = Array.isArray(d?.results) ? d.results : [];
+    // De-duplicate by name, keeping the first — which, given the catalogue's
+    // ordering, is the best-known holder of it. iTunes returns a separate record
+    // per artist page, so a common name like "Earl" comes back five or six times
+    // with different ids, and our artist pages are keyed by name: every one of
+    // those rows opens the identical page. They are duplicates here whatever
+    // they are at Apple.
+    const seen = new Set<string>();
     return rows
       .filter((row) => row.artistId && row.artistName)
-      .map((row) => ({ id: String(row.artistId), name: String(row.artistName) }));
+      .map((row) => ({ id: String(row.artistId), name: String(row.artistName) }))
+      .filter((a) => {
+        const key = a.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
   } catch {
     return [];
   }
