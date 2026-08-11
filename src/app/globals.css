@@ -255,10 +255,25 @@ html.theme-mono [class*="text-xl"][class*="uppercase"][class*="tracking-["] {
 /* SETLST Pro turntable icons: white art → black in light mode */
 html.theme-mono .pro-turntable { filter: invert(1); }
 
-/* ---- Top navbar stays dark in light mode, at every width ----
-   The whole bar and its dropdown render in the original dark palette on mobile and
-   desktop alike, so the logo + menu row reads as a distinct dark header. */
-html.theme-mono nav.top-nav { background-color: #000000 !important; border-bottom-color: #1f1f1f !important; }
+/* ---- Top navbar stays dark in light mode ----
+   The bar and its dropdown render in the original dark palette so the logo + menu
+   row reads as a distinct dark header.
+
+   Desktop only. On phones there is no bar to tint — the logo row is hidden and
+   only the hamburger floats over the page — so painting the nav black drew a
+   black strip across the top of an otherwise light screen. The bar's own
+   background is `sm:bg-[#111111]/96` for the same reason. */
+/* The phone hamburger is white for the dark theme; on a light screen with no
+   bar behind it that left it invisible. Targeted by its own class rather than
+   by colour, because the dropdown it opens is dark in both themes and uses the
+   same white text. */
+@media (max-width: 639px) {
+  html.theme-mono .nav-burger { color: #1c160c !important; }
+}
+
+@media (min-width: 640px) {
+  html.theme-mono nav.top-nav { background-color: #000000 !important; border-bottom-color: #1f1f1f !important; }
+}
 
   html.theme-mono .top-nav .bg-\[\#111111\] { background-color: #111111 !important; }
   html.theme-mono .top-nav .bg-\[\#1a1a1a\] { background-color: #1a1a1a !important; }

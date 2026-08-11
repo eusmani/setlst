@@ -167,7 +167,7 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#1a1a1a] transition-colors"
               >
                 {/* Mobile: hamburger (3 lines) */}
-                <div className="relative sm:hidden text-[#f0f0f0] p-0.5">
+                <div className="nav-burger relative sm:hidden text-[#f0f0f0] p-0.5">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
                   </svg>
