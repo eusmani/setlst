@@ -14,6 +14,7 @@
 		1A5E90102A9F41D000C0FFEE /* SetlstIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5E90112A9F41D000C0FFEE /* SetlstIntents.swift */; };
 		2AE78EFCE8D6F6924CFE25E6 /* SETLSTShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E020DEEFAB8BAA3B5DA771FE /* SETLSTShare.appex */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
+		394933466943069B52A71F29 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 3AD22FD08FAC6B4504962D7D /* PrivacyInfo.xcprivacy */; };
 		49F37D5B615815150EFDA543 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C7A535D0CD58E5A984C300F /* ShareViewController.swift */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -23,7 +24,9 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		6D9FEC9866E6B333E8104B05 /* SETLSTWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = D9FD99CD3A522FCF6E3AAFE1 /* SETLSTWidget.appex */; };
+		70DD433D665F8D818107CBB5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1D8304D553C3E3634AFB8880 /* PrivacyInfo.xcprivacy */; };
 		8F940C344FEBA178375AAFE5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 739EFC4EB5BFF3615692ADD6 /* Foundation.framework */; };
+		97A7FDE6DBDC12BCB862D6E6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FDCB35330D7F199146A36EB8 /* PrivacyInfo.xcprivacy */; };
 		A0F960B7F4748B2BA038376A /* WidgetBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9DEEFDECD89CB459E49FA6 /* WidgetBridge.swift */; };
 /* End PBXBuildFile section */
 
@@ -63,7 +66,9 @@
 		1A5E7C012A9F41D000C0FFEE /* InstagramStoryPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstagramStoryPlugin.swift; sourceTree = "<group>"; };
 		1A5E7C032A9F41D000C0FFEE /* QuickActionsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActionsPlugin.swift; sourceTree = "<group>"; };
 		1A5E90112A9F41D000C0FFEE /* SetlstIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SetlstIntents.swift; path = Native/SetlstIntents.swift; sourceTree = "<group>"; };
+		1D8304D553C3E3634AFB8880 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
+		3AD22FD08FAC6B4504962D7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -79,6 +84,7 @@
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		D9FD99CD3A522FCF6E3AAFE1 /* SETLSTWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SETLSTWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E020DEEFAB8BAA3B5DA771FE /* SETLSTShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SETLSTShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDCB35330D7F199146A36EB8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +152,7 @@
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 				6B9DEEFDECD89CB459E49FA6 /* WidgetBridge.swift */,
+				3AD22FD08FAC6B4504962D7D /* PrivacyInfo.xcprivacy */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -162,6 +169,7 @@
 			isa = PBXGroup;
 			children = (
 				8C7A535D0CD58E5A984C300F /* ShareViewController.swift */,
+				1D8304D553C3E3634AFB8880 /* PrivacyInfo.xcprivacy */,
 			);
 			name = SETLSTShare;
 			path = SETLSTShare;
@@ -179,6 +187,7 @@
 			isa = PBXGroup;
 			children = (
 				65F4C5037AA01016DAEDEE79 /* SETLSTWidget.swift */,
+				FDCB35330D7F199146A36EB8 /* PrivacyInfo.xcprivacy */,
 			);
 			name = SETLSTWidget;
 			path = SETLSTWidget;
@@ -289,6 +298,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97A7FDE6DBDC12BCB862D6E6 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -302,6 +312,7 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				394933466943069B52A71F29 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,6 +320,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				70DD433D665F8D818107CBB5 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
