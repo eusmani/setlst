@@ -26,8 +26,11 @@ export async function GET(req: NextRequest) {
   // their albums back from the iTunes fallback, and have no way to open the
   // artist. iTunes has no artist-photo endpoint, so the avatar is one of their
   // own covers — an artist you can reach beats an artist you can't.
+  // `want` is captured here rather than read off `q` inside: the early return
+  // above narrows `q` for the rest of GET, but that narrowing doesn't reach into
+  // a function declaration, which TypeScript assumes could run later.
+  const want = q.toLowerCase();
   function artistsFromAlbums(albums: SpotifyAlbum[]) {
-    const want = q.toLowerCase();
     const match = (name: string) => {
       const n = name.toLowerCase();
       if (n === want) return 3;
