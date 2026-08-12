@@ -60,7 +60,14 @@ npx cap sync ios
 # drifting apart is exactly how this broke: local builds use the workspace, so
 # its pins were current while the project's were a plugin behind, and nothing
 # caught it until the Cloud refused to resolve.
-xcodebuild -project ios/App/App.xcodeproj -scheme App -resolvePackageDependencies
+#
+# Non-fatal. This script runs under `set -e`, so a failure here would abort the
+# whole build during post-clone — reported as a script error, pointing away from
+# the actual problem. If resolution can't run, the build should still reach the
+# Resolve Dependencies step and fail there with Xcode's own message.
+if ! xcodebuild -project ios/App/App.xcodeproj -scheme App -resolvePackageDependencies; then
+  echo "warning: could not pre-resolve Swift packages; leaving it to the build"
+fi
 
 echo "=== post-clone complete ==="
 ls -d node_modules/@capacitor/app ios/App/App/public ios/App/App/capacitor.config.json
