@@ -47,5 +47,22 @@ export DATABASE_URL="${DATABASE_URL:-file:./dev.db}"
 npm ci
 npx cap sync ios
 
+# Swift package pins, regenerated after cap sync has rewritten Package.swift.
+#
+# Xcode Cloud builds with automatic dependency resolution disabled, so a
+# Package.resolved that doesn't match the package graph is a hard error, not
+# something it repairs on the fly. Adding a Capacitor plugin can pull in a Swift
+# package underneath it — @capacitor/camera brought in ion-ios-camera — and the
+# committed pins go stale the moment that happens.
+#
+# It resolves against App.xcodeproj because that is what Xcode Cloud builds. The
+# project and ios/SETLST.xcworkspace keep separate resolved files, and the two
+# drifting apart is exactly how this broke: local builds use the workspace, so
+# its pins were current while the project's were a plugin behind, and nothing
+# caught it until the Cloud refused to resolve.
+xcodebuild -project ios/App/App.xcodeproj -scheme App -resolvePackageDependencies
+
 echo "=== post-clone complete ==="
 ls -d node_modules/@capacitor/app ios/App/App/public ios/App/App/capacitor.config.json
+echo "resolved packages:"
+/usr/bin/python3 -c "import json;print('\n'.join('  '+p['identity'] for p in json.load(open('ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'))['pins']))" || true
