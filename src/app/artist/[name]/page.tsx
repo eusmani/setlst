@@ -97,19 +97,27 @@ async function itunes<T>(url: string): Promise<{ results?: T[] } | null> {
   }
 }
 
-// Resolve the exact iTunes artist ID so we get THIS artist's catalog, not anyone sharing a name
-async function resolveArtistId(name: string): Promise<number | null> {
-  try {
-    const data = await itunes<{ artistId?: number; artistName?: string }>(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=musicArtist&limit=15`
-    );
-    const results = data?.results ?? [];
-    const want = norm(name);
-    const exact = results.find((a) => a.artistName && norm(a.artistName) === want);
-    return exact?.artistId ?? null;
-  } catch {
-    return null;
-  }
+/**
+ * Every iTunes artist id whose name matches exactly.
+ *
+ * Plural on purpose. Artist names aren't unique and the catalogue's ordering
+ * isn't stable, so taking the first match is a coin toss: "Zedd" matches both
+ * the artist with 88 releases and a different act with 3, and whichever came
+ * back first decided whether the page had a discography. Same shape as the
+ * three bands called Geese.
+ *
+ * Capped, because the candidates are looked up in parallel and a common word
+ * can match many acts.
+ */
+async function resolveArtistIds(name: string): Promise<number[]> {
+  const data = await itunes<{ artistId?: number; artistName?: string }>(
+    `https://itunes.apple.com/search?term=${encodeURIComponent(name)}&entity=musicArtist&limit=15`
+  );
+  const want = norm(name);
+  const ids = (data?.results ?? [])
+    .filter((a) => a.artistName && a.artistId && norm(a.artistName) === want)
+    .map((a) => a.artistId as number);
+  return [...new Set(ids)].slice(0, 4);
 }
 
 // Strip reissue/edition markers so "Master of Puppets (Remastered)" → "Master of Puppets"
@@ -215,7 +223,7 @@ async function lastKnownGood(artist: string): Promise<Discography> {
 
 async function getDiscography(artist: string) {
   try {
-    const artistId = await resolveArtistId(artist);
+    const artistIds = await resolveArtistIds(artist);
 
     // Two passes, because neither finds everything on its own:
     //
@@ -226,16 +234,21 @@ async function getDiscography(artist: string) {
     //     the id lookup misses them from the other artist's side entirely.
     //
     // Both run in parallel and are merged; mapAlbums de-duplicates.
-    const [byId, byName] = await Promise.all([
-      artistId
-        ? itunes<ItunesAlbum>(`https://itunes.apple.com/lookup?id=${artistId}&entity=album&limit=100`)
-        : Promise.resolve(null),
+    const [byIdResults, byName] = await Promise.all([
+      Promise.all(
+        artistIds.map(async (id) => {
+          const data = await itunes<ItunesAlbum>(
+            `https://itunes.apple.com/lookup?id=${id}&entity=album&limit=100`
+          );
+          return (data?.results ?? []).filter((r) => r.collectionId && r.artistId === id);
+        })
+      ),
       itunes<ItunesAlbum>(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=album&limit=100`),
     ]);
 
-    const headlined: ItunesAlbum[] = (byId?.results ?? []).filter(
-      (r: ItunesAlbum) => r.collectionId && r.artistId === artistId
-    );
+    // The candidate with the biggest catalogue is the artist people mean. It
+    // also can't be decided by the order iTunes happened to return the names in.
+    const headlined: ItunesAlbum[] = byIdResults.sort((a, b) => b.length - a.length)[0] ?? [];
 
     // Shared credits only.
     //

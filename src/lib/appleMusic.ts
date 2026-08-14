@@ -100,3 +100,87 @@ export async function searchAppleAlbum(query: string): Promise<AppleAlbum | null
     year: at.releaseDate ? parseInt(at.releaseDate.slice(0, 4)) : null,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Artist discography
+// ---------------------------------------------------------------------------
+
+/** A release in the shape the artist page already maps from iTunes. */
+export interface AppleArtistRelease {
+  collectionId: number;
+  collectionName: string;
+  artistName: string;
+  artworkUrl100: string;
+  releaseDate: string;
+  trackCount?: number;
+  artistId?: number;
+}
+
+interface AMArtist { id: string; attributes?: { name?: string } }
+interface AMFullAlbum {
+  id: string;
+  attributes?: {
+    name?: string; artistName?: string; releaseDate?: string;
+    artwork?: { url?: string }; trackCount?: number;
+  };
+}
+
+const bare = (s: string) =>
+  s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/**
+ * An artist's albums from the Apple Music catalog.
+ *
+ * The artist page is built on the public iTunes Search API, which is
+ * unauthenticated and throttled per IP — on shared serverless egress that means
+ * intermittent empty answers, and an empty answer renders as "no releases". This
+ * is the same catalogue behind a developer token, so it isn't subject to that,
+ * and it serves as the second opinion when iTunes comes back with nothing.
+ *
+ * Returns [] rather than throwing when unconfigured, so callers can treat it as
+ * one source among several.
+ */
+export async function appleArtistAlbums(name: string): Promise<AppleArtistRelease[]> {
+  const token = developerToken();
+  if (!token) return [];
+  const auth = { Authorization: `Bearer ${token}` };
+
+  try {
+    const found = await fetch(
+      `https://api.music.apple.com/v1/catalog/us/search?types=artists&limit=10&term=${encodeURIComponent(name)}`,
+      { headers: auth, cache: "no-store" }
+    );
+    if (!found.ok) return [];
+    const artists: AMArtist[] = (await found.json())?.results?.artists?.data ?? [];
+    if (artists.length === 0) return [];
+
+    // Prefer an exact name match; Apple orders by relevance, so the first hit is
+    // the well-known holder of a shared name when there's no exact one.
+    const want = bare(name);
+    const artist = artists.find((a) => a.attributes?.name && bare(a.attributes.name) === want) ?? artists[0];
+
+    const albums = await fetch(
+      `https://api.music.apple.com/v1/catalog/us/artists/${artist.id}/albums?limit=100`,
+      { headers: auth, cache: "no-store" }
+    );
+    if (!albums.ok) return [];
+    const data: AMFullAlbum[] = (await albums.json())?.data ?? [];
+
+    return data
+      .filter((a) => a.attributes?.name && a.attributes?.artistName && a.attributes?.artwork?.url)
+      .map((a) => ({
+        // Apple's ids are numeric strings; the artist page keys releases by number.
+        collectionId: Number(a.id),
+        collectionName: a.attributes!.name as string,
+        artistName: a.attributes!.artistName as string,
+        // The artwork URL is a template — fill it in at the size the page wants.
+        artworkUrl100: (a.attributes!.artwork!.url as string).replace("{w}", "600").replace("{h}", "600"),
+        releaseDate: a.attributes!.releaseDate ?? "",
+        trackCount: a.attributes!.trackCount,
+        artistId: Number(artist.id),
+      }))
+      .filter((a) => Number.isFinite(a.collectionId));
+  } catch {
+    return [];
+  }
+}

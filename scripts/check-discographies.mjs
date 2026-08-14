@@ -20,6 +20,9 @@ const ARTISTS = [
   "SZA", "Drake", "Radiohead", "Tame Impala",
   "Fontaines D.C.", "Tyler, The Creator",
   "Metro Boomin", "Doechii", "Playboi Carti",
+  // Names shared with a smaller act of the same spelling — the catalogue's
+  // ordering used to decide which one the page showed.
+  "Zedd", "Justice", "Gunna", "Prince", "Air", "Sade", "Muse",
 ];
 
 const results = await Promise.all(
