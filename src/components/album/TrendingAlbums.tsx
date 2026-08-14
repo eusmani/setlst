@@ -39,6 +39,8 @@ export default function TrendingAlbums({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
+  // Whether the row actually has anywhere to scroll, measured rather than assumed.
+  const [overflows, setOverflows] = useState(false);
 
   function updateArrows() {
     const el = scrollerRef.current;
@@ -51,6 +53,26 @@ export default function TrendingAlbums({
     const el = scrollerRef.current;
     if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
   }
+
+  // Arrows are shown from the real width of the row, not from how many albums
+  // came back. Counting them assumed every card is narrow enough that four
+  // always overflow; at lg each is 18% of the row, so four fill 72% and there is
+  // nothing to scroll — the arrow appeared and did nothing when Popular This
+  // Week returned a short list. Re-measured on resize, since the breakpoint
+  // changes the card width.
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const measure = () => {
+      setOverflows(el.scrollWidth > el.clientWidth + 4);
+      updateArrows();
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, albums]);
 
   useEffect(() => {
     if (albums) return; // caller supplied the albums directly
@@ -98,7 +120,7 @@ export default function TrendingAlbums({
 
   const items = display.slice(0, limit);
 
-  const canPage = slider && items.length > 3;
+  const canPage = slider && overflows;
 
   // Arrows only on desktop/non-touch; mobile swipes the row with a finger.
   const arrowBtn =
