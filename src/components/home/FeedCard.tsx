@@ -2,6 +2,8 @@ import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
 import { ratingTier } from "@/lib/rating";
 import type { ActivityItem } from "@/lib/feed";
+import ContentMenu from "@/components/moderation/ContentMenu";
+import type { ReportableType } from "@/lib/reportTypes";
 
 // One item in the mobile home feed, shaped like the social feeds people already
 // know: a byline row, then the thing itself at a size worth looking at, then the
@@ -21,8 +23,14 @@ function timeAgo(iso: string): string {
 }
 
 function Byline({
-  username, avatar, action, at,
-}: { username: string; avatar: string | null; action: string; at: string }) {
+  username, avatar, action, at, contentType, contentId, label,
+}: {
+  username: string; avatar: string | null; action: string; at: string;
+  // Reporting hangs off the byline so all three card kinds get it from one
+  // place. This is the main content surface on a phone, and it was the only one
+  // without a way to report or block — every desktop equivalent already had it.
+  contentType: ReportableType; contentId: string; label: string;
+}) {
   return (
     <div className="flex items-center gap-2.5 px-3 py-2.5">
       <Link href={`/profile/${username}`} className="shrink-0">
@@ -35,6 +43,12 @@ function Byline({
         <span className="text-[#8a8a8a]">{action}</span>
       </p>
       <span className="ml-auto shrink-0 text-[11px] text-[#6b6b6b]">{timeAgo(at)}</span>
+      <ContentMenu
+        contentType={contentType}
+        contentId={contentId}
+        authorUsername={username}
+        label={label}
+      />
     </div>
   );
 }
@@ -54,7 +68,8 @@ export default function FeedCard({ item }: { item: ActivityItem }) {
     return (
       <Card>
         <Byline username={review.user.username} avatar={review.user.avatar}
-          action="rated an album" at={review.createdAt} />
+          action="rated an album" at={review.createdAt}
+          contentType="review" contentId={review.id} label="this review" />
 
         <Link href={`/album/${review.album.spotifyId}`} className="press-soft block relative">
           {review.album.artwork ? (
@@ -95,7 +110,8 @@ export default function FeedCard({ item }: { item: ActivityItem }) {
     return (
       <Card>
         <Byline username={thread.user.username} avatar={thread.user.avatar}
-          action="started a discussion" at={thread.createdAt} />
+          action="started a discussion" at={thread.createdAt}
+          contentType="thread" contentId={thread.id} label="this discussion" />
         <Link href={`/thread/${thread.id}`} className="press-soft block px-3 pb-3">
           <div className="flex gap-3">
             {thread.album.artwork && (
@@ -118,7 +134,8 @@ export default function FeedCard({ item }: { item: ActivityItem }) {
   return (
     <Card>
       <Byline username={reply.user.username} avatar={reply.user.avatar}
-        action="replied to a discussion" at={reply.createdAt} />
+        action="replied to a discussion" at={reply.createdAt}
+        contentType="reply" contentId={reply.id} label="this reply" />
       <Link href={`/thread/${reply.thread.id}`} className="press-soft block px-3 pb-3">
         <p className="text-[14px] text-[#e8e8e8] leading-relaxed line-clamp-3">{reply.body}</p>
         <p className="text-[11px] text-[#6b6b6b] mt-1.5">on {reply.thread.title}</p>
