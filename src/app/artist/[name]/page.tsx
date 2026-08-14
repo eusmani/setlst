@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { after } from "next/server";
 import { isCollaborationCredit } from "@/lib/credits";
 import AlbumCard from "@/components/album/AlbumCard";
 import FollowArtistButton from "./FollowArtistButton";
@@ -170,9 +171,21 @@ type Discography = ReturnType<typeof mapAlbums>;
  * best-effort: a page that rendered fine should never fail because we couldn't
  * record it.
  */
-async function remember(artist: string, albums: Discography): Promise<Discography> {
+/** Keys written recently by this instance, so a popular artist isn't re-saved per view. */
+const WROTE = new Map<string, number>();
+const WRITE_EVERY = 60 * 60 * 1000;
+
+function remember(artist: string, albums: Discography): Discography {
   const key = norm(artist);
-  if (key) {
+  const last = WROTE.get(key);
+  if (!key || (last && Date.now() - last < WRITE_EVERY)) return albums;
+  WROTE.set(key, Date.now());
+
+  // after() runs once the response has been sent. Awaiting the upsert on the
+  // render path cost about a second per view — a cross-region Turso write, paid
+  // by the reader, to save data the reader already has. The point of the cache
+  // is the *next* request, so nobody should wait for it.
+  after(async () => {
     try {
       const payload = JSON.stringify(albums);
       await prisma.artistDiscographyCache.upsert({
@@ -182,8 +195,9 @@ async function remember(artist: string, albums: Discography): Promise<Discograph
       });
     } catch {
       /* cache is an optimisation, never a requirement */
+      WROTE.delete(key);
     }
-  }
+  });
   return albums;
 }
 
