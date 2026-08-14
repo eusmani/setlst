@@ -51,28 +51,40 @@ const BAD = /\b(karaoke|tribute|made famous|cover version|string quartet|instrum
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
+/** Cached iTunes responses, kept in-process and only ever populated with data. */
+const ITUNES_MEMO = new Map<string, { at: number; data: { results?: unknown[] } }>();
+const ITUNES_TTL = 6 * 60 * 60 * 1000;
+
 /**
- * Fetch JSON from iTunes, not caching a failure.
+ * Fetch JSON from iTunes, never remembering an empty answer.
  *
- * Next's data cache keys on the URL and stores whatever came back, including a
- * 403 or 429. iTunes throttles by IP and Vercel's egress addresses are shared,
- * so one throttled reply used to pin an artist's page empty for the full
- * revalidate window — which is why some artists had no discography at all while
- * others were fine, and why it never recovered on reload.
+ * This is the second attempt at the same bug: artists whose page stayed
+ * permanently blank while others were fine. The first fix assumed a throttled
+ * request fails visibly, and retried when the response wasn't ok. It doesn't —
+ * iTunes answers HTTP 200 with `results: []`. Next's data cache stored that as
+ * a perfectly good response and served it for the full revalidate window, so
+ * the retry never ran and the page stayed empty for a day.
  *
- * A failed response is retried once uncached, so a bad reply costs one extra
- * request instead of a day of blank pages.
+ * Caching is done here instead, on one rule: only a response that actually
+ * contains results is remembered. An empty or failed reply is never stored, so
+ * the next request tries again rather than inheriting the emptiness. Being
+ * in-process it's per-instance, which is the right trade for a cache whose job
+ * is to avoid re-asking for data we already have.
  */
 async function itunes<T>(url: string): Promise<{ results?: T[] } | null> {
+  const hit = ITUNES_MEMO.get(url);
+  if (hit && Date.now() - hit.at < ITUNES_TTL) return hit.data as { results?: T[] };
+
   try {
-    const cached = await fetch(url, { next: { revalidate: 86400 } });
-    if (cached.ok) return await cached.json();
-  } catch {
-    /* fall through to the uncached attempt */
-  }
-  try {
-    const fresh = await fetch(url, { cache: "no-store" });
-    return fresh.ok ? await fresh.json() : null;
+    // Deliberately uncached at the fetch layer: the whole failure above came
+    // from Next persisting a response that looked fine and wasn't.
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (Array.isArray(data?.results) && data.results.length > 0) {
+      ITUNES_MEMO.set(url, { at: Date.now(), data });
+    }
+    return data;
   } catch {
     return null;
   }
