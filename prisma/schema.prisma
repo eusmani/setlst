@@ -457,3 +457,21 @@ model ReplyVote {
 
   @@unique([userId, replyId])
 }
+
+// Last known-good discography per artist.
+//
+// The artist page is built from a live iTunes call, so anything that makes that
+// call come back empty — a throttle answering 200 with no results, a name that
+// doesn't normalise the way the catalogue spells it, an outage — used to render
+// as "No releases found". Three separate causes produced the identical blank
+// page, and each was only noticeable once someone hit it.
+//
+// This is the backstop rather than a fourth fix for a fourth cause: once an
+// artist's discography has been fetched successfully, it is kept, and a later
+// empty answer serves the stored copy instead of nothing. Stale releases beat an
+// empty page, and a genuinely unknown artist has no row so still shows empty.
+model ArtistDiscographyCache {
+  name      String   @id
+  payload   String
+  updatedAt DateTime @default(now())
+}

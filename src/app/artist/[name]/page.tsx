@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 import { isCollaborationCredit } from "@/lib/credits";
 import AlbumCard from "@/components/album/AlbumCard";
 import FollowArtistButton from "./FollowArtistButton";
@@ -153,6 +154,51 @@ function mapAlbums(results: ItunesAlbum[]) {
     .map(({ id, title, artist, artwork, year, kind }) => ({ id, title, artist, artwork, year, kind }));
 }
 
+type Discography = ReturnType<typeof mapAlbums>;
+
+/**
+ * Keep the last discography that actually had releases in it.
+ *
+ * The artist page is assembled from a live iTunes call, so anything that makes
+ * that call come back empty renders as "No releases found". Three different
+ * causes produced that identical blank page — a throttle answering 200 with no
+ * results, a name whose accents didn't normalise, a stale cached failure — and
+ * each was only found when someone hit it.
+ *
+ * So rather than a fourth fix for a fourth cause, the successful answer is
+ * stored and served whenever a later one comes back empty. Writing is
+ * best-effort: a page that rendered fine should never fail because we couldn't
+ * record it.
+ */
+async function remember(artist: string, albums: Discography): Promise<Discography> {
+  const key = norm(artist);
+  if (key) {
+    try {
+      const payload = JSON.stringify(albums);
+      await prisma.artistDiscographyCache.upsert({
+        where: { name: key },
+        create: { name: key, payload },
+        update: { payload, updatedAt: new Date() },
+      });
+    } catch {
+      /* cache is an optimisation, never a requirement */
+    }
+  }
+  return albums;
+}
+
+/** The stored discography for an artist, or an empty list if we've never had one. */
+async function lastKnownGood(artist: string): Promise<Discography> {
+  const key = norm(artist);
+  if (!key) return [];
+  try {
+    const row = await prisma.artistDiscographyCache.findUnique({ where: { name: key } });
+    return row ? (JSON.parse(row.payload) as Discography) : [];
+  } catch {
+    return [];
+  }
+}
+
 async function getDiscography(artist: string) {
   try {
     const artistId = await resolveArtistId(artist);
@@ -190,7 +236,7 @@ async function getDiscography(artist: string) {
     );
 
     const merged = mapAlbums([...headlined, ...collaborations]);
-    if (merged.length > 0) return merged;
+    if (merged.length > 0) return remember(artist, merged);
 
     // Nothing matched precisely — usually the id lookup failed. Rather than
     // showing an empty discography, fall back to exact-name matches, then keep
@@ -209,9 +255,14 @@ async function getDiscography(artist: string) {
       byArtist.set(id, [...(byArtist.get(id) ?? []), a]);
     }
     const biggest = [...byArtist.values()].sort((x, y) => y.length - x.length)[0] ?? [];
-    return mapAlbums(biggest);
+    const loose = mapAlbums(biggest);
+    // Still nothing. Rather than render "No releases found" — which has been
+    // wrong far more often than it's been right — fall back to the last copy we
+    // successfully fetched for this artist.
+    return loose.length > 0 ? remember(artist, loose) : await lastKnownGood(artist);
   } catch {
-    return [];
+    // An outage shouldn't empty a page we've already filled once.
+    return await lastKnownGood(artist);
   }
 }
 
