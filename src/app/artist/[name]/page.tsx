@@ -49,7 +49,12 @@ function releaseKind(name: string, trackCount?: number): ReleaseKind {
 // pattern loose enough to strip every live record in the catalogue.
 const BAD = /\b(karaoke|tribute|made famous|cover version|string quartet|instrumental|8-bit|parody|parodies|spoof|bootleg|unofficial|not for resale|promo only)\b/i;
 
-const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+// Fold accents before stripping punctuation. Removing non-alphanumerics alone
+// deleted the accented letter outright, so "Beyoncé" became "beyonc" and never
+// matched a request for "Beyonce" — the artist page came back empty for every
+// artist whose name carries a diacritic.
+const norm = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 /** Cached iTunes responses, kept in-process and only ever populated with data. */
 const ITUNES_MEMO = new Map<string, { at: number; data: { results?: unknown[] } }>();

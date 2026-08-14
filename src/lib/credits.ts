@@ -33,7 +33,14 @@ const ANY_SEPARATOR = /\s*(?:,|&|\band\b|\bfeat\b\.?|\bfeaturing\b|\bft\b\.?|\bw
 const TITLE_FEATURE = /\((?:feat\b\.?|featuring|ft\b\.?|with)\s+([^)]+)\)/i;
 
 function norm(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  // Accents are folded rather than stripped: without this "Beyoncé" reduces to
+  // "beyonc" and stops matching a credit written "Beyonce", or the reverse.
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 function unique(names: string[]): string[] {
