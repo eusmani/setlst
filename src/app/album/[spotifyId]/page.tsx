@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { displayCredits } from "@/lib/credits";
 import { prisma } from "@/lib/prisma";
-import { getAlbum } from "@/lib/spotify";
+import { getAlbum, isSpotifyId } from "@/lib/spotify";
 import { getAlbumDescription } from "@/lib/wikipedia";
 import { getAlbumMeta, formatReleaseDate, getBandMembers } from "@/lib/musicbrainz";
 import { getTracklist, collectContributors, linkTracksToSpotify } from "@/lib/tracklist";
@@ -278,8 +278,10 @@ export default async function AlbumPage({
   const spotifyTracks: TrackItem[] = spotifyAlbum?.tracks?.items ?? [];
   const reviews = dbAlbum?.reviews ?? [];
 
-  // Last-resort fallback for bare links (no API, no DB, no params)
-  if (!title || !artwork) {
+  // Last-resort fallback for bare links (no API, no DB, no params).
+  // Spotify's oEmbed only knows Spotify ids, so for an iTunes-sourced album this
+  // was a second doomed round trip after the album lookup that just failed.
+  if ((!title || !artwork) && isSpotifyId(spotifyId)) {
     const o = await getOembed(spotifyId);
     title = title ?? o.title;
     artwork = artwork ?? o.artwork;

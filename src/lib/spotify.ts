@@ -237,7 +237,18 @@ export async function resolveAlbumTracks(
   }
 }
 
+/**
+ * A Spotify album id: 22 base62 characters.
+ *
+ * Worth checking, because plenty of ids in this app aren't Spotify's. The
+ * catalogue falls back to iTunes whenever Spotify is unavailable, and those
+ * albums carry a numeric collectionId. Asking Spotify for one costs an OAuth
+ * token fetch and a round trip to be told what the format already says.
+ */
+const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/;
+
 export async function getAlbum(id: string): Promise<SpotifyAlbum | null> {
+  if (!SPOTIFY_ID.test(id)) return null;
   const t = await token();
   const r = await fetch(`https://api.spotify.com/v1/albums/${id}`, {
     headers: { Authorization: `Bearer ${t}` },
@@ -245,6 +256,11 @@ export async function getAlbum(id: string): Promise<SpotifyAlbum | null> {
   });
   if (!r.ok) return null;
   return r.json();
+}
+
+/** True when an id could be a Spotify album — see SPOTIFY_ID. */
+export function isSpotifyId(id: string): boolean {
+  return SPOTIFY_ID.test(id);
 }
 
 // ---------------------------------------------------------------------------
