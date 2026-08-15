@@ -70,7 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             // cover the screen so the underlying app/login page never flashes
             // before the React onboarding overlay mounts. Removed by the overlay
             // when onboarding is dismissed. Must match OnboardingSlideshow SEEN_KEY.
-            __html: `try{if(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&!localStorage.getItem('setlst_onboarded_v1')){document.documentElement.classList.add('onb-pending');}}catch(e){}`,
+            __html: `try{var n=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());if(n){document.documentElement.classList.add('is-native');}if(n&&!localStorage.getItem('setlst_onboarded_v1')){document.documentElement.classList.add('onb-pending');}}catch(e){}`,
           }}
         />
       </head>
@@ -99,11 +99,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <BottomNav />
           <VerifyBanner />
           <main className="flex-1">{children}</main>
-          {/* Desktop only. A link footer at the end of a scroll is a website
-              tell, and on a phone it sat right under the tab bar. Every link
-              here is already reachable in Settings → Legal & safety, which is
+          {/* Web only. A link footer at the end of a scroll is a website tell,
+              and on a phone it sat right under the tab bar. Hidden below sm by
+              breakpoint, and inside the native app at any size by .is-native —
+              an iPad is wider than sm, so the breakpoint alone still showed it
+              there. Every link is already in Settings → Legal & safety, which is
               also where App Review looks for them. */}
-          <footer className="hidden sm:block mt-auto border-t border-[#1f1f1f] py-5 text-center text-xs text-[#6b6b6b]">
+          <footer className="site-footer hidden sm:block mt-auto border-t border-[#1f1f1f] py-5 text-center text-xs text-[#6b6b6b]">
             <strong>SETLST</strong> · log the music you love
             <span className="mx-2 text-[#2e2e2e]">·</span>
             <a href="/privacy" className="hover:text-[#c4a832] transition-colors">Privacy</a>

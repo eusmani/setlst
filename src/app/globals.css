@@ -520,3 +520,9 @@ html.onb-pending body { overflow: hidden; }
   letter-spacing: 0.1em;
   color: #f0f0f0;
 }
+
+/* Inside the native app the site footer is hidden at every size. The breakpoint
+   rule on the element only covers phones, and an iPad is wider than sm — so the
+   tagline and the Privacy / Terms / Support links came back on tablet. The class
+   is set synchronously in <head>, so it never paints and then disappears. */
+html.is-native .site-footer { display: none !important; }
