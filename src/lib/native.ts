@@ -161,6 +161,56 @@ export function canUseNativeCamera(): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// App Tracking Transparency
+// ---------------------------------------------------------------------------
+
+export type TrackingStatus = "authorized" | "denied" | "restricted" | "notDetermined" | "unavailable";
+
+export interface TrackingResult {
+  status: TrackingStatus;
+  /** The IDFA, present only when authorized. */
+  idfa: string | null;
+}
+
+/**
+ * Ask permission to track, returning the decision and the advertising id.
+ *
+ * Call this at the point an ad would appear, not at launch. iOS shows the prompt
+ * once per install and answers from the stored decision ever after, so asking
+ * before anyone has seen the app spends the only chance on a moment with no
+ * context — and a denial is permanent short of a trip to Settings.
+ *
+ * `status()` reads the existing decision without prompting, for deciding what to
+ * request from an ad network on later launches.
+ */
+export async function requestTracking(): Promise<TrackingResult> {
+  if (!isNative()) return { status: "unavailable", idfa: null };
+  try {
+    const { registerPlugin } = await import("@capacitor/core");
+    const plugin = registerPlugin<{ request(): Promise<TrackingResult> }>("SetlstTracking");
+    const result = await plugin.request();
+    return { status: result.status, idfa: result.idfa ?? null };
+  } catch {
+    // Older build without the plugin, or the call failed — either way there is
+    // no consent, which is the safe answer.
+    return { status: "unavailable", idfa: null };
+  }
+}
+
+/** The current tracking decision. Never prompts. */
+export async function trackingStatus(): Promise<TrackingResult> {
+  if (!isNative()) return { status: "unavailable", idfa: null };
+  try {
+    const { registerPlugin } = await import("@capacitor/core");
+    const plugin = registerPlugin<{ status(): Promise<TrackingResult> }>("SetlstTracking");
+    const result = await plugin.status();
+    return { status: result.status, idfa: result.idfa ?? null };
+  } catch {
+    return { status: "unavailable", idfa: null };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Spotify
 // ---------------------------------------------------------------------------
 

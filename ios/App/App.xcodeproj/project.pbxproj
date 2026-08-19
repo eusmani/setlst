@@ -28,6 +28,7 @@
 		8F940C344FEBA178375AAFE5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 739EFC4EB5BFF3615692ADD6 /* Foundation.framework */; };
 		97A7FDE6DBDC12BCB862D6E6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FDCB35330D7F199146A36EB8 /* PrivacyInfo.xcprivacy */; };
 		A0F960B7F4748B2BA038376A /* WidgetBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B9DEEFDECD89CB459E49FA6 /* WidgetBridge.swift */; };
+		A2CD01851D923D9F2EC2EF6E /* TrackingPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F90B3F98F79EB7DB519E327 /* TrackingPlugin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +81,7 @@
 		65F4C5037AA01016DAEDEE79 /* SETLSTWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SETLSTWidget.swift; sourceTree = "<group>"; };
 		6B9DEEFDECD89CB459E49FA6 /* WidgetBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetBridge.swift; path = Native/WidgetBridge.swift; sourceTree = "<group>"; };
 		739EFC4EB5BFF3615692ADD6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		7F90B3F98F79EB7DB519E327 /* TrackingPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrackingPlugin.swift; sourceTree = "<group>"; };
 		8C7A535D0CD58E5A984C300F /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		D9FD99CD3A522FCF6E3AAFE1 /* SETLSTWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SETLSTWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,6 +117,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		442E0378336935F9FBF98542 /* Native */ = {
+			isa = PBXGroup;
+			children = (
+				7F90B3F98F79EB7DB519E327 /* TrackingPlugin.swift */,
+			);
+			name = Native;
+			sourceTree = "<group>";
+		};
 		504EC2FB1FED79650016851F = {
 			isa = PBXGroup;
 			children = (
@@ -153,6 +163,7 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 				6B9DEEFDECD89CB459E49FA6 /* WidgetBridge.swift */,
 				3AD22FD08FAC6B4504962D7D /* PrivacyInfo.xcprivacy */,
+				442E0378336935F9FBF98542 /* Native */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -344,6 +355,7 @@
 				1A5E7C042A9F41D000C0FFEE /* QuickActionsPlugin.swift in Sources */,
 				1A5E90102A9F41D000C0FFEE /* SetlstIntents.swift in Sources */,
 				A0F960B7F4748B2BA038376A /* WidgetBridge.swift in Sources */,
+				A2CD01851D923D9F2EC2EF6E /* TrackingPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
