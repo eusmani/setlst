@@ -19,8 +19,12 @@ function readEnv(file) {
     return {};
   }
 }
-const env = { ...readEnv("../.env"), ...readEnv("../.env.local") };
+// .env carries a local file: URL for development; the production Turso
+// credentials are in .env.production.local and must win, or the migration
+// silently creates the table in dev.db and production still lacks it.
+const env = { ...readEnv("../.env"), ...readEnv("../.env.local"), ...readEnv("../.env.production.local") };
 
+console.log(`  target: ${env.DATABASE_URL?.startsWith("file:") ? "LOCAL " + env.DATABASE_URL : "production Turso"}`);
 const client = createClient({ url: env.DATABASE_URL, authToken: env.TURSO_AUTH_TOKEN });
 
 try {

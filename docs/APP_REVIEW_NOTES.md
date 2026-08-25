@@ -30,7 +30,9 @@ Thank you for the detailed feedback. We've addressed each item:
 
 **5.2.1 Intellectual Property.** SETLST does not host, stream, or sell music. It displays catalogue **metadata** — titles, artists, release dates, track listings and cover art — retrieved at request time from the Apple Music / iTunes Search API, the Spotify Web API, MusicBrainz and Wikipedia, each used under that provider's public developer terms. Artwork is shown at catalogue scale solely to identify the release being discussed, with links back to the rights holder's service. We've added a Copyright & Attribution page (https://setlst.dev/copyright) naming every source and its licence, an in-app attribution notice on every album page, and a takedown process with a dedicated address (copyright@setlst.dev) committing to removal within 24 hours and termination of repeat infringers. Trademarks are attributed to their owners, and we state plainly that SETLST is independent and not affiliated with or endorsed by Apple, Spotify or any artist or label.
 
-**Demo account:** `<username>` / `<password>` — has existing reviews, a discussion thread, and a conversation so reporting and blocking can be exercised immediately.
+**Demo account:** `setlst_demo` / `SetlstDemo!2026` — signed in, email already verified. It has seven reviews across six albums, follows three other members, and is part of a discussion with replies and an existing conversation, so **Report** and **Block** can be exercised immediately on content the demo account did not write (the `···` menu is hidden on your own posts).
+
+**A note on the screenshots and demo content.** Every album, artist, cover image, review and discussion visible in this account is fictional and created by us. We understand that displaying catalogue cover art inside the app under the providers' developer terms is a different question from using it in App Store marketing material, so no third-party artwork appears in our screenshots.
 
 ---
 
