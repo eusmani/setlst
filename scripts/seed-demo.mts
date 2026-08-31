@@ -152,6 +152,86 @@ const REVIEWS = [
   { by: "rowan_fm", album: "demo-midnight-arcadia", rating: 7, subject: "Fun, a bit thin", body: "Great singles, less of an album than it thinks it is." },
 ];
 
+
+// ---------------------------------------------------------------------------
+// Real releases
+// ---------------------------------------------------------------------------
+
+/**
+ * Well-known albums, looked up in the catalogue so the ids, artwork and years
+ * are the real ones.
+ *
+ * Popular This Week ranks purely on this app's own activity, so with only a
+ * handful of members it renders nearly empty. These give it something true to
+ * show. Displaying real releases *inside* the app is what the Apple and Spotify
+ * developer terms permit — the thing those terms don't cover is putting label
+ * artwork in App Store marketing, which is why the screenshot content above is
+ * invented instead.
+ */
+const REAL = [
+  { artist: "Nas", album: "Illmatic", takes: [["rowan_fm", 10, "Still the benchmark", "Forty minutes, no filler, and every producer bringing their best beat. Nothing has aged."], ["juno_tapes", 9.5, "The New York record", "You can hear the window open on half these tracks."]] },
+  { artist: "Radiohead", album: "In Rainbows", takes: [["setlst_demo", 9.5, "Their warmest record", "The one where the machinery finally serves the songs instead of hiding them. 15 Step still sounds like the future."], ["hallie_b", 9, "Nude", "That's it. That's the review."]] },
+  { artist: "Amy Winehouse", album: "Back to Black", takes: [["setlst_demo", 9, "Every song is a standard", "Ronson's production points at the sixties and the writing is entirely her own."], ["rowan_fm", 8.5, "Devastating in hindsight", "Hard to hear now without knowing how it ends."]] },
+  { artist: "Daft Punk", album: "Random Access Memories", takes: [["hallie_b", 8.5, "Session musicians and robots", "The long ones earn their length. Touch is the best thing they ever made."]] },
+  { artist: "Kendrick Lamar", album: "To Pimp a Butterfly", takes: [["juno_tapes", 9.5, "Dense in the best way", "The jazz players are doing as much storytelling as the verses."], ["setlst_demo", 9, "Demands attention", "Not background music. Sit with it."]] },
+  { artist: "Nirvana", album: "In Utero", takes: [["rowan_fm", 9, "Abrasive on purpose", "Albini put the band in a room and let them sound like one. Still bracing."]] },
+  { artist: "SZA", album: "SOS", takes: [["hallie_b", 8, "Too long, still great", "Twenty-three tracks is a lot, but the highs are as high as anything last decade."]] },
+  { artist: "Sufjan Stevens", album: "Illinois", takes: [["juno_tapes", 9, "Maximalist and tender", "Somehow both a history lesson and a diary."]] },
+  { artist: "Tame Impala", album: "Currents", takes: [["setlst_demo", 8.5, "The break-up record as a pop album", "Every hook is a good idea followed all the way through."]] },
+];
+
+/**
+ * Look an album up in the catalogue.
+ *
+ * Takes the ten best matches rather than the first, because the first is often
+ * wrong: searching "Frank Ocean Blonde" returned "Moon River - Single". Full
+ * lengths are preferred over singles and EPs, and the title is checked against
+ * what was asked for, so a stray single can't stand in for the album.
+ */
+async function findReal(artistWanted: string, expect: string) {
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(`${artistWanted} ${expect}`)}&entity=album&limit=15`;
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  const rows: Record<string, unknown>[] = (await r.json())?.results ?? [];
+
+  const bare = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const want = bare(expect);
+  const wantArtist = bare(artistWanted);
+  // "Frank Ocean Blonde" matched "Piano Tribute to Frank Ocean" by Blond Piano,
+  // so covers bands are excluded the same way the artist page excludes them.
+  const TRIBUTE = /tribute|karaoke|piano versions?|made famous|in the style of|cover version/i;
+
+  const scored = rows
+    .filter((row) => row.collectionId && row.collectionName && row.artistName)
+    .filter((row) => !TRIBUTE.test(String(row.collectionName)) && !TRIBUTE.test(String(row.artistName)))
+    // The credited artist has to be the one asked for, not merely mentioned.
+    .filter((row) => bare(String(row.artistName)).startsWith(wantArtist))
+    .map((row) => {
+      // Compare without edition wrapping, so "In Utero (20th Anniversary
+      // Edition)" still counts as In Utero.
+      const name = bare(String(row.collectionName).replace(/\s*[([][^)\]]*[)\]]/g, ""));
+      const tracks = Number(row.trackCount ?? 0);
+      return { row, exact: name === want, tracks };
+    })
+    // Exact only. "Currents" kept matching "Currents B-Sides & Remixes - EP" and
+    // "Blonde" matched a single, because a prefix or substring match will always
+    // find something and it is regularly the wrong thing. Better to seed one
+    // fewer album than to seed the wrong one.
+    .filter((c) => c.exact)
+    .sort((a, b) => b.tracks - a.tracks);
+
+  const row = scored[0]?.row;
+  if (!row) return null;
+  return {
+    spotifyId: String(row.collectionId),
+    title: String(row.collectionName).replace(/\s*[([](Deluxe|Expanded|Remastered|\d+th Anniversary)[^)\]]*[)\]]/i, "").trim(),
+    artist: String(row.artistName),
+    artwork: String(row.artworkUrl100 ?? "").replace("100x100bb", "600x600bb") || null,
+    year: row.releaseDate ? parseInt(String(row.releaseDate).slice(0, 4)) : null,
+    genres: row.primaryGenreName ? JSON.stringify([row.primaryGenreName]) : null,
+  };
+}
+
 async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 12);
   const now = new Date();
@@ -285,6 +365,63 @@ async function main() {
     });
   }
   console.log("  inbox   1 conversation");
+
+  // --- real albums, so Popular This Week has something true to show ---------
+  let realCount = 0, realReviews = 0;
+  const seededRealIds: string[] = [];
+  for (const [i, entry] of REAL.entries()) {
+    const found = await findReal(entry.artist, entry.album);
+    if (!found) { console.log(`  skipped ${entry.artist} — ${entry.album} (not in the iTunes store catalogue)`); continue; }
+    const { spotifyId, ...data } = found;
+    const album = await prisma.album.upsert({
+      where: { spotifyId },
+      create: { spotifyId, ...data },
+      update: data,
+      select: { id: true },
+    });
+    realCount++;
+    seededRealIds.push(spotifyId);
+
+    for (const [n, [by, rating, subject, body]] of entry.takes.entries()) {
+      // Inside seven days, which is the window Popular This Week weights double.
+      const createdAt = ago(((i + n) % 6) + 0.5);
+      await prisma.review.upsert({
+        where: { userId_albumId: { userId: users[by as string].id, albumId: album.id } },
+        create: { rating: rating as number, subject: subject as string, body: body as string, userId: users[by as string].id, albumId: album.id, createdAt },
+        update: { rating: rating as number, subject: subject as string, body: body as string, createdAt },
+      });
+      realReviews++;
+    }
+    console.log(`  real    ${data.title} — ${data.artist}`);
+  }
+  console.log(`  real albums ${realCount}, reviews ${realReviews}`);
+
+  // --- clean up anything a previous run got wrong ---------------------------
+  //
+  // Matching used to be fuzzy, and it seeded a tribute album, a single, and a
+  // B-sides EP before the exact-title rule went in. Those rows are still there
+  // with demo reviews attached, so they keep appearing in Popular This Week.
+  //
+  // Only albums whose reviews are *entirely* from demo accounts are removed, and
+  // only when this run didn't seed them — an album a real member has reviewed is
+  // never touched, whatever its id.
+  const demoUserIds = Object.values(users).map((u) => u.id);
+  const keep = new Set([...seededRealIds, ...ALBUMS.map((a) => a.id)]);
+  const candidates = await prisma.album.findMany({
+    where: { reviews: { some: { userId: { in: demoUserIds } } } },
+    select: { id: true, spotifyId: true, title: true, artist: true, reviews: { select: { userId: true } } },
+  });
+  let removed = 0;
+  for (const a of candidates) {
+    if (keep.has(a.spotifyId)) continue;
+    const onlyDemo = a.reviews.every((r) => demoUserIds.includes(r.userId));
+    if (!onlyDemo) continue;
+    await prisma.review.deleteMany({ where: { albumId: a.id } });
+    await prisma.album.delete({ where: { id: a.id } });
+    console.log(`  removed ${a.title} — ${a.artist}  (mis-seeded)`);
+    removed++;
+  }
+  if (removed) console.log(`  cleaned up ${removed} album(s) from earlier runs`);
 
   console.log(`\n  demo login:  setlst_demo  /  ${PASSWORD}`);
   console.log("  paste those into docs/APP_REVIEW_NOTES.md and App Store Connect.\n");
