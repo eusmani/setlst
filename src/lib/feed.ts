@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { blockedIds } from "@/lib/moderation";
+import { notDemoAlbum } from "@/lib/demo";
 
 const feedInclude = {
   user: { select: { id: true, username: true, avatar: true } },
@@ -76,10 +77,20 @@ async function getActivity(userIds: string[] | null, viewerId: string | undefine
     ...(visibleIds ? { userId: { in: visibleIds } } : hidden.length ? { userId: { notIn: hidden } } : {}),
   };
 
+  // The site-wide feed (no userIds — logged out, or "Trending") is a discovery
+  // surface, so seeded demo albums are kept out of it for the same reason they're
+  // kept out of Popular This Week: they're invented, and presented among real
+  // releases they look like generated filler. A feed scoped to specific people
+  // still shows them, so the demo account's own activity and anyone following it
+  // is unaffected — which is what App Review and the screenshots rely on.
+  const global = !visibleIds;
+  const reviewWhere = global ? { ...where, album: { spotifyId: notDemoAlbum } } : where;
+  const threadWhere = global ? { ...where, albumSpotifyId: notDemoAlbum } : where;
+
   const [reviews, threads, replies] = await Promise.all([
-    prisma.review.findMany({ where, include: feedInclude, orderBy: { createdAt: "desc" }, take }),
+    prisma.review.findMany({ where: reviewWhere, include: feedInclude, orderBy: { createdAt: "desc" }, take }),
     prisma.thread.findMany({
-      where,
+      where: threadWhere,
       orderBy: { createdAt: "desc" },
       take,
       include: { user: { select: { id: true, username: true, avatar: true } }, _count: { select: { replies: true } } },

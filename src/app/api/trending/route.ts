@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { notDemoAlbum } from "@/lib/demo";
 
 export const dynamic = "force-dynamic";
 
@@ -23,14 +24,25 @@ export async function GET() {
   const DAY = 86_400_000;
   const currentYear = new Date().getFullYear();
 
+  // Seeded demo albums are excluded here. They exist so App Store screenshots
+  // contain no label-owned artwork, but this list ranks by review activity — and
+  // the seed's own reviews were enough to push invented bands into everyone's
+  // discovery feed, where they read as machine-generated filler.
   const [albums, saved, comments] = await Promise.all([
     prisma.album.findMany({
+      where: { spotifyId: notDemoAlbum },
       include: {
         reviews: { select: { rating: true, createdAt: true, likes: { select: { value: true } } } },
       },
     }),
-    prisma.savedAlbum.findMany({ select: { spotifyId: true, title: true, artist: true, artwork: true, year: true, createdAt: true } }),
-    prisma.comment.findMany({ where: { removedAt: null }, select: { albumSpotifyId: true, createdAt: true } }),
+    prisma.savedAlbum.findMany({
+      where: { spotifyId: notDemoAlbum },
+      select: { spotifyId: true, title: true, artist: true, artwork: true, year: true, createdAt: true },
+    }),
+    prisma.comment.findMany({
+      where: { removedAt: null, albumSpotifyId: notDemoAlbum },
+      select: { albumSpotifyId: true, createdAt: true },
+    }),
   ]);
 
   const map = new Map<string, Row>();
