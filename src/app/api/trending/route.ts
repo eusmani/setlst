@@ -91,7 +91,25 @@ export async function GET() {
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score);
 
+  // One release per record, not one per catalogue id.
+  //
+  // The same album exists under several ids — a reissue, an anniversary edition,
+  // a different territory — and each carries its own reviews, so Illmatic and
+  // In Utero were each listed twice. Merging is done here rather than in the
+  // database because both rows are legitimate: people reviewed the edition they
+  // own. Editions are stripped before comparing, and the highest-scoring row
+  // survives, so the merged entry is the one people actually engaged with.
+  const bare = (v: string) =>
+    v.toLowerCase().replace(/\s*[([][^)\]]*[)\]]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const seenRelease = new Set<string>();
+  const deduped = ranked.filter((r) => {
+    const key = `${bare(r.title)}|${bare(r.artist)}`;
+    if (seenRelease.has(key)) return false;
+    seenRelease.add(key);
+    return true;
+  });
+
   // Popular This Week is based only on the app's own user activity (reviews, saves,
   // likes, comments) — no external chart fill.
-  return NextResponse.json(ranked.slice(0, 30));
+  return NextResponse.json(deduped.slice(0, 30));
 }
