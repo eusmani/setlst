@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { purchasePlus, restorePurchases } from "@/lib/purchases";
+import { purchasePlus, restorePurchases, openCustomerCenter, purchasesAvailable } from "@/lib/purchases";
 
 interface Status { premium: boolean; plan: string | null; until: string | null; appUserId: string | null }
 
@@ -41,6 +41,15 @@ export default function SetlstPlus() {
     setBusy(false);
   }
 
+  // RevenueCat's Customer Center handles cancellations, plan changes and refund
+  // requests natively, so we don't have to build any of that.
+  async function manage() {
+    if (!status?.appUserId) return;
+    const shown = await openCustomerCenter(status.appUserId);
+    if (!shown) setMsg("Manage your subscription in Settings › Apple Account › Subscriptions.");
+    else fetch("/api/premium/status").then((r) => r.json()).then(setStatus).catch(() => {});
+  }
+
   if (!status) return null;
 
   return (
@@ -56,10 +65,15 @@ export default function SetlstPlus() {
           <p className="text-xs text-[#a0a0a0] mb-3">
             You’re a Pro member{status.until ? ` · renews ${new Date(status.until).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}. Thanks for supporting SETLST 💛
           </p>
-          <Link href="/analytics" className="inline-flex items-center gap-1.5 text-xs text-[#c4a832] border border-[#c4a832]/50 hover:border-[#c4a832] rounded-full px-3 py-1.5 transition-colors">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
-            View your review analytics
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/analytics" className="inline-flex items-center gap-1.5 text-xs text-[#c4a832] border border-[#c4a832]/50 hover:border-[#c4a832] rounded-full px-3 py-1.5 transition-colors">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
+              View your review analytics
+            </Link>
+            {purchasesAvailable() && (
+              <button onClick={manage} className="text-xs text-[#a0a0a0] hover:text-[#c4a832] transition-colors">Manage subscription</button>
+            )}
+          </div>
         </>
       ) : (
         <>
