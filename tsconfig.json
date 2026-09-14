@@ -11,6 +11,9 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // The ad-hoc App Store Connect scripts in the repo root import each other by
+    // explicit .mts path; harmless under noEmit, and keeps them type-checked.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
