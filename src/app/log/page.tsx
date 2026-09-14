@@ -18,6 +18,7 @@ export default function LogPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlight = useRef<AbortController | null>(null);
 
   function onChange(v: string) {
     setQ(v);
@@ -26,14 +27,25 @@ export default function LogPage() {
     timer.current = setTimeout(() => runSearch(v), 350);
   }
 
+  // Abandon the previous request rather than letting it race: a slower earlier
+  // search could otherwise land last and overwrite the current results — which
+  // reads as "this album isn't in the catalogue" for an album that is.
   async function runSearch(query: string) {
+    inFlight.current?.abort();
+    const controller = new AbortController();
+    inFlight.current = controller;
+
     setLoading(true); setSearched(true);
     try {
-      const r = await fetch(`/api/spotify/search?q=${encodeURIComponent(query)}`);
+      const r = await fetch(`/api/spotify/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
       const d = await r.json();
+      if (controller.signal.aborted) return;
       setResults(Array.isArray(d.results) ? d.results : []);
-    } catch { setResults([]); }
-    setLoading(false);
+    } catch {
+      if (controller.signal.aborted) return;
+      setResults([]);
+    }
+    if (!controller.signal.aborted) setLoading(false);
   }
 
   function href(a: AlbumResult) {

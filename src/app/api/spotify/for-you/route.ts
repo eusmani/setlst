@@ -18,8 +18,12 @@ export async function GET() {
   const results = await Promise.all(
     artists.slice(0, 8).map(async (a) => {
       try {
+        // One call PER ARTIST, so a single page view costs 8. Spotify rate
+        // limits per app, not per token, so this drains the same quota the
+        // search endpoints need. A discography barely changes day to day.
         const r = await fetch(`https://api.spotify.com/v1/artists/${a.id}/albums?include_groups=album&limit=3&market=US`, {
           headers: { Authorization: `Bearer ${token}` },
+          next: { revalidate: 86400 },
         });
         if (!r.ok) return null;
         const d = await r.json();

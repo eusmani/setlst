@@ -15,6 +15,42 @@ function albumType(a: SpotifyAlbum): "album" | "single" | "ep" {
   return "album";
 }
 
+const norm = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+// How well a row answers what was actually typed.
+//
+// Neither catalogue orders strictly by relevance, and iTunes — which serves
+// every search while Spotify is rate limited — is the worse of the two: it will
+// put a compilation, or an act *named* after the query, above the album that is
+// literally called it ("ok computer" returned a band called Ok Computer before
+// Radiohead). So score the title match explicitly and let that lead, keeping the
+// catalogue's own order only as the tiebreak.
+function relevance(name: string, artist: string, query: string, topArtist: boolean): number {
+  const n = norm(name), a = norm(artist), q = norm(query);
+  let score = 0;
+  if (n === q) score += 100;              // the album IS what was typed
+  else if (n.startsWith(q)) score += 55;  // "1989 (Taylor's Version)"
+  else if (n.includes(q)) score += 25;
+  if (a === q) score += 45;               // the query names the artist
+  else if (a.includes(q)) score += 20;
+  if (topArtist) score += 35;             // among the best-known matching artists
+  // A derivative edition must never outrank the record itself.
+  if (/\b(karaoke|remix|reimagin|revisited|tribute|instrumental)\b/i.test(name)) score -= 40;
+  if (/\b(single|ep)\b/i.test(name)) score -= 12;
+  return score;
+}
+
+// A catalogue row is only usable if we can render and trust it. Applied to the
+// Spotify AND iTunes results so the fallback decision below is made on what the
+// user would really see, not on a raw row count.
+function usable(albums: SpotifyAlbum[]): SpotifyAlbum[] {
+  return albums.filter(
+    (a) =>
+      a.id && a.name && a.images?.[0]?.url && a.artists?.[0]?.name &&
+      !BAD.test(a.name) && !BAD_ARTIST.test(a.artists[0].name) && !isLikelyAI(a.artists[0].name, a.name)
+  );
+}
+
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q");
   if (!q) return NextResponse.json({ results: [], artists: [] });
@@ -32,18 +68,27 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    let { artists, albums } = await searchArtistsAndAlbums(q);
+    const { artists: rawArtists, albums: rawAlbums } = await searchArtistsAndAlbums(q);
+    let artists = rawArtists;
+
+    // Filter BEFORE deciding whether the fallback is needed. Spotify can return
+    // a full page of rows that are all unusable — karaoke, tributes, art-less
+    // entries — and testing the RAW count meant the fallback never ran while
+    // the filtered list was empty, so a real album reported as "not found".
+    let albums = usable(rawAlbums);
 
     // Spotify's quota runs out for hours at a time, and when it does every
     // search came back empty — indistinguishable from "no such album". Fall back
     // to the iTunes catalogue so search keeps working.
     let degraded = false;
     if (albums.length === 0) {
-      const fallback = await searchAlbumsViaITunes(q);
+      const fallback = usable(await searchAlbumsViaITunes(q));
       if (fallback.length > 0) {
         albums = fallback;
-        artists = [];
         degraded = true;
+        // Only treat Spotify as down when it returned nothing at all. If it gave
+        // us rows that we merely filtered away, its artist results are still good.
+        if (rawAlbums.length === 0) artists = [];
       }
     }
 
@@ -76,15 +121,11 @@ export async function GET(req: NextRequest) {
           .slice(0, 12)
           .map((a) => ({ id: `itunes:${a.id}`, name: a.name, image: coverFor(a.name, albums), popularity: 0 }));
 
-    // Albums to review. Keep Spotify's relevance order, but float albums by the
-    // top popular artists to the front so popular matches come first.
+    // Albums to review, ranked by how well they answer the query. Sort is stable,
+    // so rows scoring equally keep the catalogue's own ordering.
     const topArtistNames = new Set(rankedArtists.slice(0, 5).map((a) => a.name.toLowerCase()));
     const seen = new Set<string>();
     const results = albums
-      .filter((a) =>
-        a.id && a.name && a.images?.[0]?.url && a.artists?.[0]?.name &&
-        !BAD.test(a.name) && !BAD_ARTIST.test(a.artists[0].name) && !isLikelyAI(a.artists[0].name, a.name)
-      )
       .filter((a) => { if (seen.has(a.id)) return false; seen.add(a.id); return true; })
       .map((a) => ({
         id: a.id,
@@ -93,10 +134,10 @@ export async function GET(req: NextRequest) {
         images: [{ url: a.images[0].url }],
         release_date: a.release_date ?? "",
         type: albumType(a),
-        _boost: topArtistNames.has(a.artists[0].name.toLowerCase()) ? 1 : 0,
+        _score: relevance(a.name, a.artists[0].name, q, topArtistNames.has(a.artists[0].name.toLowerCase())),
       }))
-      .sort((x, y) => y._boost - x._boost)
-      .map(({ _boost, ...rest }) => { void _boost; return rest; });
+      .sort((x, y) => y._score - x._score)
+      .map(({ _score, ...rest }) => { void _score; return rest; });
 
     return NextResponse.json({ results: results.slice(0, 30), artists: rankedArtists, degraded });
   } catch (error) {

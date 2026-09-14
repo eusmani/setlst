@@ -101,8 +101,11 @@ export interface TopArtist { id: string; name: string; image: string | null; gen
 export async function getTopArtists(userId: string, limit = 20): Promise<TopArtist[]> {
   const token = await getUserToken(userId);
   if (!token) return [];
+  // Listening history moves slowly; uncached this was a Spotify call on every
+  // request that touched the user's top artists.
   const res = await fetch(`https://api.spotify.com/v1/me/top/artists?limit=${limit}&time_range=medium_term`, {
     headers: { Authorization: `Bearer ${token}` },
+    next: { revalidate: 3600 },
   });
   if (!res.ok) return [];
   const d = await res.json();

@@ -46,7 +46,15 @@ async function searchOne(q: string, type: "album" | "artist", limit: number, off
   const url = `https://api.spotify.com/v1/search?${new URLSearchParams({ q, type, limit: String(limit), offset: String(offset), market: "US" })}`;
   for (let attempt = 0; attempt < 2; attempt++) {
     const t = await token();
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${t}` }, next: { revalidate: 3600 } });
+    // Next caches by URL regardless of status, so a single 429 would otherwise
+    // be served from the cache for the whole revalidate window — pinning "no
+    // results" for that query for an hour, long after the quota recovered. The
+    // retry deliberately bypasses the cache so a stale failure can't stick.
+    // (revalidate and no-store together are ignored, so never set both.)
+    const r = await fetch(url, {
+      headers: { Authorization: `Bearer ${t}` },
+      ...(attempt === 0 ? { next: { revalidate: 3600 } } : { cache: "no-store" as const }),
+    });
     if (r.status === 429) {
       // Spotify's client-credentials quota is finite and, once exhausted,
       // Retry-After comes back in hours — far longer than we can wait here.
@@ -54,9 +62,18 @@ async function searchOne(q: string, type: "album" | "artist", limit: number, off
       // "no results" and was indistinguishable from a genuinely empty search.
       const retryAfter = parseInt(r.headers.get("Retry-After") ?? "1");
       console.error(`[spotify] rate limited (429), retry-after ${retryAfter}s`);
+      // Quota exhaustion lasts hours, so do NOT retry uncached here — that
+      // spends more quota during the outage it is meant to soften. The cached
+      // 429 expires with the revalidate window, and the iTunes fallback covers
+      // users meanwhile.
       if (retryAfter > 5) return null;
       await new Promise((res) => setTimeout(res, Math.min(retryAfter * 1000, 2000)));
       continue;
+    }
+    if (!r.ok) {
+      console.error(`[spotify] search http ${r.status}`);
+      if (attempt === 0) continue;
+      return null;
     }
     const d = await r.json();
     if (d.error) { console.error("[spotify] search error:", d.error); return null; }
@@ -322,10 +339,19 @@ export async function searchArtistsViaITunes(q: string, limit = 12): Promise<{ i
 export async function searchAlbumsViaITunes(q: string, limit = 20): Promise<SpotifyAlbum[]> {
   try {
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=album&limit=${limit}`;
-    const r = await fetch(url, { next: { revalidate: 3600 } });
-    if (!r.ok) return [];
-    const d = await r.json();
-    const rows: Record<string, unknown>[] = Array.isArray(d?.results) ? d.results : [];
+    // This is the fallback every search leans on while Spotify is rate limited,
+    // so a transient empty must not become the cached answer for an hour — that
+    // is indistinguishable from "this album doesn't exist". Confirm uncached
+    // before believing an empty result.
+    let r = await fetch(url, { next: { revalidate: 3600 } });
+    let d = r.ok ? await r.json() : null;
+    let rows: Record<string, unknown>[] = Array.isArray(d?.results) ? d.results : [];
+    if (rows.length === 0) {
+      r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) return [];
+      d = await r.json();
+      rows = Array.isArray(d?.results) ? d.results : [];
+    }
 
     return rows
       .filter((row) => row.collectionId && row.collectionName && row.artistName)
