@@ -105,5 +105,23 @@ export default function NativeBridge() {
     return () => { removeListener?.(); };
   }, []);
 
+  // The native SwiftUI shell has no Capacitor, so the effect above bails out
+  // there. It hands its APNs token over as a DOM event instead — it can't post
+  // the token itself, because /api/push/register authenticates with the session
+  // cookie and that lives in the web view, not in URLSession.
+  useEffect(() => {
+    const onToken = (e: Event) => {
+      const detail = (e as CustomEvent<{ token?: string; platform?: string }>).detail;
+      if (!detail?.token) return;
+      fetch("/api/push/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: detail.token, platform: detail.platform ?? "ios" }),
+      }).catch(() => {});
+    };
+    window.addEventListener("setlst:pushToken", onToken);
+    return () => window.removeEventListener("setlst:pushToken", onToken);
+  }, []);
+
   return null;
 }

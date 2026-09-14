@@ -49,6 +49,7 @@ model User {
 
   reviews      Review[]
   likes        Like[]
+  deviceTokens DeviceToken[]
   savedAlbums  SavedAlbum[]
   crates       Crate[]
   threads       Thread[]
@@ -474,4 +475,23 @@ model ArtistDiscographyCache {
   name      String   @id
   payload   String
   updatedAt DateTime @default(now())
+}
+
+
+// APNs device tokens for push delivery.
+//
+// Keyed by the TOKEN rather than the user: one device has exactly one token, but
+// a device can change hands between accounts, and a user can have several
+// devices. Keying this way means re-registering an existing device moves it to
+// the current account instead of leaving a stale row that would push someone
+// else's notifications to this phone.
+model DeviceToken {
+  token     String   @id
+  userId    String
+  platform  String   @default("ios")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
