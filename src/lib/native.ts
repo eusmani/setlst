@@ -12,9 +12,35 @@ export function isNative(): boolean {
 
 export interface Coords { lat: number; lon: number }
 
+// The standalone SwiftUI shell has no Capacitor, so isNative() is false there and
+// the web fallback (navigator.geolocation) cannot work inside its WKWebView.
+// It exposes location through a reply-style WKScriptMessageHandler instead.
+interface ReplyHandler { postMessage(body: unknown): Promise<unknown> }
+function shellLocation(): ReplyHandler | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as {
+    webkit?: { messageHandlers?: { setlstLocation?: ReplyHandler } };
+  };
+  return w.webkit?.messageHandlers?.setlstLocation ?? null;
+}
+
+async function coordsFromShell(prompt: boolean): Promise<Coords | null> {
+  const bridge = shellLocation();
+  if (!bridge) return null;
+  try {
+    const r = (await bridge.postMessage({ prompt })) as Partial<Coords> | null;
+    return typeof r?.lat === "number" && typeof r?.lon === "number"
+      ? { lat: r.lat, lon: r.lon }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 // Current location — native Geolocation on device (WKWebView can't use the web
 // geolocation API), browser geolocation on the web.
 export async function getCoords(): Promise<Coords | null> {
+  if (shellLocation()) return coordsFromShell(true);
   if (isNative()) {
     try {
       const { Geolocation } = await import("@capacitor/geolocation");
@@ -43,6 +69,8 @@ export async function getCoords(): Promise<Coords | null> {
 // asking for location it hasn't justified (App Store guideline 5.1.1). Features
 // that need a fresh prompt call getCoords() from an explicit user action.
 export async function getCoordsIfAllowed(): Promise<Coords | null> {
+  // prompt:false — the shell replies null rather than raising the system dialog.
+  if (shellLocation()) return coordsFromShell(false);
   if (isNative()) {
     try {
       const { Geolocation } = await import("@capacitor/geolocation");

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchSeatGeek } from "@/app/api/concerts/route";
+import { fetchConcertsNear, concertsConfigured } from "@/app/api/concerts/route";
 
 // A short list of upcoming concerts for the onboarding "Catch shows near you"
 // slide. Onboarding runs before we ask for location permission, so we geolocate
@@ -16,7 +16,7 @@ const FALLBACK_CITIES: [number, number][] = [
 ];
 
 export async function GET(req: NextRequest) {
-  if (!process.env.SEATGEEK_CLIENT_ID) {
+  if (!concertsConfigured()) {
     return NextResponse.json([], { status: 200 });
   }
 
@@ -24,15 +24,15 @@ export async function GET(req: NextRequest) {
   const hLat = req.headers.get("x-vercel-ip-latitude");
   const hLon = req.headers.get("x-vercel-ip-longitude");
 
-  let concerts: Awaited<ReturnType<typeof fetchSeatGeek>> = [];
+  let concerts: Awaited<ReturnType<typeof fetchConcertsNear>> = [];
   if (hLat && hLon) {
-    concerts = await fetchSeatGeek(parseFloat(hLat), parseFloat(hLon)).catch(() => []);
+    concerts = await fetchConcertsNear(parseFloat(hLat), parseFloat(hLon)).catch(() => []);
   }
 
   // Nothing nearby (or no geo headers)? Show a major-city lineup instead.
   if (concerts.length === 0) {
     const [lat, lon] = FALLBACK_CITIES[Math.floor(Math.random() * FALLBACK_CITIES.length)];
-    concerts = await fetchSeatGeek(lat, lon).catch(() => []);
+    concerts = await fetchConcertsNear(lat, lon).catch(() => []);
   }
 
   const out = concerts

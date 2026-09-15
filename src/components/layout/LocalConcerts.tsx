@@ -11,7 +11,7 @@ interface Concert {
   url: string;
   image: string | null;
   price: string | null;
-  source?: "SeatGeek";
+  source?: "SeatGeek" | "Ticketmaster";
 }
 
 function formatDate(d: string) {
@@ -193,14 +193,21 @@ export default function LocalConcerts() {
           >
             Refresh
           </button>
-          <a
-            href="https://seatgeek.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-[#6b6b6b] hover:text-[#c4a832] transition-colors"
-          >
-            More on SeatGeek →
-          </a>
+          {/* Results can come from either catalogue, so credit the one
+              that actually supplied them. */}
+          {(() => {
+            const tm = concerts[0]?.source === "Ticketmaster";
+            return (
+              <a
+                href={tm ? "https://www.ticketmaster.com" : "https://seatgeek.com"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-[#6b6b6b] hover:text-[#c4a832] transition-colors"
+              >
+                More on {tm ? "Ticketmaster" : "SeatGeek"} →
+              </a>
+            );
+          })()}
         </div>
       )}
     </section>
