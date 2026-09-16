@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import HomeGreeting from "@/components/home/HomeGreeting";
 import { GREETING_COOKIE, GREETINGS } from "@/lib/greetings";
 import { getUserActivity, getFriendsActivity, getRecentActivity } from "@/lib/feed";
@@ -72,7 +73,18 @@ async function DesktopMyFeed({ userId }: { userId: string }) {
 export default async function HomePage() {
   const session = await auth();
   const userId = session?.user?.id;
-  const username = session?.user?.username ?? "";
+  // Read the username fresh rather than trusting the token, which goes stale
+  // after a rename — same reason /profile resolves it server-side. A stale name
+  // here built a "See more" link to /profile/<old-name>/albums-reviewed, a
+  // profile that no longer exists.
+  const username = userId
+    ? (
+        await prisma.user.findUnique({
+          where: { id: userId },
+          select: { username: true },
+        })
+      )?.username ?? ""
+    : "";
 
   // Render the greeting the client pinned for this session, so the first paint
   // is already right. On a fresh launch there's no cookie yet and HomeGreeting
